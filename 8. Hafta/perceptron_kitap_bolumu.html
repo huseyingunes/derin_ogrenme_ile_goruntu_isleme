@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>8. Hafta — Perceptron: Makinenin İlk Karar Hücresi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1a2e;
+      --ink2: #2d2d4a;
+      --muted: #6b6b8a;
+      --paper: #fafaf7;
+      --paper2: #f3f3ee;
+      --line: #e4e4d8;
+      --gold: #c8963e;
+      --gold2: #e8b86d;
+      --gold-soft: #fdf3e0;
+      --rust: #b5451b;
+      --rust-soft: #fdf0eb;
+      --teal: #1a6b6b;
+      --teal-soft: #e8f5f5;
+      --violet: #5a2d82;
+      --violet-soft: #f0e8f8;
+      --slate: #2d4a6b;
+      --slate-soft: #e8f0f8;
+      --emerald: #1a5c3a;
+      --emerald-soft: #e8f5ee;
+      --shadow-sm: 0 2px 8px rgba(26,26,46,.06);
+      --shadow: 0 8px 32px rgba(26,26,46,.10);
+      --shadow-lg: 0 20px 60px rgba(26,26,46,.14);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.9;
+      font-size: 17px;
+    }
+
+    /* ─── PROGRESS BAR ─── */
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--rust));
+      z-index: 999; transition: width .1s;
+      box-shadow: 0 0 8px rgba(200,150,62,.5);
+    }
+
+    /* ─── COVER ─── */
+    .cover {
+      position: relative;
+      background: var(--ink);
+      color: #f5f0e8;
+      padding: 0;
+      overflow: hidden;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .cover-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at 80% 20%, rgba(200,150,62,.15), transparent),
+        radial-gradient(ellipse 40% 40% at 10% 80%, rgba(90,45,130,.20), transparent),
+        linear-gradient(160deg, #0f0f1e 0%, #1a1a3a 60%, #0f1520 100%);
+    }
+
+    .cover-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(200,150,62,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,150,62,.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .cover-content {
+      position: relative;
+      padding: 60px 64px 52px;
+      max-width: 1100px;
+    }
+
+    .cover-kicker {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .82rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold2);
+      margin-bottom: 24px;
+    }
+    .cover-kicker span {
+      display: inline-block; width: 32px; height: 1px;
+      background: var(--gold2);
+    }
+
+    .cover h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.4rem, 5vw, 4.4rem);
+      line-height: 1.06;
+      letter-spacing: -.02em;
+      font-weight: 900;
+      color: #f5f0e8;
+      margin-bottom: 16px;
+    }
+    .cover h1 em {
+      font-style: italic;
+      color: var(--gold2);
+    }
+
+    .cover-sub {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(1rem, 1.6vw, 1.25rem);
+      font-weight: 300;
+      color: rgba(245,240,232,.65);
+      max-width: 680px;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .cover-pills {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .pill {
+      font-family: 'Outfit', sans-serif;
+      font-size: .83rem; font-weight: 500;
+      padding: 8px 16px; border-radius: 999px;
+      border: 1px solid rgba(200,150,62,.35);
+      background: rgba(200,150,62,.08);
+      color: var(--gold2);
+      letter-spacing: .02em;
+    }
+
+    /* ─── LAYOUT ─── */
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 0 40px 80px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0,1fr);
+      gap: 40px;
+      align-items: start;
+      margin-top: 40px;
+    }
+
+    /* ─── SIDEBAR TOC ─── */
+    .toc {
+      position: sticky; top: 24px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+      padding: 28px 24px;
+      overflow: hidden;
+    }
+    .toc::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--rust));
+    }
+    .toc-header {
+      font-family: 'Outfit', sans-serif;
+      font-size: .76rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .toc ol { list-style: none; padding: 0; }
+    .toc li { margin: 2px 0; }
+    .toc a {
+      font-family: 'Outfit', sans-serif;
+      font-size: .87rem; font-weight: 400;
+      color: var(--muted); text-decoration: none;
+      display: block; padding: 6px 10px; border-radius: 8px;
+      transition: all .15s;
+      line-height: 1.35;
+    }
+    .toc a:hover { background: var(--gold-soft); color: var(--gold); }
+    .toc a.active { background: var(--gold-soft); color: var(--gold); font-weight: 600; }
+
+    .toc-divider { height: 1px; background: var(--line); margin: 12px 0; }
+
+    /* ─── CONTENT ─── */
+    .content { display: flex; flex-direction: column; gap: 32px; }
+
+    /* ─── SECTION CARD ─── */
+    .sec {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 48px 52px 44px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sec-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: .75rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sec-num::before {
+      content: ''; display: inline-block;
+      width: 20px; height: 2px; background: var(--gold);
+    }
+
+    h2.stitle {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.7rem, 2.5vw, 2.15rem);
+      line-height: 1.18;
+      letter-spacing: -.02em;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 28px;
+    }
+
+    h3 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.28rem;
+      font-weight: 600;
+      color: var(--slate);
+      margin: 36px 0 12px;
+      line-height: 1.3;
+    }
+
+    h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem; font-weight: 600;
+      color: var(--ink2);
+      margin: 20px 0 8px;
+      letter-spacing: -.01em;
+    }
+
+    p {
+      margin-bottom: 18px;
+      color: var(--ink2);
+    }
+
+    p.lead {
+      font-size: 1.08rem;
+      color: var(--ink);
+      line-height: 2;
+    }
+
+    strong { color: var(--ink); }
+    em { color: var(--rust); font-style: italic; }
+
+    /* ─── CALLOUT BOXES ─── */
+    .box {
+      border-radius: 16px;
+      padding: 22px 26px;
+      margin: 24px 0;
+      position: relative;
+      padding-left: 56px;
+    }
+    .box::before {
+      position: absolute; left: 18px; top: 20px;
+      font-size: 1.3rem; line-height: 1;
+    }
+
+    .box-info {
+      background: var(--slate-soft);
+      border: 1px solid #c5d8ee;
+    }
+    .box-info::before { content: '💡'; }
+
+    .box-history {
+      background: var(--violet-soft);
+      border: 1px solid #c8a8e8;
+    }
+    .box-history::before { content: '🏛'; }
+
+    .box-insight {
+      background: var(--teal-soft);
+      border: 1px solid #9ecece;
+    }
+    .box-insight::before { content: '🔭'; }
+
+    .box-warn {
+      background: var(--rust-soft);
+      border: 1px solid #e8c0a8;
+    }
+    .box-warn::before { content: '⚠️'; }
+
+    .box-teach {
+      background: var(--emerald-soft);
+      border: 1px solid #9eceba;
+    }
+    .box-teach::before { content: '🎓'; }
+
+    .box-exercise {
+      background: var(--gold-soft);
+      border: 1px solid #e8c88a;
+    }
+    .box-exercise::before { content: '✏️'; }
+
+    .box-def {
+      background: var(--paper2);
+      border: 2px solid var(--ink);
+      border-radius: 4px 16px 16px 16px;
+    }
+    .box-def::before { content: ''; padding: 0; }
+    .box-def { padding-left: 26px; }
+
+    .box p:last-child { margin-bottom: 0; }
+    .box-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700; font-size: .88rem;
+      letter-spacing: .05em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .box-info .box-title { color: var(--slate); }
+    .box-history .box-title { color: var(--violet); }
+    .box-insight .box-title { color: var(--teal); }
+    .box-warn .box-title { color: var(--rust); }
+    .box-teach .box-title { color: var(--emerald); }
+    .box-exercise .box-title { color: #8a5c10; }
+    .box-def .box-title { color: var(--ink); }
+
+    /* ─── QUOTE ─── */
+    blockquote {
+      margin: 28px 0;
+      padding: 24px 28px 24px 36px;
+      border-left: 4px solid var(--gold);
+      background: var(--gold-soft);
+      border-radius: 0 16px 16px 0;
+      font-style: italic;
+      color: #5a4010;
+      font-size: 1.05rem;
+      line-height: 1.75;
+    }
+    blockquote cite {
+      display: block; margin-top: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-style: normal; font-size: .85rem;
+      color: var(--gold); font-weight: 600;
+    }
+
+    /* ─── FORMULA ─── */
+    .formula {
+      background: var(--ink);
+      color: #e8f0f8;
+      padding: 22px 28px;
+      border-radius: 16px;
+      margin: 20px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+      letter-spacing: .02em;
+      overflow-x: auto;
+      line-height: 1.8;
+    }
+    .formula .label {
+      display: block;
+      font-family: 'Outfit', sans-serif;
+      font-size: .76rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gold2);
+      margin-bottom: 8px;
+    }
+    .formula .eq { color: var(--gold2); }
+    .formula .var { color: #a8d8f8; }
+    .formula .op { color: #f8a8a8; }
+    .formula .note {
+      display: block; margin-top: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .84rem; color: rgba(232,240,248,.6);
+      letter-spacing: 0;
+    }
+
+    /* ─── CODE ─── */
+    pre {
+      background: #0d1117;
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid #30363d;
+      position: relative;
+    }
+    pre::before {
+      content: 'Python';
+      position: absolute; top: 12px; right: 16px;
+      font-family: 'Outfit', sans-serif; font-size: .72rem;
+      font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: #7c8fa8;
+    }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .92rem; line-height: 1.8;
+      color: #e6edf3;
+    }
+    .c-kw { color: #ff7b72; }
+    .c-fn { color: #d2a8ff; }
+    .c-str { color: #a5d6ff; }
+    .c-num { color: #79c0ff; }
+    .c-cmt { color: #8b949e; font-style: italic; }
+    .c-var { color: #e6edf3; }
+    .c-op { color: #ffa657; }
+
+    /* ─── GRID ─── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0; }
+
+    .mini-card {
+      background: var(--paper2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+
+    /* ─── TIMELINE ─── */
+    .timeline { margin: 24px 0; }
+    .tl-item {
+      display: grid; grid-template-columns: 100px 1fr;
+      gap: 20px; margin-bottom: 28px; position: relative;
+    }
+    .tl-item::before {
+      content: ''; position: absolute;
+      left: 99px; top: 24px; bottom: -28px;
+      width: 2px; background: var(--line);
+    }
+    .tl-item:last-child::before { display: none; }
+    .tl-year {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700; font-size: .92rem;
+      color: var(--gold); text-align: right;
+      padding-top: 2px;
+      position: relative;
+    }
+    .tl-year::after {
+      content: ''; position: absolute;
+      right: -14px; top: 8px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--gold);
+    }
+    .tl-body h4 { margin-top: 0; color: var(--slate); }
+    .tl-body p { margin-bottom: 0; }
+
+    /* ─── TABLE ─── */
+    table {
+      width: 100%; border-collapse: collapse;
+      margin: 20px 0; font-size: .95rem;
+    }
+    th {
+      background: var(--ink); color: #f5f0e8;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600; font-size: .84rem;
+      letter-spacing: .04em;
+      padding: 12px 16px; text-align: left;
+    }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--paper2); }
+
+    /* ─── PERSON CARD ─── */
+    .person-card {
+      display: grid; grid-template-columns: 90px 1fr;
+      gap: 24px; align-items: start;
+      background: var(--paper2);
+      border: 1px solid var(--line);
+      border-radius: 20px; padding: 24px;
+      margin: 20px 0;
+    }
+    .person-avatar {
+      width: 90px; height: 90px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem;
+      background: var(--ink); flex-shrink: 0;
+    }
+    .person-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--ink); margin-bottom: 2px;
+    }
+    .person-dates {
+      font-family: 'Outfit', sans-serif;
+      font-size: .82rem; color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ─── SEPARATOR ─── */
+    .divider {
+      display: flex; align-items: center; gap: 16px;
+      margin: 32px 0;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--line);
+    }
+    .divider span {
+      font-family: 'Outfit', sans-serif;
+      font-size: .78rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    /* ─── REFERENCES ─── */
+    .ref-list { list-style: none; padding: 0; }
+    .ref-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--line);
+      font-size: .95rem; line-height: 1.6;
+      display: flex; gap: 16px;
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-num {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700; color: var(--gold);
+      min-width: 24px; text-align: right;
+    }
+    .ref-list a { color: var(--teal); text-decoration: none; }
+    .ref-list a:hover { text-decoration: underline; }
+
+    ul, ol { padding-left: 22px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; }
+
+    /* ─── FADE-IN ─── */
+    .sec {
+      opacity: 0; transform: translateY(20px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    .sec.visible { opacity: 1; transform: none; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { position: static; }
+      .sec { padding: 32px 28px 28px; }
+      .cover-content { padding: 40px 28px 36px; }
+      .g2 { grid-template-columns: 1fr; }
+      .g3 { grid-template-columns: 1fr; }
+      .person-card { grid-template-columns: 1fr; }
+      .tl-item { grid-template-columns: 80px 1fr; }
+      .wrap { padding: 0 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+<div id="progress"></div>
+
+<!-- ═══════════════════════════════════════════
+     COVER
+════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-bg"></div>
+  <div class="cover-grid"></div>
+  <div class="cover-content">
+    <div class="cover-kicker"><span></span> Derin Öğrenme ile Görüntü İşleme · Hafta 8 <span></span></div>
+    <h1>Perceptron:<br><em>Makinenin İlk</em><br>Karar Hücresi</h1>
+    <p class="cover-sub">
+      Kural tabanlı sistemlerden öğrenen sistemlere geçişi, biyolojik ilhamdan matematiksel modele evrimi ve tarihsel kırılma noktasını tüm ayrıntılarıyla inceleyen kapsamlı bir kitap bölümü.
+    </p>
+    <div class="cover-pills">
+      <div class="pill">45+45+45 dk · 3 ders</div>
+      <div class="pill">Yüksek Lisans Seviyesi</div>
+      <div class="pill">Görüntü İşleme Perspektifi</div>
+      <div class="pill">Python Kodu Dahil</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="layout">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="toc">
+  <div class="toc-header">İçindekiler</div>
+  <ol>
+    <li><a href="#b1">1. Başlangıç Sorusu</a></li>
+    <li><a href="#b2">2. Tarihsel Kökler</a></li>
+    <li><a href="#b3">3. Rosenblatt ve Perceptron</a></li>
+    <li><a href="#b4">4. Matematiksel Yapı</a></li>
+    <li><a href="#b5">5. Bias: Eşiğin Gömülmesi</a></li>
+    <li><a href="#b6">6. Geometrik Yorum</a></li>
+    <li><a href="#b7">7. Öğrenme Algoritması</a></li>
+    <li><a href="#b8">8. AND Kapısı ve Python Kodu</a></li>
+    <li><a href="#b9">9. XOR Kırılma Noktası</a></li>
+    <li><a href="#b10">10. Ders Planı</a></li>
+    <div class="toc-divider"></div>
+    <li><a href="#refs">Kaynaklar</a></li>
+  </ol>
+</nav>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<main class="content">
+
+<!-- ─── BÖLÜM 1 ─── -->
+<section class="sec" id="b1">
+  <div class="sec-num">Bölüm 1</div>
+  <h2 class="stitle">Bir problemle başlayalım: Neden perceptron diye bir şeye ihtiyaç duyuldu?</h2>
+
+  <p class="lead">Bilgisayar tarihinin uzun bir döneminde temel varsayım netti: bir problemi çözmek istiyorsak, gerekli kuralları açıkça kodlarız; makine de o kuralları uygular. Toplama, sıralama, arama — hepsi bu paradigma içinde mükemmel çalışır. Ama örüntü tanıma söz konusu olduğunda sistem zorlanmaya başlar.</p>
+
+  <p>Bir kamera görüntüsü düşünelim. Aydınlatma bozuk, nesne tam merkezde değil, kenarlar gürültüyle pürüzlü. "Bu nesne yuvarlak mı?" sorusunu bir çocuk bile yanıtlayabilir. Ama klasik kural tabanlı makine? Her koşula ayrı bir <em>if</em> bloğu, her istisna için ayrı bir yama. Gerçek dünya steril değildir ve kural listesi asla tükenmez.</p>
+
+  <div class="box box-info">
+    <div class="box-title">Temel Soru</div>
+    <p>Görüntü işlemenin ilk aşamalarında çok şeyi elle tasarlarız: eşikleme, kenar çıkarımı, morfolojik işlemler. Ama sınıflandırma problemi büyüdükçe şu soru kaçınılmaz hale gelir: <strong>"Makineye kararı tek tek tarif etmek yerine, kararı veriden öğrenmesini sağlayabilir miyiz?"</strong></p>
+  </div>
+
+  <p>Perceptron, bu soruya verilen erken dönem cevaplardan biridir. Onu yalnızca küçük bir formül olarak okumak eksiktir — perceptron, <strong>"programlanan sistem" ile "öğrenen sistem"</strong> arasındaki zihinsel geçişi temsil eder. Makine artık sabit prosedür uygulayan yapı değil; örneklere bakarak karar parametrelerini güncelleyen, deneyimden etkilenen bir sistem olarak düşünülmeye başlanır.</p>
+
+  <p>Bu yüzden perceptronu, tarihsel bağlamından kopararak yalnızca bir matematiksel model olarak sunmak hatalıdır. O, yapay zeka tarihindeki ilk büyük zihinsel yön değişimlerinden birinin cisimleşmesidir.</p>
+
+  <div class="box box-teach">
+    <div class="box-title">Dersin Açılışı İçin Soru</div>
+    <p>Öğrencilere şu soruyu yöneltin: <em>"Bir elmayı elma yapan şeyin tam listesini çıkarabilir misiniz?"</em> Rengi mi, şekli mi, boyutu mu? Soluk elma var, yeşil elma var, kocaman elma var. Liste bitmez. Bu tartışma, kuralların neden yetersiz kaldığını sezgisel olarak gösterir.</p>
+  </div>
+</section>
+
+<!-- ─── BÖLÜM 2 ─── -->
+<section class="sec" id="b2">
+  <div class="sec-num">Bölüm 2</div>
+  <h2 class="stitle">Perceptron'dan önce: Biyolojiden mantığa, mantıktan öğrenmeye uzanan yol</h2>
+
+  <p>Perceptron bir anda ortaya çıkmadı. Onu mümkün kılan şey, birkaç ayrı düşünce hattının onlarca yıl boyunca birbirine yaklaşmasıdır: biyolojik nöron fikri, kararların eşiğe dayalı temsili ve bağlantıların deneyimle değişebileceği kuramı.</p>
+
+  <div class="timeline">
+
+    <div class="tl-item">
+      <div class="tl-year">1943</div>
+      <div class="tl-body">
+        <h4>Warren McCulloch & Walter Pitts</h4>
+        <p>İki araştırmacı, nöronun davranışını mantıksal bir modelle temsil etmeye çalıştı. Temel soyutlama basitti: girdiler var, toplama var, bir eşik var, çıktı var. Bu çerçeve bugün sıradan görünse de 1943'te devrimciydi; biyolojinin gizemi matematiksel sembolle ifade edilebilir hale gelmişti.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-year">1949</div>
+      <div class="tl-body">
+        <h4>Donald Olding Hebb</h4>
+        <p>Kanadalı nöropsikolog Hebb, öğrenmenin sinaptik güçlenme ile ilişkili olabileceği fikrini sistematik biçimde savundu. "Birlikte etkinleşen hücrelerin bağlantıları güçlenir" — bu ilke, daha sonraki tüm yapay öğrenme kuramlarında izini bıraktı.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-year">1958</div>
+      <div class="tl-body">
+        <h4>Frank Rosenblatt</h4>
+        <p>Perceptron, öğrenebilen bir sınıflandırıcı olarak sahneye çıktı. Artık tartışma yalnızca "nöron benzeri hesaplama yapılabilir mi?" değil, "makine veriyle karar öğrenebilir mi?" sorusuna dönmüştü.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>2.1. McCulloch–Pitts: Nöronu Matematikle Yakalamak</h3>
+
+  <div class="person-card">
+    <div class="person-avatar">🧠</div>
+    <div>
+      <div class="person-name">Warren McCulloch & Walter Pitts</div>
+      <div class="person-dates">1943 · "A Logical Calculus of the Ideas Immanent in Nervous Activity"</div>
+      <p>Bir nörofizyolog ile genç bir matematikçinin ortak çalışması. McCulloch beyin fizyolojisini getirdi, Pitts matematiksel mantığı. İkisi birlikte nöronun davranışını Boolean mantıkla modelledi.</p>
+    </div>
+  </div>
+
+  <p>McCulloch ve Pitts'in kritik katkısı şuydu: nöronu mistik bir biyolojik kara kutu olmaktan çıkardılar. "Girdileri olan, belli koşullar altında ateşleyen" bir karar birimi olarak tanımladılar. Bu sadeleştirme, hesaplanabilirlik kuramının nöroloji ile buluşmasını sağladı. Modelleri bugünkü kadar güçlü değildi; öğrenmeden yoktu, ağırlıklar sabitti. Ama <em>fikrin</em> önü açıldı: beyin, hesaplanabilir bir makine gibi düşünülebilir.</p>
+
+  <div class="box box-history">
+    <div class="box-title">Tarihsel Not</div>
+    <p>Walter Pitts, 1943'te Chicago'ya geldiğinde sadece 19 yaşındaydı. Ailesi yoktu, düzensiz bir hayatı vardı; ama matematik dehası rakipsizdi. Norbert Wiener ve John von Neumann gibi devlerle aynı masada oturdu. Öyküsü, bilimin kurumsal sınırları aşabileceğinin nadir örneklerinden biridir.</p>
+  </div>
+
+  <h3>2.2. Donald Hebb: Öğrenme İçten Gelir</h3>
+
+  <div class="person-card">
+    <div class="person-avatar">📖</div>
+    <div>
+      <div class="person-name">Donald Olding Hebb</div>
+      <div class="person-dates">1904–1985 · Kanadalı Nöropsikolog · McGill Üniversitesi</div>
+      <p>Hebb, psikoloji doktorasını Harvard'da tamamladı; ancak asıl eserini McGill'de yayımladı. Çalışmaları psikoloji, nöroloji ve yapay zeka arasındaki köprüyü kurdu.</p>
+    </div>
+  </div>
+
+  <p>Hebb'in 1949'daki kitabı <em>The Organization of Behavior</em> tek bir temel soruya odaklanıyordu: beyin nasıl öğrenir? Cevabı şaşırtıcı derecede somuttu: iki nöron aynı anda defalarca birlikte etkinleşirse, aralarındaki sinaptik bağlantı güçlenir. Bu görüngüye bugün "Hebb kuralı" ya da <em>Hebbian learning</em> deniyor.</p>
+
+  <blockquote>
+    "Bir hücrenin aksonunun başka bir hücreyi uyarabilecek kadar yakın olması ve tekrar eden ya da sürekli biçimde o hücreyi ateşlemesi durumunda, biri ya da her ikisinde de bir büyüme süreci ya da metabolik değişim gerçekleşir."
+    <cite>— Donald Hebb, 1949</cite>
+  </blockquote>
+
+  <p>Hebb psikolojistti; nöronlar arası bağlantı gücünü deneyle ölçmüyordu, kuramsal bir model öneriyordu. Çalışmasını yaptı çünkü insan belleğinin ve öğrenmesinin biyolojik temelini anlamak istiyordu — dönemin davranışçı psikolojisi içsel süreçleri reddediyordu ve Hebb bu tutuma karşı çıktı.</p>
+
+  <div class="box box-insight">
+    <div class="box-title">"Parametre Güncelleme" Ne Demektir?</div>
+    <p>Yapay sistemlerde bir modelin içinde sayılar — <strong>parametreler</strong> — bulunur. Bu sayılar modelin "neyi bildiğini" belirler. Eğitim sırasında model bir tahmin yapar, tahmini gerçekle karşılaştırır, fark varsa parametreleri o farkı azaltacak yönde günceller. Bu döngü binlerce kez tekrarlanır.</p>
+    <p>Hebb'in yaptığı şey, tam olarak bunun biyolojik karşılığını tarif etmekti: iki nöron birlikte çalışırsa, aralarındaki "bağlantı parametresi" güçlenir. Yapay sinir ağlarındaki parametre güncellemesi bu fikrin mühendislik versiyonudur. Öğrenme, dışarıdan kural yüklenmesi değil; sistemin iç sayılarının veriye göre ayarlanmasıdır.</p>
+  </div>
+
+  <div class="box box-warn">
+    <div class="box-title">Yaygın Yanılgıyı Düzeltelim</div>
+    <p>Yapay sinir ağı, beynin birebir kopyası değildir. Hebb'den ve nörolojiden ilham alınmıştır; ama bu ilham bir analogdur, bir çeviri değil. Gerçek nöronlar çok daha karmaşık kimyasal ve elektriksel süreçler içerir. Bunu baştan net kurmak, öğrencilerin "o zaman beyin nasıl daha iyi?" gibi yanlış sorularda zaman harcamasını önler.</p>
+  </div>
+
+</section>
+
+<!-- ─── BÖLÜM 3 ─── -->
+<section class="sec" id="b3">
+  <div class="sec-num">Bölüm 3</div>
+  <h2 class="stitle">Frank Rosenblatt ve perceptronun sahneye çıkışı: Bilimsel modelden kültürel olaya</h2>
+
+  <div class="person-card">
+    <div class="person-avatar">⚡</div>
+    <div>
+      <div class="person-name">Frank Rosenblatt</div>
+      <div class="person-dates">1928–1971 · Amerikalı Psikolog &amp; Bilgisayar Bilimcisi · Cornell Üniversitesi</div>
+      <p>Cornell'de psikoloji doktorası aldı. Perceptronu sadece teorik bir model olarak kalmadı; donanım olarak inşa etti. Çalışması hem bilim dünyasında hem de kamuoyunda olağandışı bir yankı uyandırdı.</p>
+    </div>
+  </div>
+
+  <p>1958 yılında Rosenblatt'ın yayımladığı makale, teknik bir makale olmanın ötesine geçti. Cornell'deki Mark I Perceptron makinesi — gerçek bir donanım — görüntü tanıma deneyleri için üretildi. 20×20 piksel fotoğraf sensörleri, rastgele bağlanmış potansiyometreler ve güncellenebilir bağlantı ağırlıkları. Makine, görerek öğreniyordu.</p>
+
+  <div class="box box-history">
+    <div class="box-title">Tarihsel Atmosfer: 1958</div>
+    <p>O yıl dünya değişim içindeydi. Sovyetler 1957'de Sputnik'i fırlattı; ABD teknoloji yarışında geride hissediyordu. Bu atmosferde "öğrenen makine" haberi yalnızca bilim camiasını değil, politika yapıcıları ve kamuoyunu da sarstı. New York Times ve diğer gazeteler perceptronu manşetlere taşıdı. Deniz Kuvvetleri bu araştırmayı finanse ediyordu.</p>
+  </div>
+
+  <h3>3.1. Neden Bu Kadar Büyük Beklenti Oluştu?</h3>
+
+  <p>Perceptron, örüntü tanıma problemini başka bir yerden ele alıyordu. Örnekleri görüyordu; yanlış yaptığı durumlarda kendi iç parametrelerini ayarlıyordu; zamanla daha iyi ayırıcı olmaya çalışıyordu. Bu davranış, dışarıdan bakıldığında, ilkel de olsa gerçek bir <em>öğrenme</em> hissi veriyordu. Ve öğrenme, o dönemde yalnızca canlılara atfedilen bir yetiydi.</p>
+
+  <blockquote>
+    "Perceptron, kendiliğinden öğrenip büyüyebilecek, kendi varlığının farkında olacak ve çevresini tanıyacak bir makinenin embriyosudur."
+    <cite>— Frank Rosenblatt, 1958 (basın toplantısından)</cite>
+  </blockquote>
+
+  <p>Rosenblatt'ın bu ifadesi teknik değil, vizyonerdi. Ama bilim camiasında hayal kırıklığına da zemin hazırladı: büyük vaatler, büyük eleştiriler doğurur.</p>
+
+  <h3>3.2. Perceptronun Tarihsel Değeri: Öğrenmeyi Merkezine Alan İlk Adım</h3>
+
+  <p>Öğrencilerin bu noktada net biçimde kavraması gereken şey şudur: perceptronun değeri, bugün kullandığımız en güçlü model olmasından gelmez. Değeri, <strong>"öğrenme" fikrini hesaplama kuramının merkezine itmesinden</strong> gelir.</p>
+
+  <p>Derin öğrenme tarihinde perceptron, küçük ve önemsiz bir durak değil; ana yolun açıldığı ilk kapılardan biridir. Rosenblatt'ın 1971'de kırk üç yaşında bir tekne kazasında hayatını kaybetmesi araştırmacı camiada derin bir üzüntü bıraktı — perceptronun bugün aldığı saygınlığı görmeden öldü.</p>
+
+  <div class="g2">
+    <div class="mini-card">
+      <h4>Kural Tabanlı Sistem</h4>
+      <p>Bilgi geliştiricidedir. Her karar elle yazılmıştır. Yeni koşul → yeni kural. Sistem statik kalır.</p>
+    </div>
+    <div class="mini-card">
+      <h4>Parametre Öğrenen Sistem (Perceptron)</h4>
+      <p>Bilginin bir kısmı veriye devredilir. Model örnekler görür, parametrelerini günceller. Sistem dinamik büyür.</p>
+    </div>
+  </div>
+
+</section>
+
+<!-- ─── BÖLÜM 4 ─── -->
+<section class="sec" id="b4">
+  <div class="sec-num">Bölüm 4</div>
+  <h2 class="stitle">Perceptronun matematiksel gövdesi: Girdi, ağırlık, toplam, karar</h2>
+
+  <p>Tarihsel katmandan mühendislik katmanına geçelim. Perceptronun yapısı şaşırtıcı derecede sadedir — ve bu sadelik aldatıcıdır. Güç basitliğin içinde gizlidir.</p>
+
+  <p>Elimizde girdiler vardır: <em>x₁, x₂, …, xₙ</em>. Her girişin karara katkısını belirleyen bir ağırlık: <em>w₁, w₂, …, wₙ</em>. Model bu girdileri ağırlıklarıyla çarpar, toplar. Bu toplama <strong>ağırlıklı toplam</strong> ya da <em>net girdi</em> denir:</p>
+
+  <div class="formula">
+    <span class="label">Ağırlıklı Toplam (Net Girdi)</span>
+    <span class="var">z</span> <span class="eq"> = </span> <span class="var">w₁</span><span class="op">·</span><span class="var">x₁</span> <span class="op">+</span> <span class="var">w₂</span><span class="op">·</span><span class="var">x₂</span> <span class="op">+</span> <span class="op">···</span> <span class="op">+</span> <span class="var">wₙ</span><span class="op">·</span><span class="var">xₙ</span> <span class="op">+</span> <span class="var">b</span>
+    <span class="note">Vektör notasyonuyla: z = wᵀx + b</span>
+  </div>
+
+  <p>Ardından bir karar mekanizması devreye girer. En yalın haliyle adım fonksiyonu:</p>
+
+  <div class="formula">
+    <span class="label">Karar Fonksiyonu (Adım / Step Function)</span>
+    <span class="var">y</span> <span class="eq"> = </span> <span class="op">1</span>&nbsp;&nbsp; eğer <span class="var">z</span> <span class="eq">≥ 0</span> ise<br>
+    <span class="var">y</span> <span class="eq"> = </span> <span class="op">0</span>&nbsp;&nbsp; eğer <span class="var">z</span> <span class="eq">&lt; 0</span> ise
+  </div>
+
+  <h3>4.1. Ağırlıklar Neyi Temsil Eder?</h3>
+
+  <p>Ağırlıklar, her girdinin karara ne ölçüde etki ettiğini kodlar. Büyük pozitif ağırlık: o özellik güçlü biçimde sınıf 1'e işaret eder. Büyük negatif ağırlık: o özellik güçlü biçimde sınıf 0'a işaret eder. Sıfıra yakın ağırlık: o özellik kararda neredeyse etkisizdir.</p>
+
+  <div class="g3">
+    <div class="mini-card">
+      <h4>w &gt; 0 (Büyük Pozitif)</h4>
+      <p>Bu özellik yüksekse model sınıf 1'e yönelir. <em>Örnek:</em> bir meyvenin kırmızılık derecesi, elma sınıfını destekler.</p>
+    </div>
+    <div class="mini-card">
+      <h4>w &lt; 0 (Büyük Negatif)</h4>
+      <p>Bu özellik yüksekse model sınıf 0'a yönelir. <em>Örnek:</em> sarılık derecesi elmayı reddeder, muz sınıfına iter.</p>
+    </div>
+    <div class="mini-card">
+      <h4>w ≈ 0 (Sıfıra Yakın)</h4>
+      <p>Bu özellik kararda belirleyici değildir. Model onu görmezden gelir.</p>
+    </div>
+  </div>
+
+  <h3>4.2. Matris Notasyonu ile Verimlilik</h3>
+
+  <p>Gerçek problemlerde onlarca, yüzlerce hatta binlerce özellik olabilir. Bu durumda tüm girdileri bir vektör <strong>x</strong>, tüm ağırlıkları bir vektör <strong>w</strong> olarak yazarız. Ağırlıklı toplam <em>wᵀx</em> (iç çarpım) ile tek satırda hesaplanır. Bu gösterim hem NumPy'da doğrudan karşılık bulur, hem de derin öğrenmedeki toplu hesaplama (batch) ile bağlantıyı görünür kılar.</p>
+
+  <h3>4.3. Neden Bu Kadar Basit Bir Model Önemlidir?</h3>
+
+  <p>Öğrenci çoğu zaman şunu düşünür: "Bu kadar basit bir formül ne işe yarar?" Yanıt şudur: güç formülde değil, <strong>parametreler öğrenilebilir olduğunda</strong> ortaya çıkar. Sabit ağırlıklarla perceptron sıradan bir filtredir. Ama ağırlıklar veriyle güncellendiğinde, model bilgiyi içselleştirmeye başlar.</p>
+
+  <p>Üstelik bu yapı bugün de yaşıyor: lojistik regresyonun temeli burada yatar. Modern derin ağların her "nöronu" aslında bu basit topla-ve-karar-ver mantığının karmaşık varyasyonudur. Perceptronu anlamak, bütün bu ailenin DNA'sını anlamaktır.</p>
+
+  <div class="box box-info">
+    <div class="box-title">Görüntü İşleme Bağlantısı</div>
+    <p>Görüntü işlemede girdi vektörü ne olabilir? Piksel yoğunlukları, Sobel filtresi çıktıları, renk histogramı değerleri, HOG özellikleri... Perceptrona ne verdiğiniz, onun ne öğrenebileceğini doğrudan belirler. Özellik mühendisliği ile model kapasitesi arasındaki bu ilişki, CNN'lerin neden devrimci olduğunu anlatan hikayenin başlangıcıdır.</p>
+  </div>
+</section>
+
+<!-- ─── BÖLÜM 5 ─── -->
+<section class="sec" id="b5">
+  <div class="sec-num">Bölüm 5</div>
+  <h2 class="stitle">Bias değeri neden ortaya çıktı? Eşiğin cebirsel gömülmesi</h2>
+
+  <p>Bias çoğu öğrenci için ilk bakışta "modele sonradan eklenmiş yapay bir sayı" gibi görünür. Bu yaygın ama eksik bir algıdır. Bias'ın nereden geldiğini anlamanın en temiz yolu, orijinal eşik formülüyle başlamaktır.</p>
+
+  <p>İlk perceptron formülasyonunda model, ağırlıklı toplamı bir eşik değeriyle karşılaştırır:</p>
+
+  <div class="formula">
+    <span class="label">Eşikli Karar (Orijinal Form)</span>
+    Sınıf <span class="op">1</span> ver, eğer&nbsp; <span class="var">w₁x₁</span> <span class="op">+</span> <span class="var">w₂x₂</span> <span class="op">+</span> <span class="op">···</span> <span class="op">+</span> <span class="var">wₙxₙ</span> <span class="eq">≥</span> <span class="var">θ</span>
+    <span class="note">θ (theta): eşik değeri — ne kadar yüksek olursa, modelin sınıf 1 demesi o kadar zorlaşır.</span>
+  </div>
+
+  <p>Şimdi eşiği sol tarafa taşıyalım:</p>
+
+  <div class="formula">
+    <span class="label">Yeniden Düzenleme</span>
+    <span class="var">w₁x₁</span> <span class="op">+</span> <span class="var">w₂x₂</span> <span class="op">+</span> <span class="op">···</span> <span class="op">+</span> <span class="var">wₙxₙ</span> <span class="op">−</span> <span class="var">θ</span> <span class="eq">≥</span> <span class="op">0</span>
+  </div>
+
+  <p>Eğer <strong>b = −θ</strong> tanımını yaparsak:</p>
+
+  <div class="formula">
+    <span class="label">Bias ile Birleşik Form (Modern Gösterim)</span>
+    <span class="var">w₁x₁</span> <span class="op">+</span> <span class="var">w₂x₂</span> <span class="op">+</span> <span class="op">···</span> <span class="op">+</span> <span class="var">wₙxₙ</span> <span class="op">+</span> <span class="var">b</span> <span class="eq">≥</span> <span class="op">0</span>
+    <span class="note">Bias (b), eşik değerinin ters işaretlisidir. Bu dönüşüm hesaplamayı sadeleştirir; artık θ ayrı bir parametre olarak takip edilmez.</span>
+  </div>
+
+  <div class="box box-info">
+    <div class="box-title">Bias Neden Keyfî Değil?</div>
+    <p>Bias, eşik kavramının model içine pratik biçimde gömülmüş halidir. Onu ayrı tutmak yerine ağırlık vektörüne dahil etmek hem matematiksel notasyonu temizler hem de kod yazmayı kolaylaştırır. NumPy'da <code>np.dot(w, x) + b</code> yazmak yeterlidir; eşiği ayrıca hesaplamak gerekmez.</p>
+  </div>
+
+  <h3>5.1. Geometrik Anlam: Bias Karar Sınırını Kaydırır</h3>
+
+  <p>İki girişli bir perceptronda karar sınırı bir doğrudur: <em>w₁x₁ + w₂x₂ + b = 0</em>. Bu denklemde:</p>
+
+  <ul>
+    <li><strong>Ağırlıklar (w₁, w₂)</strong> — doğrunun yönünü belirler; döndürür.</li>
+    <li><strong>Bias (b)</strong> — doğrunun konumunu belirler; paralel kaydırır.</li>
+  </ul>
+
+  <p>Bias olmadan (<em>b = 0</em>), karar doğrusu her zaman orijinden — (0,0) noktasından — geçmek zorunda kalır. Bu muazzam bir kısıtlamadır: veri orijini içermiyorsa, model anlamlı bir sınır bulamayabilir. Bias, modeli bu kısıtlamadan kurtarır.</p>
+
+  <div class="box box-insight">
+    <div class="box-title">Pedagojik Formül</div>
+    <p>Bu ayrımı öğrencilere kalıcı biçimde aktaracak tek cümle şudur: <strong>"Ağırlıklar çizgiyi döndürür; bias çizgiyi kaydırır."</strong></p>
+    <p>Bu cümle sadece perceptron için değil, lojistik regresyon, tam bağlı katmanlar ve konvolüsyon katmanları için de geçerlidir. Bir kez doğru yerleşti mi, tekrar anlatmanıza gerek kalmaz.</p>
+  </div>
+
+  <h3>5.2. Görüntü İşleme Öğrencisi Neden Bunu İyi Bilmeli?</h3>
+
+  <p>Konvolüsyon katmanlarında da her filtre bir bias değerine sahiptir. Tam bağlı (dense) katmanlarda da. Transformer mimarilerinde de. Her yerde gördüğünüz <em>affine dönüşüm</em> — <strong>Wx + b</strong> — bu basit yapının doğrudan mirasıdır. Bias'ı perceptron seviyesinde net kavramak, "bu sayı neden burada?" sorusunu ileride tekrar sormaktan kurtarır.</p>
+
+</section>
+
+<!-- ─── BÖLÜM 6 ─── -->
+<section class="sec" id="b6">
+  <div class="sec-num">Bölüm 6</div>
+  <h2 class="stitle">Geometrik yorum: Perceptron aslında bir karar sınırı öğrenir</h2>
+
+  <p>İki girişli bir perceptron düşünelim. Karar sınırı <em>z = 0</em> koşulundan elde edilir:</p>
+
+  <div class="formula">
+    <span class="label">Karar Sınırı Denklemi</span>
+    <span class="var">w₁</span><span class="op">·</span><span class="var">x₁</span> <span class="op">+</span> <span class="var">w₂</span><span class="op">·</span><span class="var">x₂</span> <span class="op">+</span> <span class="var">b</span> <span class="eq"> = 0</span>
+    <span class="note">Bu denklem 2B düzlemde bir doğru, 3B uzayda bir düzlem, nB uzayda ise (n-1) boyutlu bir hiperdüzlemdir.</span>
+  </div>
+
+  <table>
+    <tr><th>Boyut</th><th>Girdi Uzayı</th><th>Karar Sınırı</th><th>Görüntü İşleme Karşılığı</th></tr>
+    <tr><td>2B</td><td>2 özellik</td><td>Doğru (çizgi)</td><td>2 renk kanalı ile basit sınıflandırma</td></tr>
+    <tr><td>3B</td><td>3 özellik</td><td>Düzlem</td><td>RGB renk uzayında sınıflandırma</td></tr>
+    <tr><td>nB</td><td>n özellik</td><td>Hiperdüzlem</td><td>Yüksek boyutlu özellik vektörü (HOG vb.)</td></tr>
+  </table>
+
+  <h3>6.1. Lineer Ayrılabilirlik: Neden Merkezî Kavramdır?</h3>
+
+  <p>Perceptron yalnızca <strong>doğrusal bir ayırıcıdır</strong>. Eğer veri tek bir doğruyla iki gruba ayrılabiliyorsa, perceptron bu problem için anlamlı bir çözüm üretebilir. Buna <em>lineer ayrılabilirlik</em> denir.</p>
+
+  <p>Ama gerçek dünya verisinin büyük çoğunluğu lineer ayrılabilir değildir. Bu durumda daha fazla epoch vermek, öğrenme hızını ayarlamak, başlangıç ağırlıklarını değiştirmek — hiçbiri yardımcı olmaz. Sorun algoritmayla değil, <strong>modelin temsil gücüyle</strong> ilgilidir. Aradığı sınır geometrik olarak yoktur.</p>
+
+  <div class="box box-warn">
+    <div class="box-title">Kritik Kavramsal Ayrım</div>
+    <p>"Perceptron iyi eğitilmedi" ile "perceptron bu problemi temsil edemez" tamamen farklı cümlelerdir. Birincisi eğitim sorunudur, ikincisi kapasite sorunudur. Bu ayrım, makine öğrenmesinin en önemli kavramsal ayrımlarından biridir ve XOR bölümünde tekrar karşımıza çıkacak.</p>
+  </div>
+
+  <h3>6.2. Görüntü İşleme Perspektifinden Düşünmek</h3>
+
+  <p>Öğrencinin perceptronu piksel uzayında hayal etmesi çok öğreticidir. İki özellik seçelim: nesnenin yatay kenar yoğunluğu ve düşey kenar yoğunluğu. Bu iki sayıyla 2B bir uzay oluşur. Perceptron burada bir doğru çizer. Bir tarafı "elma", diğer tarafı "armut" der.</p>
+
+  <p>Ama bu iki özelliğin yeterli olmadığı bir nesne çifti düşünün. Ne kadar çok epoch verirsek verelim, doğrusal sınır bizi kurtarmaz. Daha fazla özellik gerekir; ve bu özellikler doğrusal olmayan yollarla birleştirilmelidir. İşte bu noktada CNN'ler sahneye çıkar.</p>
+
+</section>
+
+<!-- ─── BÖLÜM 7 ─── -->
+<section class="sec" id="b7">
+  <div class="sec-num">Bölüm 7</div>
+  <h2 class="stitle">Perceptron nasıl öğrenir? Hatanın yön gösterdiği güncelleme mantığı</h2>
+
+  <p>Perceptronun en çarpıcı özelliği yalnızca karar vermesi değil; hatalarını kullanarak kendini düzeltebilmesidir. Güncelleme kuralı son derece sezgiseldir: yanlış tahmin yaptıysan, o yanlışlığı azaltacak yönde parametrelerini değiştir.</p>
+
+  <div class="formula">
+    <span class="label">Perceptron Öğrenme Kuralı</span>
+    <span class="var">w</span> <span class="eq">←</span> <span class="var">w</span> <span class="op">+</span> <span class="var">η</span> <span class="op">·</span> (<span class="var">y</span><sub>gerçek</sub> <span class="op">−</span> <span class="var">y</span><sub>tahmin</sub>) <span class="op">·</span> <span class="var">x</span><br>
+    <span class="var">b</span> <span class="eq">←</span> <span class="var">b</span> <span class="op">+</span> <span class="var">η</span> <span class="op">·</span> (<span class="var">y</span><sub>gerçek</sub> <span class="op">−</span> <span class="var">y</span><sub>tahmin</sub>)
+    <span class="note">η (eta): öğrenme oranı — değişimin büyüklüğünü belirler. Çok büyükse model sallanır, çok küçükse yavaş öğrenir.</span>
+  </div>
+
+  <h3>7.1. Her Durumda Ne Olur?</h3>
+
+  <table>
+    <tr><th>Gerçek (y)</th><th>Tahmin (ŷ)</th><th>Hata Terimi</th><th>Güncelleme</th></tr>
+    <tr><td>1</td><td>1</td><td>0</td><td>Güncelleme yok — doğru tahmin</td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>Güncelleme yok — doğru tahmin</td></tr>
+    <tr><td>1</td><td>0</td><td>+1</td><td>Ağırlıklar artırılır → z yükselir → sınıf 1 daha kolay</td></tr>
+    <tr><td>0</td><td>1</td><td>−1</td><td>Ağırlıklar azaltılır → z düşer → sınıf 0 daha kolay</td></tr>
+  </table>
+
+  <h3>7.2. Öğrenme Hızı (η) Ne İşe Yarar?</h3>
+
+  <p>Öğrenme hızı, her güncellemede ağırlıkların ne kadar değişeceğini kontrol eder. Çok büyük bir η: model büyük adımlarla hareket eder, çözümün etrafında sallanabilir, asla yerleşemeyebilir. Çok küçük bir η: model adım adım ilerler, yakınsama çok yavaş olur. Bu denge, derin öğrenmede hyperparametre ayarının en kritik konularından biridir.</p>
+
+  <div class="g2">
+    <div class="mini-card">
+      <h4>η çok büyükse</h4>
+      <p>Her adımda karar sınırı büyük sıçramalar yapar. Çözüm etrafında sürekli sallanır, kararlı bir noktaya yerleşemez.</p>
+    </div>
+    <div class="mini-card">
+      <h4>η çok küçükse</h4>
+      <p>Karar sınırı çok yavaş hareket eder. Aynı noktaya ulaşmak için binlerce epoch gerekebilir.</p>
+    </div>
+  </div>
+
+  <h3>7.3. Yakınsama: Perceptron Ne Zaman Durur?</h3>
+
+  <p>Eğer veri <strong>doğrusal olarak ayrılabilirse</strong>, perceptron sonlu sayıda güncellemeden sonra sıfır hatalı bir çözüm bulur. Bu garantiyi veren <em>Perceptron Yakınsama Teoremi</em> adı verilen bir matematiksel sonuçtur. Teoremin kanıtına derse bu haftada girmek gerekmez; ama fikrin verilmesi önemlidir.</p>
+
+  <p>Eğer veri doğrusal olarak ayrılabilir değilse — ki XOR bunun en ünlü örneğidir — perceptron bir denge bulmakta başarısız olur. Sürekli günceller, bir türlü yerleşemez. Daha fazla epoch vermek bu durumu düzeltmez.</p>
+
+  <div class="box box-history">
+    <div class="box-title">Hebb Kuralı ile Bağlantı</div>
+    <p>Perceptron güncelleme kuralını Hebb'in öğrenme fikrine bağlamak öğretici bir köprüdür. İkisi de şunu söyler: bağlantı gücü (ağırlık), sistemin ürettiği çıktıyla girdi arasındaki ilişkiye göre değişir. Hebb'de bu biyolojik bir gözlemdi; perceptronda cebirsel bir kural oldu.</p>
+  </div>
+
+  <div class="box box-teach">
+    <div class="box-title">Sınıfta Çok İşe Yarayan Alıştırma</div>
+    <p>Öğrencilere küçük bir veri seti verin (dört nokta yeter). Her güncellemeden sonra karar doğrusunu beyaz tahta üzerinde elle çizmelerini isteyin. Öğrenme kavramı soyut eşitliklerden çıkıp elle tutulur bir görsel sezgiye dönüşür. Bu alıştırma 15 dakikada yapılabilir ve çok güçlü bir etki bırakır.</p>
+  </div>
+
+</section>
+
+<!-- ─── BÖLÜM 8 ─── -->
+<section class="sec" id="b8">
+  <div class="sec-num">Bölüm 8</div>
+  <h2 class="stitle">Örnek problem: AND kapısı, adım adım yorum ve sıfırdan Python perceptron kodu</h2>
+
+  <p>Perceptronun mantığını somutlaştırmak için AND problemi idealdir: küçük, sezgisel ve doğrusal olarak ayrılabilir. İki ikili girdi, tek ikili çıktı.</p>
+
+  <div class="g2">
+    <div class="mini-card">
+      <h4>AND Doğruluk Tablosu</h4>
+      <table style="margin:0;">
+        <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+        <tr><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>0</td><td>1</td><td>0</td></tr>
+        <tr><td>1</td><td>0</td><td>0</td></tr>
+        <tr><td>1</td><td>1</td><td>1</td></tr>
+      </table>
+    </div>
+    <div class="mini-card">
+      <h4>Geometrik Anlam</h4>
+      <p>Bu dört nokta 2B düzlemde şöyle görünür: (0,0), (0,1) ve (1,0) sınıf 0; yalnızca (1,1) sınıf 1. Köşede olan tek bu nokta, diğerlerinden bir doğruyla rahatlıkla ayrılabilir.</p>
+    </div>
+  </div>
+
+  <h3>8.1. Sıfırdan Python Kodu: Kütüphane Yok, Sihir Yok</h3>
+
+<pre><code><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+
+<span class="c-cmt"># ─── Veri: AND problemi ───────────────────────────────────────</span>
+<span class="c-var">X</span> = <span class="c-fn">np.array</span>([
+    [<span class="c-num">0</span>, <span class="c-num">0</span>],
+    [<span class="c-num">0</span>, <span class="c-num">1</span>],
+    [<span class="c-num">1</span>, <span class="c-num">0</span>],
+    [<span class="c-num">1</span>, <span class="c-num">1</span>]
+], dtype=<span class="c-fn">float</span>)
+
+<span class="c-var">y</span> = <span class="c-fn">np.array</span>([<span class="c-num">0</span>, <span class="c-num">0</span>, <span class="c-num">0</span>, <span class="c-num">1</span>], dtype=<span class="c-fn">int</span>)
+
+<span class="c-cmt"># ─── Başlangıç parametreleri ──────────────────────────────────</span>
+<span class="c-var">weights</span> = <span class="c-fn">np.zeros</span>(<span class="c-var">X</span>.shape[<span class="c-num">1</span>])    <span class="c-cmt"># [0.0, 0.0] — henüz hiçbir şey "öğrenilmedi"</span>
+<span class="c-var">bias</span> = <span class="c-num">0.0</span>
+<span class="c-var">lr</span> = <span class="c-num">0.1</span>      <span class="c-cmt"># öğrenme hızı</span>
+<span class="c-var">epochs</span> = <span class="c-num">15</span>
+
+<span class="c-kw">def</span> <span class="c-fn">step</span>(<span class="c-var">z</span>):
+    <span class="c-kw">return</span> <span class="c-num">1</span> <span class="c-kw">if</span> <span class="c-var">z</span> >= <span class="c-num">0</span> <span class="c-kw">else</span> <span class="c-num">0</span>
+
+<span class="c-cmt"># ─── Eğitim döngüsü ───────────────────────────────────────────</span>
+<span class="c-kw">for</span> <span class="c-var">epoch</span> <span class="c-kw">in</span> <span class="c-fn">range</span>(<span class="c-var">epochs</span>):
+    <span class="c-var">total_error</span> = <span class="c-num">0</span>
+    <span class="c-kw">for</span> <span class="c-var">i</span> <span class="c-kw">in</span> <span class="c-fn">range</span>(<span class="c-fn">len</span>(<span class="c-var">X</span>)):
+        <span class="c-var">z</span> = <span class="c-fn">np.dot</span>(<span class="c-var">X</span>[<span class="c-var">i</span>], <span class="c-var">weights</span>) + <span class="c-var">bias</span>   <span class="c-cmt"># ağırlıklı toplam</span>
+        <span class="c-var">pred</span> = <span class="c-fn">step</span>(<span class="c-var">z</span>)                       <span class="c-cmt"># karar</span>
+        <span class="c-var">error</span> = <span class="c-var">y</span>[<span class="c-var">i</span>] - <span class="c-var">pred</span>                 <span class="c-cmt"># hata: 0, +1 ya da -1</span>
+        <span class="c-var">total_error</span> += <span class="c-fn">abs</span>(<span class="c-var">error</span>)
+        <span class="c-var">weights</span> += <span class="c-var">lr</span> * <span class="c-var">error</span> * <span class="c-var">X</span>[<span class="c-var">i</span>]      <span class="c-cmt"># perceptron güncellemesi</span>
+        <span class="c-var">bias</span>    += <span class="c-var">lr</span> * <span class="c-var">error</span>
+    <span class="c-fn">print</span>(<span class="c-str">f"Epoch {<span class="c-var">epoch</span>+<span class="c-num">1</span>:02d} | w={<span class="c-var">weights</span>} | b={<span class="c-var">bias</span>:.2f} | hata={<span class="c-var">total_error</span>}"</span>)
+
+<span class="c-cmt"># ─── Son tahminler ────────────────────────────────────────────</span>
+<span class="c-fn">print</span>(<span class="c-str">"\n— Son tahminler —"</span>)
+<span class="c-kw">for</span> <span class="c-var">xi</span>, <span class="c-var">yi</span> <span class="c-kw">in</span> <span class="c-fn">zip</span>(<span class="c-var">X</span>, <span class="c-var">y</span>):
+    <span class="c-var">z</span> = <span class="c-fn">np.dot</span>(<span class="c-var">xi</span>, <span class="c-var">weights</span>) + <span class="c-var">bias</span>
+    <span class="c-fn">print</span>(<span class="c-str">f"Girdi: {<span class="c-var">xi</span>.astype(int)} | Gerçek: {<span class="c-var">yi</span>} | Tahmin: {<span class="c-fn">step</span>(<span class="c-var">z</span>)}"</span>)
+</code></pre>
+
+  <h3>8.2. Satır Satır Pedagojik Açıklama</h3>
+
+  <ol>
+    <li><strong>X matrisi:</strong> Dört örnek, her biri iki özellik. AND probleminin tüm giriş kombinasyonları.</li>
+    <li><strong>y vektörü:</strong> Gerçek etiketler. Model bunlara bakarak öğrenecek.</li>
+    <li><strong>Sıfır başlangıcı:</strong> weights = [0.0, 0.0] ve bias = 0.0. Model henüz hiçbir şey bilmiyor. Her özellik eşit (ve anlamsız) ağırlıkla başlıyor.</li>
+    <li><strong>np.dot:</strong> Ağırlıklı toplamı vektör çarpımıyla verimli hesaplar. Manuel çarpma ve toplama yazmak gerekmez.</li>
+    <li><strong>step fonksiyonu:</strong> Adım fonksiyonu. z ≥ 0 ise 1, değilse 0.</li>
+    <li><strong>error = y[i] - pred:</strong> Üç olası değer: 0 (doğru), +1 (kaçırılmış 1), -1 (hatalı 1).</li>
+    <li><strong>Güncelleme:</strong> Hata varsa ağırlıklar ve bias değişir. Hata yoksa değişmez.</li>
+    <li><strong>Epoch:</strong> Tüm veri setinin bir kez taranması. 15 epoch, 15 tam geçiş.</li>
+  </ol>
+
+  <div class="box box-exercise">
+    <div class="box-title">Sınıf İçi Görev</div>
+    <p>Öğrenciden aynı kodu OR problemi için uyarlamasını isteyin (<code>y = [0, 1, 1, 1]</code>). Ardından şu soruyu yöneltin: "Hangi epoch'ta hata sıfırlandı? OR ile AND arasındaki fark ağırlıklara nasıl yansıdı?" Bu tartışma, ağırlıkların ne anlam taşıdığını somutlaştırır.</p>
+  </div>
+</section>
+
+<!-- ─── BÖLÜM 9 ─── -->
+<section class="sec" id="b9">
+  <div class="sec-num">Bölüm 9</div>
+  <h2 class="stitle">Kırılma noktası: XOR neden çözülemez ve bu neden tarihsel olarak bu kadar önemlidir?</h2>
+
+  <p>Perceptronun gerçek değeri, başarıları kadar başarısızlıklarının da öğretici olmasından gelir. XOR problemi bu başarısızlığın en temiz ve en dramatik örneğidir.</p>
+
+  <div class="g2">
+    <div class="mini-card">
+      <h4>XOR Doğruluk Tablosu</h4>
+      <table style="margin:0;">
+        <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+        <tr><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>0</td><td>1</td><td>1</td></tr>
+        <tr><td>1</td><td>0</td><td>1</td></tr>
+        <tr><td>1</td><td>1</td><td>0</td></tr>
+      </table>
+    </div>
+    <div class="mini-card">
+      <h4>Geometrik Sorun</h4>
+      <p>Bu dört noktayı düzlemde çizin: (0,0) ve (1,1) sınıf 0; (0,1) ve (1,0) sınıf 1. Köşegen üzerindeler. Tek bir doğru bu iki grubu ayıramaz. Defalarca deneyin — imkânsız.</p>
+    </div>
+  </div>
+
+  <div class="box box-warn">
+    <div class="box-title">Yaygın Yanılgı — Öğrencilere Vurgulanmalı</div>
+    <p><strong>"Daha çok epoch verirsek çözer"</strong> — hayır. <strong>"Öğrenme hızını değiştirirsek düzelir"</strong> — hayır. <strong>"Başlangıç ağırlıklarını farklı seçersek olur"</strong> — hayır. Problem zamanla ya da parametre ayarlarıyla çözülmez çünkü problem, modelin temsil gücündedir. Perceptronun aradığı sınır, bu veri uzayında geometrik olarak yoktur.</p>
+  </div>
+
+  <h3>9.1. Minsky ve Papert: Yıkıcı Eleştiri mi, Yapıcı Katkı mı?</h3>
+
+  <div class="person-card">
+    <div class="person-avatar">📐</div>
+    <div>
+      <div class="person-name">Marvin Minsky & Seymour Papert</div>
+      <div class="person-dates">1969 · "Perceptrons: An Introduction to Computational Geometry" · MIT Press</div>
+      <p>Minsky, MIT yapay zeka laboratuvarının kurucularından. Papert ise eğitim teknolojisi ve Logo programlama dilinin babası. İkisi birlikte perceptronun sınırlarını matematiksel düzeyde inceledi.</p>
+    </div>
+  </div>
+
+  <p>Minsky ve Papert'ın 1969 kitabı, perceptron tartışmasının dönüm noktasıdır. Popüler anlatıda bu kitap bazen abartılmış biçimde "sinir ağlarını bitirdi" şeklinde sunulur. Daha doğru bir yorum şudur: <strong>kitap, belirli bir model sınıfının matematiksel sınırlarını keskinleştirdi</strong>. XOR'un tek katmanlı perceptronla çözülemeyeceğini formalize etti. Bu, kötüleyici bir eleştiri değil, alanı dürüstleştiren bir katkıdır.</p>
+
+  <p>Evet, kısa vadede bu eleştiriler araştırma fonlarını daralttı. "AI kışı" dönemleriyle örtüşen bir ivme kaybı yaşandı. Ama uzun vadeli sonuç yapıcıydı: araştırmacılar tek katmanlı doğrusal ayırıcıların ötesine geçmek zorunda kaldı. Bu baskı, sonraki on yıllarda çok katmanlı ağları, farklı aktivasyon fonksiyonlarını ve nihayet geri yayılım algoritmasını doğurdu.</p>
+
+  <div class="box box-insight">
+    <div class="box-title">Tarihsel Perspektif</div>
+    <p>Perceptronun XOR sorununu çözememesi, derin öğrenmenin önünü kapatan değil; derin öğrenmenin neden gerekli olduğunu gösteren bir kırılma noktasıdır. Minsky ve Papert'ın kitabı okunmadan anlaşılmaz, ama abartılmadan da değerlendirilmemelidir.</p>
+  </div>
+
+  <h3>9.2. Çözüm: Gizli Katman ve Temsil Dönüşümü</h3>
+
+  <p>XOR sorununu çözmek için ne gerekir? İki şey: <strong>(1) birden fazla nöron</strong> ve <strong>(2) doğrusal olmayan aktivasyon</strong>. Bu ikisi birlikte girdi uzayını yeni bir temsil uzayına dönüştürür — ve dönüştürülmüş uzayda veriler lineer ayrılabilir hale gelir.</p>
+
+  <p>Gizli katman, bir bakıma perceptronun göremediği soyut özellikleri üretir. "XOR için her iki girdi de 1 mi?" ve "girişlerin en az biri 1 mi?" gibi ara temsilleri öğrenebilir; sonra çıktı katmanı bu ara temsilleri birleştirir. Bu fikir, 9. haftanın tam merkezinde yer alır.</p>
+
+  <div class="box box-teach">
+    <div class="box-title">Bu Haftanın Kapanış Cümlesi</div>
+    <p><strong>"Perceptron tek başına hedef değildir; çok katmanlı düşüncenin neden zorunlu olduğunu gösteren ilk merdivendir."</strong></p>
+    <p>Bu cümle dersin son beş dakikasında tahtaya yazılabilir. Öğrenci hem perceptronun değerini hem de neden yetmediğini aynı anda aklında tutarak dersten ayrılır.</p>
+  </div>
+
+</section>
+
+<!-- ─── BÖLÜM 10 ─── -->
+<section class="sec" id="b10">
+  <div class="sec-num">Bölüm 10</div>
+  <h2 class="stitle">8. hafta için öğretim önerisi: Bu bölüm sınıfta nasıl işlenmeli?</h2>
+
+  <p>Bu dersi görüntü işleme perspektifiyle verdiğiniz için 8. haftanın salt yapay zeka tarihi gibi akması doğru olmaz. Aynı şekilde yalnızca denklem ve kod yığınına indirgemek de eksik kalır. En verimli akış, tarihsel motivasyonu, matematiksel sadeliği ve görsel sezgiyi birlikte işletmektir.</p>
+
+  <div class="g2">
+    <div class="mini-card">
+      <h4>1. Ders (45 dk) — Motivasyon ve Tarih</h4>
+      <p>Kural tabanlı sistemlerin sınırı → McCulloch–Pitts → Hebb → Rosenblatt. Amaç: "Neden perceptron?" sorusunun öğrencinin zihninde oluşması. Görüntü örnekleriyle açın, "bu nesneyi elle sınıflandırabilir misiniz?" sorusuyla başlayın.</p>
+    </div>
+    <div class="mini-card">
+      <h4>2. Ders (45 dk) — Matematik ve Geometri</h4>
+      <p>Ağırlıklı toplam, bias, adım fonksiyonu, karar sınırı, lineer ayrılabilirlik. Amaç: perceptronun ne yaptığını formül ve geometri üzerinden göstermek. Tahta üzerinde elle çizin.</p>
+    </div>
+    <div class="mini-card">
+      <h4>3. Ders (45 dk) — Kod, XOR ve Tartışma</h4>
+      <p>Python ile AND örneği, eğitim döngüsü, çıktıları tartışmak. XOR deneyi: "daha fazla epoch versek ne olur?" Ardından 9. haftanın motivasyonu: çok katmanlı ağ neden gerekir?</p>
+    </div>
+    <div class="mini-card">
+      <h4>Kapanış Mesajı</h4>
+      <p>"Tek nöron güçlü bir başlangıçtır — ama gerçek dünya için daha derin temsil katmanlarına ihtiyacımız var." Bu cümle, öğrencinin haftalarca hatırlayabileceği türden.</p>
+    </div>
+  </div>
+
+  <h3>Öğrenciye Yöneltilebilecek Kavramsal Sorular</h3>
+
+  <div class="box box-exercise">
+    <div class="box-title">Düşünme Soruları</div>
+    <ul>
+      <li>Bias olmazsa karar sınırı geometrik olarak nasıl kısıtlanır? Bunun pratik sonucu ne olur?</li>
+      <li>Perceptronun "doğrusal ayırıcı" olması tam olarak ne anlama gelir? Hangi problemler çözülebilir, hangileri çözülemez?</li>
+      <li>Veri doğrusal ayrılabilir değilse daha fazla epoch neden tek başına çözüm değildir? Bu durum ağırlıkları nasıl etkiler?</li>
+      <li>Hebb kuralı ile perceptron güncelleme kuralı arasında ne tür bir benzerlik var? Fark nerede başlar?</li>
+      <li>Konvolüsyon katmanında da bias var. Orada bias'ın rolü nedir? Perceptrondakiyle benzer mi?</li>
+    </ul>
+  </div>
+
+  <div class="box box-teach">
+    <div class="box-title">Önerilen Kısa Ödev</div>
+    <p>Öğrencilerden AND ve OR için perceptron kodu yazmaları, ardından XOR için aynı modeli denemeleri ve "neden başarısız oldu?" sorusuna geometrik yorum içeren kısa bir rapor (1–2 sayfa) yazmaları istenebilir. Epoch sayısını artırmanın neden işe yaramadığını formüle dayanarak açıklamaları gerektiği belirtilmeli.</p>
+  </div>
+
+</section>
+
+<!-- ─── KAYNAKLAR ─── -->
+<section class="sec" id="refs">
+  <div class="sec-num">Kaynaklar ve Atıflar</div>
+  <h2 class="stitle">Kaynaklar</h2>
+
+  <p>Bu bölümde kullanılan tarihsel çerçeve, matematiksel sunuş ve pedagojik yaklaşım için aşağıdaki kaynaklara başvurulmuştur.</p>
+
+  <ul class="ref-list">
+    <li>
+      <span class="ref-num">[1]</span>
+      <span>McCulloch, W. S., &amp; Pitts, W. (1943). A Logical Calculus of the Ideas Immanent in Nervous Activity. <em>Bulletin of Mathematical Biophysics</em>, 5(4), 115–133. <a href="https://doi.org/10.1007/BF02478259" target="_blank" rel="noopener">DOI</a></span>
+    </li>
+    <li>
+      <span class="ref-num">[2]</span>
+      <span>Hebb, D. O. (1949). <em>The Organization of Behavior: A Neuropsychological Theory.</em> Wiley. <a href="https://www.mpi.nl/publications/item2346268/organization-behavior-neuropsychological-theory" target="_blank" rel="noopener">Kayıt</a></span>
+    </li>
+    <li>
+      <span class="ref-num">[3]</span>
+      <span>Rosenblatt, F. (1958). The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain. <em>Psychological Review</em>, 65(6), 386–408. <a href="https://pubmed.ncbi.nlm.nih.gov/13602029/" target="_blank" rel="noopener">PubMed</a></span>
+    </li>
+    <li>
+      <span class="ref-num">[4]</span>
+      <span>Minsky, M., &amp; Papert, S. A. (1969; genişletilmiş baskı 1987). <em>Perceptrons: An Introduction to Computational Geometry.</em> MIT Press. <a href="https://mitpress.mit.edu/9780262631112/perceptrons/" target="_blank" rel="noopener">MIT Press</a></span>
+    </li>
+    <li>
+      <span class="ref-num">[5]</span>
+      <span>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). <em>Deep Learning.</em> MIT Press. <a href="https://www.deeplearningbook.org/" target="_blank" rel="noopener">deeplearningbook.org</a></span>
+    </li>
+    <li>
+      <span class="ref-num">[6]</span>
+      <span>Stanford CS231n — Convolutional Neural Networks for Visual Recognition. <a href="https://cs231n.github.io/" target="_blank" rel="noopener">cs231n.github.io</a></span>
+    </li>
+    <li>
+      <span class="ref-num">[7]</span>
+      <span>MIT OpenCourseWare — Introduction to Neural Computation (9.40). <a href="https://ocw.mit.edu/courses/9-40-introduction-to-neural-computation-spring-2018/" target="_blank" rel="noopener">MIT OCW</a></span>
+    </li>
+  </ul>
+</section>
+
+</main>
+</div>
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const p = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('progress').style.width = p + '%';
+});
+
+// Intersection Observer for fade-in
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.07 });
+document.querySelectorAll('.sec').forEach(s => observer.observe(s));
+
+// TOC active state
+const secEls = document.querySelectorAll('section.sec[id]');
+const tocLinks = document.querySelectorAll('.toc a');
+const onScroll = () => {
+  let current = '';
+  secEls.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  tocLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+};
+window.addEventListener('scroll', onScroll, { passive: true });
+</script>
+</body>
+</html>
