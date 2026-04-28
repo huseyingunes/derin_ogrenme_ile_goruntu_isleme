@@ -1,0 +1,2561 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>9. Hafta | Çok Katmanlı Ağlardan Yapay Sinir Ağlarına</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --paper:#ffffff;
+      --ink:#1f2937;
+      --muted:#5b6577;
+      --line:#d9e2ec;
+      --blue:#1d4ed8;
+      --blue-2:#3b82f6;
+      --blue-soft:#dbeafe;
+      --violet:#7c3aed;
+      --violet-soft:#ede9fe;
+      --teal:#0f766e;
+      --teal-soft:#ccfbf1;
+      --amber:#92400e;
+      --amber-soft:#fef3c7;
+      --rose:#be123c;
+      --rose-soft:#ffe4e6;
+      --green:#166534;
+      --green-soft:#dcfce7;
+      --orange:#c2410c;
+      --orange-soft:#ffedd5;
+      --code:#0f172a;
+      --code-ink:#e2e8f0;
+      --shadow:0 14px 38px rgba(15,23,42,.08);
+      --radius:22px;
+      --radius-sm:16px;
+      --maxw:1240px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(59,130,246,.10), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(124,58,237,.10), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(15,118,110,.06), transparent 24%),
+        var(--bg);
+      line-height:1.85;
+    }
+
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:28px}
+    .hero{
+      position:relative;
+      overflow:hidden;
+      padding:56px 44px;
+      border-radius:28px;
+      background:linear-gradient(135deg, #0a1f5c 0%, #1d4ed8 38%, #7c3aed 72%, #0f766e 100%);
+      color:#fff;
+      box-shadow:var(--shadow);
+    }
+    .hero:before,.hero:after{
+      content:"";
+      position:absolute;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      filter:blur(.4px);
+    }
+    .hero:before{width:320px;height:320px;right:-80px;top:-60px}
+    .hero:after{width:260px;height:260px;left:-50px;bottom:-60px}
+    .hero .kicker{
+      display:inline-block;
+      margin-bottom:14px;
+      padding:8px 14px;
+      border:1px solid rgba(255,255,255,.24);
+      background:rgba(255,255,255,.10);
+      border-radius:999px;
+      font-size:.92rem;
+      letter-spacing:.01em;
+    }
+    .hero h1{
+      margin:0 0 10px;
+      font-size:clamp(2.1rem,4.2vw,3.9rem);
+      line-height:1.08;
+      letter-spacing:-.03em;
+      font-weight:800;
+    }
+    .hero h2{
+      margin:0;
+      max-width:960px;
+      font-weight:500;
+      font-size:clamp(1.05rem,1.8vw,1.32rem);
+      color:#e9efff;
+    }
+    .hero-meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:22px;
+    }
+    .pill{
+      padding:9px 13px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:.9rem;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:320px minmax(0,1fr);
+      gap:26px;
+      margin-top:26px;
+      align-items:start;
+    }
+
+    .toc{
+      position:sticky;
+      top:18px;
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
+    }
+    .toc h3{
+      margin:0 0 14px;
+      color:var(--blue);
+      font-size:1.08rem;
+    }
+    .toc ol{margin:0;padding-left:18px}
+    .toc li{margin:7px 0;font-size:.95rem}
+    .toc a{color:var(--ink);text-decoration:none;}
+    .toc a:hover{color:var(--blue);text-decoration:underline}
+    .toc .toc-sub{
+      padding-left:14px;
+      margin:4px 0 4px 0;
+      list-style:none;
+    }
+    .toc .toc-sub li{font-size:.88rem;color:var(--muted)}
+    .toc .toc-sub a{color:var(--muted)}
+    .toc .toc-sub a:hover{color:var(--blue)}
+
+    .content{
+      display:flex;
+      flex-direction:column;
+      gap:26px;
+    }
+
+    .card{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:36px 36px 32px;
+    }
+
+    h2.section-title{
+      margin:0 0 18px;
+      font-family:"Source Serif 4", Georgia, serif;
+      font-size:clamp(1.75rem,2.6vw,2.3rem);
+      line-height:1.18;
+      letter-spacing:-.02em;
+      color:#12325f;
+    }
+
+    h3{
+      margin:28px 0 10px;
+      font-size:1.2rem;
+      line-height:1.3;
+      color:var(--violet);
+    }
+
+    h4{
+      margin:18px 0 8px;
+      color:#17458f;
+      font-size:1.02rem;
+    }
+
+    h5{
+      margin:14px 0 6px;
+      color:var(--teal);
+      font-size:.98rem;
+      font-weight:700;
+    }
+
+    p{margin:0 0 14px;font-size:1.04rem;}
+    .lead{font-size:1.14rem;color:#354153;}
+    .serif{font-family:"Source Serif 4", Georgia, serif;font-size:1.08rem;}
+
+    .highlight,
+    .insight,
+    .warning,
+    .historical,
+    .exercise,
+    .teaching,
+    .success,
+    .pytorch{
+      border-radius:18px;
+      padding:16px 20px;
+      margin:18px 0;
+      border:1px solid transparent;
+    }
+    .highlight{background:linear-gradient(90deg,var(--blue-soft),#eef6ff);border-color:#bfdbfe;}
+    .insight{background:linear-gradient(90deg,var(--teal-soft),#effefb);border-color:#99f6e4;}
+    .warning{background:linear-gradient(90deg,var(--amber-soft),#fff8df);border-color:#fcd34d;}
+    .historical{background:linear-gradient(90deg,var(--violet-soft),#f5f0ff);border-color:#d8b4fe;}
+    .exercise{background:linear-gradient(90deg,var(--rose-soft),#fff1f3);border-color:#fda4af;}
+    .teaching{background:#f8fafc;border-color:#cbd5e1;}
+    .success{background:linear-gradient(90deg,var(--green-soft),#f0fdf4);border-color:#86efac;}
+    .pytorch{background:linear-gradient(90deg,#fff7ed,#fef3c7);border-color:#fdba74;border-left:4px solid #ea580c;}
+
+    .formula{
+      margin:14px 0;
+      padding:16px 20px;
+      border-radius:16px;
+      background:#fbfdff;
+      border:1px dashed #bfd0e4;
+      font-family:"Source Serif 4", Georgia, serif;
+      overflow:auto;
+      font-size:1.08rem;
+    }
+
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:18px 0;}
+    .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin:18px 0;}
+    .mini{
+      background:#fbfdff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+    }
+    .mini h4{margin-top:0}
+    .mini.blue{background:var(--blue-soft);border-color:#93c5fd;}
+    .mini.violet{background:var(--violet-soft);border-color:#c4b5fd;}
+    .mini.teal{background:var(--teal-soft);border-color:#5eead4;}
+    .mini.amber{background:var(--amber-soft);border-color:#fcd34d;}
+    .mini.green{background:var(--green-soft);border-color:#86efac;}
+    .mini.rose{background:var(--rose-soft);border-color:#fda4af;}
+
+    .placeholder{
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;color:#334155;font-weight:700;
+      padding:18px;border-radius:20px;
+      border:2px dashed #94a3b8;
+      background:linear-gradient(135deg,rgba(219,234,254,.6),rgba(237,233,254,.55));
+      min-height:180px;margin:20px 0 10px;
+    }
+    .placeholder.tall{min-height:320px}
+    .placeholder.medium{min-height:240px}
+    .caption{color:var(--muted);font-size:.95rem;font-style:italic;margin-bottom:10px;}
+
+    .timeline{
+      position:relative;margin:18px 0 6px;
+      padding-left:18px;border-left:4px solid var(--blue);
+    }
+    .timeline-item{margin:0 0 20px}
+    .timeline-item strong{color:var(--blue)}
+
+    ul,ol{margin-top:0}
+    li{margin-bottom:8px}
+
+    blockquote{
+      margin:18px 0;padding:16px 20px;
+      border-left:4px solid var(--violet);
+      background:#f8fafc;border-radius:14px;
+      color:#334155;font-style:italic;
+    }
+
+    pre{
+      background:var(--code);color:var(--code-ink);
+      padding:22px;border-radius:18px;overflow:auto;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+      line-height:1.62;font-size:.93rem;margin:14px 0 18px;
+    }
+    code{font-family:Consolas,"Courier New",monospace}
+    p code, li code{
+      background:#f1f5f9;color:#1e40af;
+      padding:2px 6px;border-radius:6px;font-size:.92em;
+    }
+
+    .code-label{
+      display:inline-block;
+      background:#1e293b;color:#94a3b8;
+      font-size:.8rem;padding:4px 12px;
+      border-radius:8px 8px 0 0;
+      margin-bottom:-2px;font-family:Consolas,monospace;
+      letter-spacing:.04em;
+    }
+
+    .result-box{
+      background:#0d2137;color:#7dd3fc;
+      padding:16px 22px;border-radius:14px;
+      font-family:Consolas,monospace;font-size:.9rem;
+      margin:0 0 16px;border:1px solid #1e3a5f;
+    }
+    .result-box .label{color:#64748b;font-size:.8rem;margin-bottom:6px;}
+
+    .table-wrap{overflow-x:auto;margin:16px 0;}
+    table{width:100%;border-collapse:collapse;font-size:.97rem;}
+    th{background:#1d4ed8;color:#fff;padding:10px 14px;text-align:left;font-weight:600;}
+    td{padding:10px 14px;border-bottom:1px solid var(--line);}
+    tr:nth-child(even) td{background:#f8faff;}
+    tr:hover td{background:#f0f7ff;}
+
+    .tag{
+      display:inline-block;
+      padding:3px 10px;border-radius:999px;
+      font-size:.82rem;font-weight:600;
+      margin:2px 3px 2px 0;
+    }
+    .tag.blue{background:var(--blue-soft);color:#1d4ed8;}
+    .tag.violet{background:var(--violet-soft);color:#6d28d9;}
+    .tag.teal{background:var(--teal-soft);color:#0f766e;}
+    .tag.amber{background:var(--amber-soft);color:#92400e;}
+    .tag.rose{background:var(--rose-soft);color:#be123c;}
+    .tag.green{background:var(--green-soft);color:#166534;}
+
+    .nn-diagram{
+      background:#0f172a;
+      border-radius:20px;
+      padding:28px;
+      margin:20px 0;
+      overflow-x:auto;
+    }
+
+    .step-flow{
+      display:flex;align-items:center;gap:0;
+      flex-wrap:wrap;margin:20px 0;
+    }
+    .step-box{
+      background:var(--blue-soft);
+      border:1px solid #93c5fd;
+      border-radius:14px;padding:12px 18px;
+      font-size:.95rem;font-weight:600;color:#1d4ed8;
+      white-space:nowrap;
+    }
+    .step-arrow{
+      font-size:1.4rem;color:#93c5fd;
+      padding:0 8px;
+    }
+
+    .kv-row{
+      display:flex;gap:12px;
+      padding:10px 0;border-bottom:1px solid var(--line);
+      align-items:flex-start;
+    }
+    .kv-key{
+      min-width:180px;font-weight:700;
+      color:#17458f;font-size:.97rem;
+    }
+    .kv-val{font-size:.97rem;color:var(--ink);}
+
+    .arch-card{
+      border-radius:18px;padding:20px;
+      border:2px solid;margin-bottom:0;
+    }
+    .arch-card h4{margin:0 0 8px;}
+    .arch-card p{margin:0;font-size:.95rem;}
+
+    .footnotes li,.resources li{margin-bottom:12px}
+    .footnotes a,.resources a{color:var(--blue);text-decoration:none;word-break:break-word}
+    .footnotes a:hover,.resources a:hover{text-decoration:underline}
+
+    .fade{
+      opacity:0;transform:translateY(18px);
+      transition:opacity .55s ease,transform .55s ease;
+    }
+    .fade.visible{opacity:1;transform:translateY(0);}
+
+    .footer{
+      text-align:center;padding:30px 12px 44px;
+      color:var(--muted);font-size:.96rem;
+    }
+    .backtop{
+      display:inline-block;margin-top:10px;
+      color:var(--blue);text-decoration:none;font-weight:700;
+    }
+
+    @media(max-width:1020px){
+      .layout{grid-template-columns:1fr}
+      .toc{position:relative;top:auto}
+      .grid2,.grid3,.grid4{grid-template-columns:1fr}
+      .hero{padding:42px 28px}
+      .card{padding:28px 24px 24px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap" id="top">
+
+  <!-- ═══ HERO ═══ -->
+  <header class="hero fade">
+    <div class="kicker">Derin Öğrenme ile Görüntü İşleme • 9. Hafta Bölümü</div>
+    <h1>Çok Katmanlı Ağlardan Yapay Sinir Ağlarına</h1>
+    <h2>
+      Tek nöronun sınırından çıkış, XOR'un çözümü, ileri besleme mimarileri, geri yayılım matematiği,
+      aktivasyon fonksiyonları, PyTorch ile gerçek hayat uygulamaları, eğitim terminolojisi ve
+      tarihin dönüm noktası hâline gelen ağ mimarileri.
+    </h2>
+    <div class="hero-meta">
+      <span class="pill">MIT tarzı anlatı + ders kitabı yoğunluğu</span>
+      <span class="pill">PyTorch kod örnekleri ve gerçek veri setleri</span>
+      <span class="pill">Eğitim terimleri tam sözlük</span>
+      <span class="pill">Tarihsel ağ mimarileri</span>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ═══ TOC ═══ -->
+    <aside class="toc fade">
+      <h3>📚 İçindekiler</h3>
+      <ol>
+        <li><a href="#bolum1">Tek nöronun sınırı ve çıkış yolu</a></li>
+        <li><a href="#bolum2">Multi-Layer Perceptron</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum2-1">Katmanlar ve mimari</a></li>
+            <li><a href="#bolum2-2">Aktivasyon fonksiyonları</a></li>
+            <li><a href="#bolum2-3">Evrensel yaklaşım teoremi</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum3">İleri besleme ve hesaplama akışı</a></li>
+        <li><a href="#bolum4">Geri yayılım algoritması</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum4-1">Gradyan ve zincir kuralı</a></li>
+            <li><a href="#bolum4-2">Hesaplama grafı</a></li>
+            <li><a href="#bolum4-3">Ağırlık güncellemesi</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum5">Kayıp fonksiyonları</a></li>
+        <li><a href="#bolum6">Optimizasyon algoritmaları</a></li>
+        <li><a href="#bolum7">Eğitim terminolojisi tam sözlük</a></li>
+        <li><a href="#bolum8">PyTorch ile YSA oluşturmak</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum8-1">Temel yapı</a></li>
+            <li><a href="#bolum8-2">Eğitim döngüsü</a></li>
+            <li><a href="#bolum8-3">Değerlendirme</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum9">Gerçek hayat problemi 1: Diyabet</a></li>
+        <li><a href="#bolum10">Gerçek hayat problemi 2: Müşteri churn</a></li>
+        <li><a href="#bolum11">Gerçek hayat problemi 3: Görüntü sınıflandırma</a></li>
+        <li><a href="#bolum12">Aşırı öğrenme ve düzenlileştirme</a></li>
+        <li><a href="#bolum13">YSA mimarileri tarihi ve türleri</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum13-1">MLP ve ilk eğitim çağı</a></li>
+            <li><a href="#bolum13-2">CNN — Konvolüsyonel ağlar</a></li>
+            <li><a href="#bolum13-3">RNN / LSTM</a></li>
+            <li><a href="#bolum13-4">Autoencoder</a></li>
+            <li><a href="#bolum13-5">GAN</a></li>
+            <li><a href="#bolum13-6">Transformer</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum14">Öğretim notları</a></li>
+        <li><a href="#atiflar">Atıflar</a></li>
+        <li><a href="#kaynaklar">Kaynaklar</a></li>
+      </ol>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="content">
+
+      <!-- ─── BÖLÜM 1 ─── -->
+      <section class="card fade" id="bolum1">
+        <h2 class="section-title">1. Tek nöronun sınırını anlamak: XOR problemi ve bir alanın krizi</h2>
+
+        <p class="lead serif">
+          Bir önceki haftada perceptronun mantığını, öğrenme kuralını ve geometrik yorumunu ayrıntılı biçimde ele aldık.
+          Perceptron, veriden öğrenebilen ilk sistematik modeldi. Fakat Minsky ve Papert, 1969'da yayımladıkları
+          <em>Perceptrons</em> kitabında bu modelin temel bir kısıtını çarpıcı biçimde ortaya koydu:
+          tek katmanlı bir perceptron doğrusal olmayan problemleri çözemez.
+        </p>
+
+        <p>
+          Bu kısıtı somutlaştırmak için en sık kullanılan örnek <strong>XOR</strong> problemidir.
+          XOR (exclusive-or, dışlayan ya da) mantık kapısı, iki girişten tam olarak biri 1 olduğunda 1 üretir,
+          her ikisi aynı olduğunda ise 0 üretir.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>XOR doğruluk tablosu</h4>
+            <table>
+              <thead><tr><th>x₁</th><th>x₂</th><th>y</th></tr></thead>
+              <tbody>
+                <tr><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>0</td><td>1</td><td>1</td></tr>
+                <tr><td>1</td><td>0</td><td>1</td></tr>
+                <tr><td>1</td><td>1</td><td>0</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mini">
+            <h4>Geometrik açıklama</h4>
+            <p>Düzlemde bu dört noktayı çizdiğinizde, pozitif örnekler (1,0) ve (0,1), negatif örnekler ise (0,0) ve (1,1)'dir.
+            Bu iki grubu tek bir düz çizgiyle ayırmak <strong>imkânsızdır.</strong> Perceptron bu yüzden XOR'u çözemez.</p>
+          </div>
+        </div>
+
+        <div class="placeholder tall"><img src="resim/9_1_xor.png" width="650"></div>
+        <div class="caption">XOR noktalarının 2B düzlemde gösterimi: (0,0) ve (1,1) mavi daireler, (0,1) ve (1,0) kırmızı kareler. Hiçbir tek doğru bu iki grubu ayıramıyor.</div>
+
+        <h3>1.1. Problem doğrusal olmayan bir karar sınırı gerektiriyor</h3>
+        <p>
+          AND ve OR problemleri doğrusal olarak ayrılabilir olduğundan perceptron onları çözebilir.
+          XOR ise iki doğrusal bölge gerektiriyor: bir tarafta (0,0) ve (1,1), diğer tarafta (0,1) ve (1,0).
+          Başka bir deyişle düzlemdeki ayrım eğri ya da parçalı olmalı.
+          Tek bir perceptron, tek bir hiperdüzlem koyabildiğinden bu iş için temelden yetersiz kalır.
+        </p>
+
+        <div class="warning">
+          <strong>Neden bu kadar önemli?</strong><br>
+          Gerçek dünya problemlerinin büyük çoğunluğu doğrusal olarak ayrılabilir değildir.
+          Bir görüntüdeki nesneyi tanımak, hastalık teşhisi koymak, sesi metne dönüştürmek —
+          bunların hepsi son derece karmaşık ve doğrusal olmayan karar sınırları gerektirir.
+          Perceptron bütün bu problemler için yetersizdir. Minsky'nin kitabı bu gerçeği ispatladı ve
+          "yapay zekâ kışı" denen 1970'lerin araştırma duraklama dönemini tetikledi.
+        </div>
+
+        <h3>1.2. Çözüm nerede saklıydı?</h3>
+        <p>
+          Cevap aslında hiç de gizemli değildi: birden fazla perceptronu üst üste ve yan yana koyun.
+          Bir perceptron katmanının çıktısını başka bir perceptron katmanının girdisi yapın.
+          Bu basit fikir, hem XOR problemini çözer hem de çok daha genel bir öğrenme çerçevesi açar.
+        </p>
+
+        <p>
+          XOR, iki perceptronun ara katman oluşturduğu bir ağla çözülebilir.
+          Birinci gizli nöron "en az biri 1" mantığını öğrenebilir (OR benzeri),
+          ikinci gizli nöron "her ikisi de 1" mantığını engelleyici biçimde öğrenebilir (NAND benzeri).
+          Bu iki gizli nöronun çıktıları birleştiğinde XOR elde edilir.
+        </p>
+
+        <div class="historical">
+          <strong>Tarihin ironisi:</strong> Çözüm 1980'lerin ortasına kadar yaygın ilgi görmedi.
+          Rumelhart, Hinton ve Williams'ın 1986'da geri yayılım algoritmasını yeniden keşfetmesi ve
+          yayımlaması, çok katmanlı ağları uygulanabilir hâle getirdi ve araştırmacıları yeniden
+          bu alana çekti. Teknik olarak cevap önde çıkmıştı; onu işe yarar hâle getiren yöntem biraz sonra geldi.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 2 ─── -->
+      <section class="card fade" id="bolum2">
+        <h2 class="section-title">2. Multi-Layer Perceptron: Katmanlar, nöronlar ve mimari</h2>
+
+        <p class="lead serif">
+          Multi-Layer Perceptron (MLP), tek katmanlı perceptronun doğal uzantısıdır.
+          Artık tek bir ağırlıklı toplam ve bir eşik değil; birden çok nörondan oluşan katmanlar,
+          katmanlar arasındaki tam bağlantılar ve her nöron için bir aktivasyon fonksiyonu vardır.
+        </p>
+
+        <p>
+          MLP'nin mimarisi üç temel bölümden oluşur: girdi katmanı, bir ya da birden fazla gizli katman ve çıktı katmanı.
+          Her katmandaki her nöron, bir önceki katmandaki her nöronla bağlıdır — bu nedenle bu tür katmanlara
+          <strong>tam bağlı (fully connected)</strong> ya da <strong>lineer katman</strong> da denir.
+        </p>
+
+        <div id="bolum2-1"></div>
+        <h3>2.1. Katmanlar ve mimari</h3>
+
+        <div class="grid3">
+          <div class="mini blue">
+            <h4>🔵 Girdi Katmanı</h4>
+            <p>Ham veriyi ağa aktaran katmandır. Nöron sayısı özellik sayısına eşittir.
+            Herhangi bir hesaplama yapmaz; yalnızca veriyi iletir.</p>
+          </div>
+          <div class="mini violet">
+            <h4>🟣 Gizli Katman(lar)</h4>
+            <p>Temsil öğrenmenin gerçekleştiği yerdir. Her nöron, önceki katmandan ağırlıklı toplam alır,
+            bias ekler ve bir aktivasyon fonksiyonu uygular.</p>
+          </div>
+          <div class="mini teal">
+            <h4>🟢 Çıktı Katmanı</h4>
+            <p>Tahmin üretir. İkili sınıflandırma için 1 nöron + sigmoid, çok sınıflı için C nöron + softmax,
+            regresyon için 1 nöron (aktivasyonsuz) kullanılır.</p>
+          </div>
+        </div>
+
+        <div class="placeholder tall">GÖRSEL ALANI<br>Klasik MLP mimarisi şeması: 4 girdi nöronu → 6 gizli nöron → 4 gizli nöron → 2 çıktı nöronu. Her bağlantıda bir ağırlık ok üstünde gösterilmeli. Nöron içinde "∑ + aktivasyon" simgeleri yer almalı.</div>
+        <div class="caption">Öneri: Renkli oklar ile geri ve ileri yön ayrımının gösterildiği şema.</div>
+
+        <h4>Her katmandaki hesaplama</h4>
+        <p>
+          Bir katmandaki her nöron şu hesabı yapar:
+        </p>
+        <div class="formula">
+          z<sub>j</sub> = Σᵢ wᵢⱼ · xᵢ + bⱼ
+        </div>
+        <div class="formula">
+          a<sub>j</sub> = f(z<sub>j</sub>)
+        </div>
+        <p>
+          Burada <em>wᵢⱼ</em> bir önceki katmanın <em>i.</em> nöronundan bu katmanın <em>j.</em> nöronuna gelen ağırlık,
+          <em>bⱼ</em> bias, <em>z</em> net girdi ve <em>f</em> aktivasyon fonksiyonudur.
+          Elde edilen <em>aⱼ</em> aktivasyonu bir sonraki katmana girdi olur.
+        </p>
+
+        <h4>Matris formunda ifade</h4>
+        <p>Tek nöron bazlı hesap yerine tüm katmanı vektörel biçimde yazmak hem daha verimlidir hem de PyTorch'un kullandığı gösterime doğrudan karşılık gelir:</p>
+        <div class="formula">
+          <strong>z</strong> = <strong>W · x</strong> + <strong>b</strong><br>
+          <strong>a</strong> = f(<strong>z</strong>)
+        </div>
+        <p>
+          Burada <strong>W</strong> ağırlık matrisi (şekil: çıktı_boyutu × girdi_boyutu), <strong>x</strong> girdi vektörü,
+          <strong>b</strong> bias vektörüdür. PyTorch'taki <code>nn.Linear</code> tam olarak bu matris çarpımını yapar.
+        </p>
+
+        <div id="bolum2-2"></div>
+        <h3>2.2. Aktivasyon fonksiyonları: Doğrusal olmayan ifade gücü</h3>
+
+        <p>
+          Aktivasyon fonksiyonları, MLP'yi perceptrondan kavramsal olarak ayıran en önemli unsurdur.
+          Aktivasyon olmadan kaç katman eklersek ekleyelim sonuç yine doğrusal bir fonksiyon olur
+          — çünkü matris çarpımlarının bileşimi yine bir matris çarpımıdır.
+          Aktivasyon fonksiyonu, bu doğrusallığı kırarak ağa gerçek anlamda karmaşık fonksiyonlar öğrenme kapasitesi kazandırır.
+        </p>
+
+        <div class="warning">
+          <strong>Kritik nokta:</strong> Aktivasyon fonksiyonu olmayan derin bir ağ, matematiksel olarak
+          tek bir lineer katmanla eşdeğerdir. Kaç gizli katman koyarsanız koyun, doğrusal olmayan bir
+          karar sınırı öğrenemezsiniz.
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Fonksiyon</th><th>Formül</th><th>Aralık</th><th>Avantaj</th><th>Dezavantaj</th><th>Ne zaman kullanılır</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sigmoid</strong></td>
+                <td>σ(x) = 1 / (1 + e⁻ˣ)</td>
+                <td>(0, 1)</td>
+                <td>Olasılık yorumu kolay; çıktı (0,1) arası</td>
+                <td>Derin ağlarda vanishing gradient sorunu; hesaplama maliyeti</td>
+                <td>İkili sınıflandırma çıkışı</td>
+              </tr>
+              <tr>
+                <td><strong>Tanh</strong></td>
+                <td>tanh(x) = (eˣ - e⁻ˣ) / (eˣ + e⁻ˣ)</td>
+                <td>(-1, 1)</td>
+                <td>Ortalama sıfıra yakın; sigmoid'den güçlü gradyan</td>
+                <td>Yine de vanishing gradient riski var</td>
+                <td>Gizli katmanlar (özellikle RNN)</td>
+              </tr>
+              <tr>
+                <td><strong>ReLU</strong></td>
+                <td>max(0, x)</td>
+                <td>[0, +∞)</td>
+                <td>Çok hızlı; derin ağlarda iyi gradyan akışı; hesaplama basit</td>
+                <td>Dying ReLU: x&lt;0 bölgede gradyan sıfır, nöron ölüyor</td>
+                <td>Derin ağların gizli katmanları (varsayılan tercih)</td>
+              </tr>
+              <tr>
+                <td><strong>Leaky ReLU</strong></td>
+                <td>max(0.01x, x)</td>
+                <td>(-∞, +∞)</td>
+                <td>Ölü nöron sorununu azaltır</td>
+                <td>Ek hiperparametre (negatif eğim)</td>
+                <td>ReLU'nun başarısız olduğu senaryolar</td>
+              </tr>
+              <tr>
+                <td><strong>ELU</strong></td>
+                <td>x ≥ 0: x; x &lt; 0: α(eˣ-1)</td>
+                <td>(-α, +∞)</td>
+                <td>Negatif değerler aktive; daha iyi eğitim kararlılığı</td>
+                <td>Üstel hesaplama</td>
+                <td>Derin ağlar, daha iyi yakınsama istendiğinde</td>
+              </tr>
+              <tr>
+                <td><strong>Softmax</strong></td>
+                <td>eˣⁱ / Σⱼ eˣʲ</td>
+                <td>(0, 1), toplam = 1</td>
+                <td>Çok sınıflı olasılık dağılımı üretir</td>
+                <td>Sayısal kararsızlık riski (büyük değerlerde)</td>
+                <td>Çok sınıflı sınıflandırma çıkışı</td>
+              </tr>
+              <tr>
+                <td><strong>GELU</strong></td>
+                <td>x · Φ(x)</td>
+                <td>(-∞, +∞)</td>
+                <td>Stokastik düzgünlük; Transformer'larda başarılı</td>
+                <td>Hesaplama maliyeti</td>
+                <td>Transformer, BERT, GPT</td>
+              </tr>
+              <tr>
+                <td><strong>Swish</strong></td>
+                <td>x · σ(x)</td>
+                <td>(-∞, +∞)</td>
+                <td>Düzgün türev; derin ağlarda ReLU'dan iyi</td>
+                <td>Daha fazla hesaplama</td>
+                <td>EfficientNet ve benzer modern mimariler</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Sekiz aktivasyon fonksiyonunun -4 ile +4 arasındaki grafiği, her biri farklı renkte, aynı eksende karşılaştırmalı olarak gösterilmeli.</div>
+        <div class="caption">Bu grafik, fonksiyonların hangi değer aralıklarında nasıl davrandığını ve türevlerinin nerede sıfırlandığını gösterir.</div>
+
+        <h4>Vanishing gradient sorunu sezgisi</h4>
+        <p>
+          Sigmoid ve tanh fonksiyonlarının türevi, fonksiyon değeri 0'a ya da uç değerlere yaklaştığında
+          sıfıra yaklaşır. Geri yayılım sırasında bu küçük türevler çarpıla çarpıla katmandan katmana
+          aktarılırken giderek küçülür. 10-20 katmanlı bir ağda en derin gizli katmanlara ulaşan gradyan
+          neredeyse sıfır olabilir. Bu durumda o katmanların ağırlıkları hiç güncellenmez;
+          öğrenme fiilen durur. ReLU bu sorunu dramatik biçimde azaltır çünkü pozitif bölgede türevi her zaman 1'dir.
+        </p>
+
+        <div id="bolum2-3"></div>
+        <h3>2.3. Evrensel yaklaşım teoremi</h3>
+
+        <blockquote>
+          "Bir gizli katmana ve yeterli sayıda nörona sahip bir yapay sinir ağı, kompakt bir uzaydaki
+          herhangi sürekli bir fonksiyonu istenilen hassasiyette yaklaşık olarak temsil edebilir."<br>
+          — Cybenko, 1989; Hornik, 1991
+        </blockquote>
+
+        <p>
+          Bu teorem son derece güçlü bir teorik güvence sağlar. Ancak birkaç önemli nüansı vardır:
+        </p>
+
+        <ul>
+          <li><strong>Varlık garantisi verir, öğrenme garantisi vermez.</strong> Teorik olarak yeterli nöron varsa ağ o fonksiyonu temsil edebilir, ama bunu veriden öğrenip öğrenemeyeceği ayrı bir sorudur.</li>
+          <li><strong>Yeterli sayıda nöron bazen astronomik olabilir.</strong> Bir katmanla her şeyi öğrenmek, pratikte mümkün olmayan büyüklüklerde ağ gerektirebilir.</li>
+          <li><strong>Derin ağlar aynı kapasiteyi çok daha verimli kullanır.</strong> Derin (çok katmanlı) ağların tek katmanlı ama geniş ağlara karşı avantajı budur: hiyerarşik özellik öğrenimi sayesinde parametreleri çok daha verimli kullanırlar.</li>
+        </ul>
+
+        <div class="insight">
+          Evrensel yaklaşım teoremi, yapay sinir ağlarının neden bu kadar güçlü olduğunu anlamak için
+          teorik bir çerçeve sunar. Pratikte önemli olan gerçek soru şudur:
+          <strong>"Bu gücü verimli biçimde, mevcut veri ve hesaplama kaynağıyla nasıl kullanırız?"</strong>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 3 ─── -->
+      <section class="card fade" id="bolum3">
+        <h2 class="section-title">3. İleri besleme: Bir veri örneği ağdan nasıl geçer?</h2>
+
+        <p class="lead serif">
+          İleri besleme (forward pass), bir girdi verisinin ağın katmanları boyunca, girdi katmanından
+          çıktı katmanına doğru ilerlemesidir. Her katmanda ağırlıklı toplam ve aktivasyon hesapları yapılır.
+          Sonunda bir tahmin üretilir.
+        </p>
+
+        <p>
+          Bunu somut bir örnekle izleyelim. Diyelim ki 3 girdi özelliği olan, 1 gizli katman (4 nöron, ReLU),
+          1 çıktı nöronu (sigmoid) olan bir ağ tasarlıyoruz. İkili sınıflandırma yapacak.
+        </p>
+
+        <div class="step-flow">
+          <div class="step-box">Girdi<br><small>x ∈ ℝ³</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">W₁·x + b₁<br><small>Lineer dönüşüm</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">ReLU(z₁)<br><small>Aktivasyon</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">W₂·a₁ + b₂<br><small>Lineer dönüşüm</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">σ(z₂)<br><small>Sigmoid çıkış</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">ŷ ∈ (0,1)<br><small>Tahmin</small></div>
+        </div>
+
+        <h3>3.1. Nümerik örnek</h3>
+        <p>
+          Diyelim ki girdi vektörümüz <strong>x = [2.0, -1.0, 0.5]</strong> olsun.
+          İlk gizli katmanın ağırlık matrisini ve bias vektörünü basitleştirmek için elle tanımlayalım.
+        </p>
+
+        <div class="formula">
+          Katman 1 (3→4): z₁ = W₁ · x + b₁<br>
+          ReLU(z₁) = max(0, z₁) → a₁<br><br>
+          Katman 2 (4→1): z₂ = W₂ · a₁ + b₂<br>
+          ŷ = σ(z₂) = 1 / (1 + e⁻<sup>z₂</sup>)
+        </div>
+
+        <p>
+          Eğer bu hesaplamanın sonunda ŷ = 0.73 çıktıysa ve gerçek etiket y = 1 ise,
+          ikili çapraz entropi kaybı şu şekilde hesaplanır:
+        </p>
+        <div class="formula">
+          L = −[y · log(ŷ) + (1−y) · log(1−ŷ)]<br>
+          L = −[1 · log(0.73) + 0 · log(0.27)]<br>
+          L = −log(0.73) ≈ 0.315
+        </div>
+
+        <h3>3.2. Toplu işlem (batch processing)</h3>
+        <p>
+          Pratikte tek bir örnek değil, aynı anda birden fazla örnek ağdan geçirilir.
+          Bu durumda girdi artık bir matristir: <strong>X ∈ ℝ<sup>N×D</sup></strong>, burada N batch boyutu, D özellik sayısıdır.
+          Matris çarpımı sayesinde N örneğin tamamı tek bir işlemde hesaplanır.
+          Bu, GPU'ların neden bu kadar etkili olduğunu açıklar: GPU'lar büyük matris çarpımlarında masaüstü CPU'lardan
+          binlerce kat daha hızlıdır.
+        </p>
+
+        <div class="highlight">
+          PyTorch dahil modern derin öğrenme çerçevelerinde, ileri besleme hesaplarını manuel yazmak gerekmez.
+          Model tanımlandıktan ve veri verildiğinde tüm bu matris işlemleri otomatik olarak GPU üzerinde paralel çalışır.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 4 ─── -->
+      <section class="card fade" id="bolum4">
+        <h2 class="section-title">4. Geri yayılım algoritması: Hatanın kaynağını bulmak</h2>
+
+        <p class="lead serif">
+          İleri besleme ağa bir tahmin ürettirir; geri yayılım ise bu tahmin ile gerçek değer arasındaki
+          kaybın her ağırlığa göre gradyanını hesaplar. Bu gradyanlar, ağırlıkları doğru yönde güncellemek için kullanılır.
+        </p>
+
+        <p>
+          Geri yayılım, zincir kuralı üzerine inşa edilmiş bir türev hesaplama algoritmasıdır.
+          1986'da Rumelhart, Hinton ve Williams tarafından çok katmanlı ağlara uygulanabilir hâle getirilmiş
+          ve derin öğrenmenin kapılarını açan en önemli teknik katkılardan biri olmuştur.
+        </p>
+
+        <div id="bolum4-1"></div>
+        <h3>4.1. Gradyan ve zincir kuralı</h3>
+
+        <p>
+          Amacımız kayıp fonksiyonunun <em>L</em>'yi, ağdaki her ağırlık <em>w</em>'ya göre türevini hesaplamaktır:
+        </p>
+        <div class="formula">
+          ∂L/∂w = ?
+        </div>
+        <p>
+          Sorun şudur: kayıp, çıktı nöronuna bağlı; çıktı nöronu son gizli katmana; son gizli katman öncekine,
+          ve böyle devam eder. Yani kayıp ile ağırlık arasında bir fonksiyon bileşimi zinciri vardır.
+          Zincir kuralı, bileşik bir fonksiyonun türevini parçalara ayırarak hesaplar:
+        </p>
+        <div class="formula">
+          dL/dw = (dL/dŷ) · (dŷ/dz) · (dz/dw)
+        </div>
+        <p>
+          Bu ifade üç terimin çarpımıdır. Her bir terim hesaplandıktan sonra çarpılır.
+          Derin ağlarda bu zincir çok daha uzun olur; ancak mantık aynıdır: çıktıdan girişe doğru,
+          her katmanda lokal türev hesaplanır ve önceki katmana iletilir.
+        </p>
+
+        <div id="bolum4-2"></div>
+        <h3>4.2. Hesaplama grafı</h3>
+
+        <p>
+          PyTorch otomatik türev (autograd) mekanizmasını hesaplama grafı üzerinden çalıştırır.
+          İleri besleme sırasında her işlem kaydedilir; <code>loss.backward()</code> çağrıldığında
+          bu grafta geriye doğru zincir kuralı uygulanarak her parametrenin gradyanı otomatik hesaplanır.
+        </p>
+
+        <div class="pytorch">
+          <strong>🔥 PyTorch autograd mantığı:</strong><br>
+          <code>requires_grad=True</code> olan tensorlar üzerinde yapılan tüm işlemler bir hesaplama grafı oluşturur.
+          <code>loss.backward()</code> bu grafı geriye doğru tarar ve her parametrenin <code>.grad</code> alanını doldurur.
+          Optimizer daha sonra bu gradyanları kullanarak parametreleri günceller.
+        </div>
+
+        <div id="bolum4-3"></div>
+        <h3>4.3. Ağırlık güncelleme kuralı</h3>
+        <p>
+          Gradyanlar hesaplandıktan sonra optimizasyon algoritması devreye girer. En temel form olan
+          gradient descent (gradyan inişi) şu güncelleme kuralını kullanır:
+        </p>
+        <div class="formula">
+          w ← w − η · ∂L/∂w
+        </div>
+        <p>
+          Burada <strong>η</strong> öğrenme oranıdır (learning rate). Eğer gradyan pozitifse kayıp o ağırlık arttıkça
+          artıyor demektir, bu yüzden ağırlığı azaltırız. Negatifse ağırlığı artırırız.
+          Bu şekilde kayıp fonksiyonu her adımda biraz daha küçülmeye çalışır.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>İyimser senaryo</h4>
+            <p>Gradyan inişi, kayıp yüzeyinin pürüzsüz bir kase şeklinde olduğu durumlarda her zaman global minimuma ulaşır.</p>
+          </div>
+          <div class="mini">
+            <h4>Gerçek senaryo</h4>
+            <p>Gerçek ağlarda kayıp yüzeyi çok karmaşıktır: yerel minimumlar, eyer noktaları, düz bölgeler vardır.
+            Modern optimizasyon yöntemleri bu zorluklarla başa çıkmak için geliştirilmiştir.</p>
+          </div>
+        </div>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Kayıp yüzeyi (loss surface) 3D çizimi: iki ağırlık parametresi ekseninde L değeri. Gradient descent yolunun birkaç adımı görünmeli. Yerel minimum, global minimum ve eyer noktası işaretlenmeli.</div>
+      </section>
+
+      <!-- ─── BÖLÜM 5 ─── -->
+      <section class="card fade" id="bolum5">
+        <h2 class="section-title">5. Kayıp fonksiyonları: Hatayı nasıl ölçeriz?</h2>
+
+        <p class="lead serif">
+          Kayıp fonksiyonu (loss function) ya da maliyet fonksiyonu (cost function), modelin tahminlerinin
+          gerçek değerlerden ne kadar uzak olduğunu sayısal bir skala üzerinde ifade eder.
+          Geri yayılımın başladığı yer burasıdır. Doğru kayıp fonksiyonunu seçmek,
+          hem öğrenmenin yönünü hem de sonucun kalitesini doğrudan etkiler.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Kayıp Fonksiyonu</th><th>Formül</th><th>Kullanım Alanı</th><th>PyTorch Karşılığı</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Ortalama Kare Hatası (MSE)</strong></td>
+                <td>L = (1/N) Σ (yᵢ − ŷᵢ)²</td>
+                <td>Regresyon problemleri</td>
+                <td><code>nn.MSELoss()</code></td>
+              </tr>
+              <tr>
+                <td><strong>Ortalama Mutlak Hata (MAE)</strong></td>
+                <td>L = (1/N) Σ |yᵢ − ŷᵢ|</td>
+                <td>Regresyon, aykırı değerlere dayanıklı</td>
+                <td><code>nn.L1Loss()</code></td>
+              </tr>
+              <tr>
+                <td><strong>İkili Çapraz Entropi (BCE)</strong></td>
+                <td>L = −Σ [y·log(ŷ) + (1−y)·log(1−ŷ)]</td>
+                <td>İkili sınıflandırma</td>
+                <td><code>nn.BCELoss()</code> veya <code>BCEWithLogitsLoss()</code></td>
+              </tr>
+              <tr>
+                <td><strong>Kategorik Çapraz Entropi (CCE)</strong></td>
+                <td>L = −Σ yₖ · log(ŷₖ)</td>
+                <td>Çok sınıflı sınıflandırma</td>
+                <td><code>nn.CrossEntropyLoss()</code></td>
+              </tr>
+              <tr>
+                <td><strong>Huber Loss</strong></td>
+                <td>Küçük hatada MSE, büyük hatada MAE davranışı</td>
+                <td>Aykırı değer toleranslı regresyon</td>
+                <td><code>nn.HuberLoss()</code></td>
+              </tr>
+              <tr>
+                <td><strong>KL Divergence</strong></td>
+                <td>L = Σ p(x) · log[p(x)/q(x)]</td>
+                <td>Olasılık dağılımları arası fark; VAE</td>
+                <td><code>nn.KLDivLoss()</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="insight">
+          <strong>Neden çapraz entropi, sınıflandırmada MSE'den daha iyidir?</strong><br>
+          MSE kullanıldığında sigmoid çıkışlı modelde gradyan, tahmin uç değerlere (0 veya 1) yaklaştığında
+          son derece küçülür (sigmoid'in türevinin düz bölgeleri). Bu, öğrenmeyi yavaşlatır.
+          Çapraz entropi, log fonksiyonu sayesinde yanlış tahminlerde çok büyük kayıp üretir ve gradyan akışı güçlü kalır.
+        </div>
+
+        <h3>5.1. Çapraz entropinin sezgisi</h3>
+        <p>
+          Çapraz entropi, bilgi teorisinden gelir. Eğer gerçek dağılım <em>p</em> ve model dağılımı <em>q</em> ise,
+          çapraz entropi iki dağılım arasındaki "şaşkınlık" ölçüsüdür.
+          Model doğru sınıf için yüksek olasılık ürettiyse kayıp küçüktür.
+          Model yanlış sınıf için yüksek olasılık ürettiyse kayıp çok büyük olur.
+        </p>
+
+        <div class="formula">
+          Tahmin: ŷ = [0.05, 0.90, 0.05] (3 sınıf, en yüksek = sınıf 2)<br>
+          Gerçek: y = [0, 1, 0] (sınıf 2 doğru)<br>
+          L = −log(0.90) ≈ 0.105  ← düşük kayıp, iyi tahmin<br><br>
+          Tahmin: ŷ = [0.05, 0.10, 0.85] (yanlış sınıf 3)<br>
+          Gerçek: y = [0, 1, 0]<br>
+          L = −log(0.10) ≈ 2.302  ← yüksek kayıp, kötü tahmin
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 6 ─── -->
+      <section class="card fade" id="bolum6">
+        <h2 class="section-title">6. Optimizasyon algoritmaları: Gradyanı nasıl kullanalım?</h2>
+
+        <p class="lead serif">
+          Gradyanlar hesaplandıktan sonra parametreleri bu gradyanlara göre nasıl güncelleyeceğimize karar vermek için
+          bir optimizasyon algoritması kullanırız. Saf gradient descent, büyük ölçekli problemlerde pratikte pek iyi çalışmaz.
+          Bunun yerine geliştirilen algoritmalar, eğitimi hem hızlandırır hem de daha kararlı hâle getirir.
+        </p>
+
+        <h3>6.1. Gradient Descent türleri</h3>
+
+        <div class="grid3">
+          <div class="mini blue">
+            <h4>Batch Gradient Descent</h4>
+            <p>Tüm veri seti üzerinden ortalama gradyan hesaplanır. Kararlı ama yavaş ve büyük veri için bellek yetersiz.</p>
+            <p><em>Her adımda N örnek</em></p>
+          </div>
+          <div class="mini violet">
+            <h4>Stochastic Gradient Descent (SGD)</h4>
+            <p>Her adımda tek bir örnek üzerinden gradyan hesaplanır. Hızlı ama gürültülü; yerel minimumdan kaçabilir.</p>
+            <p><em>Her adımda 1 örnek</em></p>
+          </div>
+          <div class="mini teal">
+            <h4>Mini-batch SGD</h4>
+            <p>Her adımda küçük bir grup (batch) üzerinden gradyan hesaplanır. Pratik denge: hız + kararlılık.</p>
+            <p><em>Her adımda B örnek (tipik: 32–512)</em></p>
+          </div>
+        </div>
+
+        <h3>6.2. İleri optimizasyon algoritmaları</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Algoritma</th><th>Temel Fikir</th><th>Güçlü Yönü</th><th>PyTorch</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>SGD + Momentum</strong></td>
+                <td>Geçmiş gradyanlardan hız biriktirir, gürültüyü azaltır</td>
+                <td>Basit, iyi ayarlandığında çok etkin; bazı görevlerde Adam'ı geçer</td>
+                <td><code>torch.optim.SGD(momentum=0.9)</code></td>
+              </tr>
+              <tr>
+                <td><strong>AdaGrad</strong></td>
+                <td>Her parametre için ayrı öğrenme oranı; seyrek gradyanlarda iyi</td>
+                <td>Seyrek veri (NLP) için faydalı</td>
+                <td><code>torch.optim.Adagrad()</code></td>
+              </tr>
+              <tr>
+                <td><strong>RMSprop</strong></td>
+                <td>AdaGrad'ın öğrenme oranı küçülme sorununu üs. hareketli ort. ile çözer</td>
+                <td>RNN ve online öğrenmede etkili</td>
+                <td><code>torch.optim.RMSprop()</code></td>
+              </tr>
+              <tr>
+                <td><strong>Adam</strong></td>
+                <td>Momentum + RMSprop birleşimi; birinci ve ikinci moment tahmini</td>
+                <td>Çoğu görev için en iyi başlangıç seçeneği; hızlı yakınsama</td>
+                <td><code>torch.optim.Adam()</code></td>
+              </tr>
+              <tr>
+                <td><strong>AdamW</strong></td>
+                <td>Adam + ağırlık azalması (weight decay) ayrımı</td>
+                <td>Büyük modellerde genelleme daha iyi; Transformer'larda tercih edilir</td>
+                <td><code>torch.optim.AdamW()</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight">
+          <strong>Pratik tavsiye:</strong> Yeni bir probleme başlarken <strong>Adam optimizer</strong> ile başlayın.
+          Çoğu zaman iyi çalışır. Üretim seviyesinde veya bir makale geliştiriyorsanız, SGD + Momentum ve
+          learning rate scheduling kombinasyonu daha iyi sonuç verebilir. Transfer öğrenmede AdamW standarttır.
+        </div>
+
+        <h3>6.3. Learning Rate Scheduling</h3>
+        <p>
+          Sabit bir öğrenme oranı her zaman optimal değildir. Eğitim başında büyük adımlar atmak hızlı
+          yakınsama sağlar; ilerleyen dönemlerde öğrenme oranını küçültmek ince ayar yapılmasına olanak tanır.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Scheduler</th><th>Davranışı</th><th>PyTorch</th></tr></thead>
+            <tbody>
+              <tr><td>StepLR</td><td>Her N epoch'ta öğrenme oranını γ çarpanıyla azalt</td><td><code>lr_scheduler.StepLR(step_size=10, gamma=0.1)</code></td></tr>
+              <tr><td>CosineAnnealingLR</td><td>Öğrenme oranını kosinüs eğrisine göre sıfıra indir, sonra sıfırla</td><td><code>lr_scheduler.CosineAnnealingLR(T_max=50)</code></td></tr>
+              <tr><td>ReduceLROnPlateau</td><td>Validation kaybı iyileşmediğinde öğrenme oranını azalt</td><td><code>lr_scheduler.ReduceLROnPlateau(patience=5)</code></td></tr>
+              <tr><td>OneCycleLR</td><td>Warm-up + annealing kombinasyonu; süper hızlı eğitim</td><td><code>lr_scheduler.OneCycleLR(max_lr=0.01)</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 7 ─── -->
+      <section class="card fade" id="bolum7">
+        <h2 class="section-title">7. Eğitim terminolojisi: Tam sözlük</h2>
+
+        <p class="lead serif">
+          Yapay sinir ağı literatüründe sıklıkla karşılaşılan terimler bazen sezgisel olmayan
+          biçimlerde kullanılır. Bu bölüm, her terimi tanımı, formülü (varsa) ve pratik nüansıyla açıklar.
+        </p>
+
+        <div class="kv-row">
+          <div class="kv-key">🔵 Epoch</div>
+          <div class="kv-val">Eğitim veri setinin tamamının modele bir kez gösterilmesidir. 1 epoch = bütün eğitim örneklerinin bir kez işlenmesi. Tipik eğitimlerde 10 ila birkaç yüz epoch kullanılır. Çok az epoch: yetersiz öğrenme (underfitting). Çok fazla epoch: ezber (overfitting).</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🟣 Batch Size</div>
+          <div class="kv-val">Her gradyan güncelleme adımında kullanılan örnek sayısıdır. Büyük batch: daha kararlı gradyan ama daha fazla bellek ve daha az genelleme. Küçük batch: gürültülü ama genellikle daha iyi genelleme. Yaygın değerler: 16, 32, 64, 128, 256. GPU belleği kısıt oluşturur.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🟢 İterasyon</div>
+          <div class="kv-val">Tek bir batch üzerinde gerçekleştirilen ileri + geri yayılım + güncelleme döngüsüdür. Bir epoch = (veri boyutu / batch boyutu) kadar iterasyondur. Örnek: 1000 örnek, batch size=100 → 1 epoch = 10 iterasyon.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🟡 Learning Rate (η)</div>
+          <div class="kv-val">Her ağırlık güncellemesinin ne kadar büyük olacağını belirler. Çok büyük: gradyan patlayabilir, yakınsama olmayabilir. Çok küçük: eğitim çok uzun sürer, yerel minimuma takılabilir. Tipik başlangıç değeri: 1e-3 (Adam için), 0.01-0.1 (SGD için).</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🔴 Training Loss</div>
+          <div class="kv-val">Modelin eğitim verisi üzerindeki kaybıdır. Eğitim boyunca azalması beklenir. Azalmıyorsa: model çok basit, öğrenme oranı yanlış ya da veri sorunlu olabilir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🔴 Validation Loss</div>
+          <div class="kv-val">Modelin eğitimde görmediği validation seti üzerindeki kaybıdır. Training loss düşerken validation loss artmaya başlarsa: overfitting başlamıştır. Model ezberlemeye başlamıştır.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">⚫ Overfitting (Aşırı Öğrenme)</div>
+          <div class="kv-val">Modelin eğitim verisini ezberlediği, yeni veriye iyi genelleyemediği durumdur. Belirtisi: training accuracy çok yüksek, validation accuracy düşük. Çözümler: dropout, regularization, erken durdurma, daha fazla veri.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">⚫ Underfitting</div>
+          <div class="kv-val">Modelin hem eğitim hem validation verisinde başarısız olmasıdır. Model çok basit ya da eğitim yetersizdir. Çözüm: daha büyük model, daha uzun eğitim, daha iyi özellikler.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🔵 Weight Initialization</div>
+          <div class="kv-val">Ağırlıkların eğitim öncesi başlangıç değerleri. Hepsi sıfır başlatılamaz (simetri kırılmaz). Sık kullanılan yöntemler: Xavier/Glorot (sigmoid/tanh için), He (ReLU için). PyTorch nn.Linear otomatik uygular.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🟣 Dropout</div>
+          <div class="kv-val">Eğitim sırasında rastgele nöronların belirli bir olasılıkla (p) devre dışı bırakılmasıdır. Model, tek bir yola bağımlı kalmaz, daha sağlam özellikler öğrenir. Çıkarım (inference) sırasında dropout kapatılır ve aktivasyonlar (1-p) ile ölçeklenir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🟢 Batch Normalization</div>
+          <div class="kv-val">Her batch içindeki aktivasyonları sıfır ortalama, birim varyans olacak şekilde normalizer. Eğitimi hızlandırır, daha yüksek learning rate kullanılmasına olanak tanır, ağırlık başlatmaya duyarlılığı azaltır.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🟡 Early Stopping</div>
+          <div class="kv-val">Validation kaybı belirli sayıda epoch boyunca iyileşmediğinde eğitimi durdurmaktır. Overfitting'i önlemenin pratik bir yoludur. Patience parametresi ne kadar bekleneceğini belirler.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🔵 Gradient Clipping</div>
+          <div class="kv-val">Gradyanın normunu belirli bir eşikle sınırlamaktır. RNN gibi modellerde gradient explosion sorununu önler. PyTorch'ta: <code>torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code></div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🔴 Hyperparameter</div>
+          <div class="kv-val">Eğitim öncesi belirlenen, veri üzerinden öğrenilmeyen parametreler: learning rate, batch size, katman sayısı, nöron sayısı, dropout oranı vb. Bunlar grid search, random search veya Bayesian optimizasyonla ayarlanır.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">⚫ Model Checkpoint</div>
+          <div class="kv-val">Eğitim sırasında en iyi validation performansını gösteren model ağırlıklarının kaydedilmesidir. Eğitim overfitting'e girerse, en iyi checkpoint'e geri dönülebilir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">🟣 Transfer Learning</div>
+          <div class="kv-val">Büyük veri setlerinde önceden eğitilmiş bir modelin ağırlıklarını, yeni bir görev için başlangıç noktası olarak kullanmaktır. Özellikle az veri varken çok güçlüdür.</div>
+        </div>
+
+        <div class="formula">
+          Epoch, Batch, İterasyon ilişkisi:<br>
+          Veri boyutu = N = 10.000 örnek<br>
+          Batch Size = B = 100<br>
+          Adım sayısı (1 epoch) = N/B = 100 iterasyon<br>
+          50 epoch → Toplam = 50 × 100 = 5.000 iterasyon<br>
+          Her iterasyonda 1 kez forward + backward + güncelleme
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 8 ─── -->
+      <section class="card fade" id="bolum8">
+        <h2 class="section-title">8. PyTorch ile Yapay Sinir Ağı Oluşturmak</h2>
+
+        <p class="lead serif">
+          PyTorch, esnekliği ve dinamik hesaplama grafı sayesinde araştırmacılar ve mühendisler tarafından
+          en çok kullanılan derin öğrenme çerçeveleri arasında yer alır.
+          Bu bölümde sıfırdan bir YSA tasarlayacak, eğiteceğiz ve değerlendireceğiz.
+        </p>
+
+        <div id="bolum8-1"></div>
+        <h3>8.1. PyTorch temel yapı taşları</h3>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4><code>torch.Tensor</code></h4>
+            <p>PyTorch'un temel veri yapısı. NumPy array'e benzer ama GPU üzerinde çalışabilir ve autograd destekler.</p>
+          </div>
+          <div class="mini">
+            <h4><code>nn.Module</code></h4>
+            <p>Tüm model bileşenlerinin temel sınıfı. Parametreleri otomatik takip eder, <code>forward()</code> metodu zorunludur.</p>
+          </div>
+          <div class="mini">
+            <h4><code>nn.Linear</code></h4>
+            <p>Tam bağlı katman: y = Wx + b işlemini gerçekleştirir. Girdi ve çıktı boyutları belirtilir.</p>
+          </div>
+          <div class="mini">
+            <h4><code>torch.optim</code></h4>
+            <p>Optimizasyon algoritmaları (Adam, SGD vb.). <code>optimizer.step()</code> ile parametreler güncellenir.</p>
+          </div>
+        </div>
+
+        <h3>8.1.1. Model tanımlama</h3>
+        <div class="code-label">Python — model.py</div>
+<pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class YapaysinirAgi(nn.Module):
+    """
+    Genel amaçlı tam bağlı (fully connected) yapay sinir ağı.
+    - input_dim  : girdi özellik sayısı
+    - hidden_dims: gizli katman nöron sayılarını tutan liste
+    - output_dim : çıktı boyutu (sınıf sayısı ya da regresyon çıktısı)
+    - dropout_p  : dropout olasılığı (0 = dropout yok)
+    """
+    def __init__(self, input_dim, hidden_dims, output_dim, dropout_p=0.3):
+        super(YapaysinirAgi, self).__init__()
+        
+        katmanlar = []
+        onceki_dim = input_dim
+        
+        for gizli_dim in hidden_dims:
+            katmanlar.append(nn.Linear(onceki_dim, gizli_dim))
+            katmanlar.append(nn.BatchNorm1d(gizli_dim))   # Batch normalizasyon
+            katmanlar.append(nn.ReLU())                   # Aktivasyon
+            katmanlar.append(nn.Dropout(p=dropout_p))     # Dropout
+            onceki_dim = gizli_dim
+        
+        # Çıktı katmanı — aktivasyonsuz (kayıp fonksiyonu içinde uygulanacak)
+        katmanlar.append(nn.Linear(onceki_dim, output_dim))
+        
+        self.ag = nn.Sequential(*katmanlar)
+    
+    def forward(self, x):
+        return self.ag(x)
+
+
+# ─── Kullanım örneği ───
+model = YapaysinirAgi(
+    input_dim=10,          # 10 özellik
+    hidden_dims=[64, 32],  # İki gizli katman: 64 ve 32 nöron
+    output_dim=1,          # İkili sınıflandırma için 1 çıktı
+    dropout_p=0.3
+)
+
+print(model)
+# → YapaysinirAgi
+#   (ag): Sequential(
+#     (0): Linear(in_features=10, out_features=64, bias=True)
+#     (1): BatchNorm1d(64, ...)
+#     (2): ReLU()
+#     (3): Dropout(p=0.3, ...)
+#     (4): Linear(in_features=64, out_features=32, bias=True)
+#     ...
+#     (8): Linear(in_features=32, out_features=1, bias=True)
+#   )
+
+# Parametre sayısı
+toplam_param = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(f"Toplam eğitilebilir parametre: {toplam_param:,}")
+</code></pre>
+
+        <div id="bolum8-2"></div>
+        <h3>8.2. Tam eğitim döngüsü</h3>
+
+        <div class="code-label">Python — egitim.py</div>
+<pre><code>import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset, random_split
+import numpy as np
+
+def modeli_egit(
+    model,
+    X_train, y_train,
+    X_val, y_val,
+    lr=1e-3,
+    batch_size=64,
+    epochs=100,
+    patience=10,       # Early stopping sabırlılığı
+    device='cpu'
+):
+    """
+    Eksiksiz eğitim döngüsü:
+    - Mini-batch SGD (Adam optimizer)
+    - Learning rate scheduling
+    - Early stopping
+    - Eğitim ve validation kaybı takibi
+    """
+    model = model.to(device)
+    
+    # ─── Veri yükleyiciler ───
+    train_dataset = TensorDataset(
+        torch.FloatTensor(X_train).to(device),
+        torch.FloatTensor(y_train).to(device)
+    )
+    val_dataset = TensorDataset(
+        torch.FloatTensor(X_val).to(device),
+        torch.FloatTensor(y_val).to(device)
+    )
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader   = DataLoader(val_dataset,   batch_size=batch_size, shuffle=False)
+    
+    # ─── Kayıp, optimizer, scheduler ───
+    kayip_fn  = nn.BCEWithLogitsLoss()   # Sigmoid + Binary CrossEntropy birleşimi
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', patience=5, factor=0.5, verbose=True
+    )
+    
+    # ─── Early stopping değişkenleri ───
+    en_iyi_val_kayip = float('inf')
+    sabir_sayaci     = 0
+    en_iyi_agirliklar = None
+    
+    # ─── Tarihçe ───
+    tarih = {'train_loss': [], 'val_loss': [], 'val_acc': []}
+    
+    for epoch in range(1, epochs + 1):
+        # ━━━ EĞİTİM AŞAMASI ━━━
+        model.train()       # Dropout ve BatchNorm aktif
+        toplam_train_kayip = 0.0
+        
+        for X_batch, y_batch in train_loader:
+            # 1. Önceki gradyanları sıfırla
+            optimizer.zero_grad()
+            
+            # 2. İleri besleme
+            cikti = model(X_batch).squeeze(1)   # (N,1) → (N,)
+            
+            # 3. Kayıp hesapla
+            kayip = kayip_fn(cikti, y_batch)
+            
+            # 4. Geri yayılım
+            kayip.backward()
+            
+            # 5. Gradient clipping (patlayan gradyanları önle)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            
+            # 6. Parametre güncelleme
+            optimizer.step()
+            
+            toplam_train_kayip += kayip.item() * X_batch.size(0)
+        
+        ort_train_kayip = toplam_train_kayip / len(train_dataset)
+        
+        # ━━━ VALİDASYON AŞAMASI ━━━
+        model.eval()        # Dropout kapalı, BatchNorm tahmin modunda
+        toplam_val_kayip = 0.0
+        dogru = 0
+        
+        with torch.no_grad():   # Gradyan hesaplanmaz → hız + bellek tasarrufu
+            for X_batch, y_batch in val_loader:
+                cikti = model(X_batch).squeeze(1)
+                kayip = kayip_fn(cikti, y_batch)
+                toplam_val_kayip += kayip.item() * X_batch.size(0)
+                
+                # Doğruluk hesaplama
+                tahmin = (torch.sigmoid(cikti) >= 0.5).float()
+                dogru += (tahmin == y_batch).sum().item()
+        
+        ort_val_kayip = toplam_val_kayip / len(val_dataset)
+        val_acc = dogru / len(val_dataset) * 100
+        
+        # Scheduler güncelle
+        scheduler.step(ort_val_kayip)
+        
+        # Tarihçeye ekle
+        tarih['train_loss'].append(ort_train_kayip)
+        tarih['val_loss'].append(ort_val_kayip)
+        tarih['val_acc'].append(val_acc)
+        
+        if epoch % 10 == 0 or epoch == 1:
+            print(f"Epoch [{epoch:3d}/{epochs}] | "
+                  f"Train Loss: {ort_train_kayip:.4f} | "
+                  f"Val Loss: {ort_val_kayip:.4f} | "
+                  f"Val Acc: {val_acc:.1f}%")
+        
+        # ━━━ EARLY STOPPING ━━━
+        if ort_val_kayip < en_iyi_val_kayip:
+            en_iyi_val_kayip = ort_val_kayip
+            sabir_sayaci = 0
+            # En iyi model ağırlıklarını kaydet
+            en_iyi_agirliklar = {k: v.clone() for k, v in model.state_dict().items()}
+        else:
+            sabir_sayaci += 1
+            if sabir_sayaci >= patience:
+                print(f"\nErken durdurma! {patience} epoch boyunca iyileşme olmadı.")
+                print(f"En iyi validation kaybı: {en_iyi_val_kayip:.4f}")
+                break
+    
+    # En iyi ağırlıklara geri dön
+    if en_iyi_agirliklar:
+        model.load_state_dict(en_iyi_agirliklar)
+    
+    return model, tarih
+</code></pre>
+
+        <div id="bolum8-3"></div>
+        <h3>8.3. Model değerlendirme</h3>
+
+        <div class="code-label">Python — degerlendirme.py</div>
+<pre><code>from sklearn.metrics import (classification_report, confusion_matrix,
+                              roc_auc_score, roc_curve)
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def modeli_degerlendir(model, X_test, y_test, device='cpu', esik=0.5):
+    """
+    Kapsamlı model değerlendirmesi:
+    Confusion matrix, precision/recall/F1, ROC-AUC
+    """
+    model.eval()
+    
+    with torch.no_grad():
+        X_tensor = torch.FloatTensor(X_test).to(device)
+        logits   = model(X_tensor).squeeze(1)
+        probs    = torch.sigmoid(logits).cpu().numpy()
+        preds    = (probs >= esik).astype(int)
+    
+    print("=" * 55)
+    print("MODEL DEĞERLENDİRME RAPORU")
+    print("=" * 55)
+    print(classification_report(y_test, preds,
+                                 target_names=["Negatif", "Pozitif"]))
+    
+    roc_auc = roc_auc_score(y_test, probs)
+    print(f"ROC-AUC Skoru: {roc_auc:.4f}")
+    
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, preds)
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                xticklabels=["Tahmin: 0", "Tahmin: 1"],
+                yticklabels=["Gerçek: 0", "Gerçek: 1"])
+    plt.title("Confusion Matrix")
+    plt.tight_layout()
+    plt.savefig("confusion_matrix.png", dpi=150)
+    plt.show()
+    
+    # ROC Eğrisi
+    fpr, tpr, _ = roc_curve(y_test, probs)
+    plt.figure(figsize=(7, 5))
+    plt.plot(fpr, tpr, color='steelblue', lw=2,
+             label=f'ROC AUC = {roc_auc:.3f}')
+    plt.plot([0, 1], [0, 1], 'k--', lw=1)
+    plt.xlabel("Yanlış Pozitif Oranı (FPR)")
+    plt.ylabel("Doğru Pozitif Oranı (TPR)")
+    plt.title("ROC Eğrisi")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("roc_curve.png", dpi=150)
+    plt.show()
+    
+    return probs, preds
+
+# Model kaydetme ve yükleme
+def modeli_kaydet(model, dosya_yolu="en_iyi_model.pth"):
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'model_config': {
+            'input_dim': 10,
+            'hidden_dims': [64, 32],
+            'output_dim': 1
+        }
+    }, dosya_yolu)
+    print(f"Model kaydedildi: {dosya_yolu}")
+
+def modeli_yukle(model_sinifi, dosya_yolu="en_iyi_model.pth"):
+    checkpoint = torch.load(dosya_yolu, map_location='cpu')
+    cfg = checkpoint['model_config']
+    model = model_sinifi(**cfg)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+    return model
+</code></pre>
+      </section>
+
+      <!-- ─── BÖLÜM 9 ─── -->
+      <section class="card fade" id="bolum9">
+        <h2 class="section-title">9. Gerçek Hayat Problemi 1: Diyabet Tahmini — Pima Indians Dataset</h2>
+
+        <p class="lead serif">
+          İlk gerçek hayat problemimizde, Pima Indians Diabetes veriseti ile bir kişinin diyabetik
+          olup olmadığını tahmin eden bir sinir ağı oluşturacağız.
+          Bu veri seti UCI Machine Learning Repository'den erişilebilir olup makine öğrenmesi
+          literatüründe klasikleşmiş bir ikili sınıflandırma benchmark'ıdır.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Veri Seti Özellikleri</h4>
+            <ul>
+              <li><strong>Kaynak:</strong> National Institute of Diabetes and Digestive and Kidney Diseases</li>
+              <li><strong>Örnek sayısı:</strong> 768</li>
+              <li><strong>Özellik sayısı:</strong> 8</li>
+              <li><strong>Sınıflar:</strong> Diyabetik (1) / Diyabetik değil (0)</li>
+              <li><strong>Sınıf dengesi:</strong> %34.9 pozitif</li>
+            </ul>
+          </div>
+          <div class="mini">
+            <h4>Özellikler</h4>
+            <ul>
+              <li>Gebelik sayısı</li>
+              <li>Kan şekeri (Glucose)</li>
+              <li>Kan basıncı (Blood Pressure)</li>
+              <li>Deri kalınlığı (Skin Thickness)</li>
+              <li>İnsülin değeri</li>
+              <li>Vücut kitle indeksi (BMI)</li>
+              <li>Diyabet soy geçmişi fonksiyonu</li>
+              <li>Yaş</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="code-label">Python — diyabet_tam_cozum.py</div>
+<pre><code>import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, roc_auc_score
+import matplotlib.pyplot as plt
+
+# ══════════════════════════════════════════════
+#  BÖLÜM 1: VERİ YÜKLEME VE KEŞİF
+# ══════════════════════════════════════════════
+url = "https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv"
+sutunlar = ['gebelik', 'glikoz', 'kan_basinci', 'deri_kalinligi',
+            'insulin', 'bmi', 'soy_gecmis', 'yas', 'diyabet']
+
+df = pd.read_csv(url, header=None, names=sutunlar)
+
+print("Veri boyutu:", df.shape)
+print("\nİlk 5 satır:")
+print(df.head())
+print("\nEksik değer kontrolü (0 gerçekte eksik olabilir):")
+sifir_sutunlar = ['glikoz', 'kan_basinci', 'deri_kalinligi', 'insulin', 'bmi']
+for s in sifir_sutunlar:
+    sifir_sayisi = (df[s] == 0).sum()
+    print(f"  {s}: {sifir_sayisi} sıfır değer ({sifir_sayisi/len(df)*100:.1f}%)")
+
+# ══════════════════════════════════════════════
+#  BÖLÜM 2: ÖN İŞLEME
+# ══════════════════════════════════════════════
+# Fizyolojik açıdan sıfır olamayacak değerleri medyan ile doldur
+for s in sifir_sutunlar:
+    df[s] = df[s].replace(0, np.nan)
+    df[s] = df[s].fillna(df[s].median())
+
+X = df.drop('diyabet', axis=1).values
+y = df['diyabet'].values
+
+# Train / Validation / Test bölünmesi (%70 / %15 / %15)
+X_train, X_temp, y_train, y_temp = train_test_split(
+    X, y, test_size=0.30, random_state=42, stratify=y
+)
+X_val, X_test, y_val, y_test = train_test_split(
+    X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp
+)
+
+print(f"\nTrain: {X_train.shape[0]} | Val: {X_val.shape[0]} | Test: {X_test.shape[0]}")
+
+# Standartlaştırma — SADECE train üzerinde fit et!
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_val   = scaler.transform(X_val)
+X_test  = scaler.transform(X_test)
+
+# ══════════════════════════════════════════════
+#  BÖLÜM 3: MODEL
+# ══════════════════════════════════════════════
+class DiyabetModeli(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.ag = nn.Sequential(
+            # Gizli katman 1: 8 → 32
+            nn.Linear(8, 32),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            
+            # Gizli katman 2: 32 → 16
+            nn.Linear(32, 16),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            
+            # Çıktı: 16 → 1 (ikili sınıflandırma)
+            nn.Linear(16, 1)
+        )
+    
+    def forward(self, x):
+        return self.ag(x)
+
+model     = DiyabetModeli()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
+kayip_fn  = nn.BCEWithLogitsLoss()
+
+print(f"\nModel parametreleri: {sum(p.numel() for p in model.parameters()):,}")
+
+# ══════════════════════════════════════════════
+#  BÖLÜM 4: EĞİTİM
+# ══════════════════════════════════════════════
+# Veri yükleyiciler
+def tensor_yukleyici(X, y, batch_size, karistir=False):
+    ds = TensorDataset(torch.FloatTensor(X), torch.FloatTensor(y))
+    return DataLoader(ds, batch_size=batch_size, shuffle=karistir)
+
+train_loader = tensor_yukleyici(X_train, y_train, batch_size=32, karistir=True)
+val_loader   = tensor_yukleyici(X_val,   y_val,   batch_size=32)
+
+tarih = {'train': [], 'val': []}
+EN_IYI_VAL = float('inf')
+PATIENCE = 15
+sabir = 0
+
+for epoch in range(1, 201):
+    # Eğitim
+    model.train()
+    train_kayip = 0
+    for Xb, yb in train_loader:
+        optimizer.zero_grad()
+        kayip = kayip_fn(model(Xb).squeeze(), yb)
+        kayip.backward()
+        optimizer.step()
+        train_kayip += kayip.item()
+    
+    # Validasyon
+    model.eval()
+    val_kayip = 0
+    with torch.no_grad():
+        for Xb, yb in val_loader:
+            val_kayip += kayip_fn(model(Xb).squeeze(), yb).item()
+    
+    tarih['train'].append(train_kayip / len(train_loader))
+    tarih['val'].append(val_kayip / len(val_loader))
+    
+    if tarih['val'][-1] < EN_IYI_VAL:
+        EN_IYI_VAL = tarih['val'][-1]
+        sabir = 0
+        torch.save(model.state_dict(), 'diyabet_en_iyi.pth')
+    else:
+        sabir += 1
+        if sabir >= PATIENCE:
+            print(f"Erken durdurma — epoch {epoch}")
+            break
+    
+    if epoch % 20 == 0:
+        print(f"Epoch {epoch}: Train={tarih['train'][-1]:.4f}, Val={tarih['val'][-1]:.4f}")
+
+# ══════════════════════════════════════════════
+#  BÖLÜM 5: TEST DEĞERLENDİRME
+# ══════════════════════════════════════════════
+model.load_state_dict(torch.load('diyabet_en_iyi.pth'))
+model.eval()
+
+with torch.no_grad():
+    test_logits = model(torch.FloatTensor(X_test)).squeeze()
+    test_probs  = torch.sigmoid(test_logits).numpy()
+    test_preds  = (test_probs >= 0.5).astype(int)
+
+print("\n" + "="*50)
+print("TEST SETİ SONUÇLARI")
+print("="*50)
+print(classification_report(y_test, test_preds,
+      target_names=["Diyabetik Değil", "Diyabetik"]))
+print(f"ROC-AUC: {roc_auc_score(y_test, test_probs):.4f}")
+</code></pre>
+
+        <div class="result-box">
+          <div class="label">Beklenen çıktı (yaklaşık değerler):</div>
+          TEST SETİ SONUÇLARI<br>
+          ──────────────────────────────────────<br>
+                          precision  recall  f1-score  support<br>
+          Diyabetik Değil    0.82      0.87    0.84       74<br>
+          Diyabetik          0.73      0.65    0.69       42<br>
+          ──────────────────────────────────────<br>
+          accuracy                       0.79      116<br>
+          ROC-AUC: 0.8341
+        </div>
+
+        <div class="insight">
+          <strong>Bu sonuçları yorumlamak:</strong> %79 doğruluk görünürde iyi ama sınıf dengesizliği
+          nedeniyle yanıltıcı olabilir. Diyabetik hastalar için recall (0.65) düşük — demek ki
+          gerçek pozitif vakaların %35'i gözden kaçıyor. Sağlık uygulamalarında bu kabul edilemez.
+          Karar eşiğini düşürmek (0.5→0.3) recall'ı artırır ama precision düşer.
+          ROC-AUC = 0.83 ise makul bir ayrım gücü olduğunu gösterir.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 10 ─── -->
+      <section class="card fade" id="bolum10">
+        <h2 class="section-title">10. Gerçek Hayat Problemi 2: Müşteri Kaybı Tahmini (Churn Prediction)</h2>
+
+        <p class="lead serif">
+          Telekom sektöründe en kritik iş problemlerinden biri, hangi müşterilerin hizmeti bırakacağını
+          önceden tahmin etmektir. IBM Telco Customer Churn veri seti bu problem için yaygın kullanılan
+          gerçek hayat verisini içerir.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Veri Seti Özellikleri</h4>
+            <ul>
+              <li><strong>Kaynak:</strong> IBM Watson Analytics</li>
+              <li><strong>Örnek sayısı:</strong> 7.043 müşteri</li>
+              <li><strong>Özellik sayısı:</strong> 20 (sayısal + kategorik)</li>
+              <li><strong>Hedef:</strong> Churn (Evet/Hayır)</li>
+              <li><strong>Sınıf dengesi:</strong> ~%26 churn</li>
+            </ul>
+          </div>
+          <div class="mini">
+            <h4>İş Problemi</h4>
+            <p>Bir telekom şirketinin müşteri kaybetmesini önlemek için hangi müşterilere
+            proaktif teklifler sunmalı? Model, churn olasılığı yüksek müşterileri önceden tespit eder.
+            <strong>Yanlış negatif (gerçek churner'ı kaçırmak), yanlış pozitiften (gereksiz teklif sunmak)
+            daha maliyetlidir.</strong></p>
+          </div>
+        </div>
+
+        <div class="code-label">Python — churn_prediction.py</div>
+<pre><code>import pandas as pd
+import numpy as np
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import classification_report, roc_auc_score
+from imblearn.over_sampling import SMOTE   # pip install imbalanced-learn
+
+# ══ VERİ YÜKLEME ══
+df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+print("Boyut:", df.shape)
+
+# ══ ÖN İŞLEME ══
+# TotalCharges sütunu bazen boş string içerir
+df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+df['TotalCharges'].fillna(df['TotalCharges'].median(), inplace=True)
+df.drop('customerID', axis=1, inplace=True)  # ID kolonunu çıkar
+
+# Kategorik değişkenleri sayısallaştır
+kategorik = df.select_dtypes(include='object').columns.tolist()
+kategorik.remove('Churn')
+
+for kol in kategorik:
+    df[kol] = LabelEncoder().fit_transform(df[kol])
+
+df['Churn'] = (df['Churn'] == 'Yes').astype(int)
+
+X = df.drop('Churn', axis=1).values
+y = df['Churn'].values
+
+# ══ SINIF DENGESİZLİĞİNİ ÇÖZME: SMOTE ══
+# SMOTE: Azınlık sınıfından sentetik örnekler üretir
+print(f"\nSMOTE öncesi: Pozitif={y.sum()}, Negatif={(1-y).sum()}")
+smote = SMOTE(random_state=42)
+X, y = smote.fit_resample(X, y)
+print(f"SMOTE sonrası: Pozitif={y.sum()}, Negatif={(1-y).sum()}")
+
+# Bölünme ve ölçeklendirme
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+scaler  = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test  = scaler.transform(X_test)
+
+# ══ MODEL: Churn için optimize edilmiş ══
+class ChurnModeli(nn.Module):
+    def __init__(self, giris_dim):
+        super().__init__()
+        self.ag = nn.Sequential(
+            nn.Linear(giris_dim, 128),
+            nn.BatchNorm1d(128), nn.ReLU(), nn.Dropout(0.4),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),  nn.ReLU(), nn.Dropout(0.3),
+            nn.Linear(64, 32),
+            nn.BatchNorm1d(32),  nn.ReLU(), nn.Dropout(0.2),
+            nn.Linear(32, 1)
+        )
+    def forward(self, x):
+        return self.ag(x)
+
+giris_dim = X_train.shape[1]
+model     = ChurnModeli(giris_dim)
+
+# ── Sınıf ağırlıkları (dengesiz veri için alternatif yol) ──
+# Bu örnekte SMOTE kullandık; alternatif olarak pos_weight kullanılabilir.
+# pos_weight = torch.tensor([neg_sayi / pos_sayi])
+# kayip_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+
+kayip_fn  = nn.BCEWithLogitsLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=5e-4, weight_decay=1e-3)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=80)
+
+# ══ EĞİTİM ══
+train_ds = TensorDataset(torch.FloatTensor(X_train), torch.FloatTensor(y_train))
+loader   = DataLoader(train_ds, batch_size=128, shuffle=True)
+
+for epoch in range(1, 101):
+    model.train()
+    for Xb, yb in loader:
+        optimizer.zero_grad()
+        kayip_fn(model(Xb).squeeze(), yb).backward()
+        optimizer.step()
+    scheduler.step()
+    
+    if epoch % 25 == 0:
+        print(f"Epoch {epoch}/100 tamamlandı, lr={scheduler.get_last_lr()[0]:.6f}")
+
+# ══ TEST ══
+model.eval()
+with torch.no_grad():
+    probs = torch.sigmoid(model(torch.FloatTensor(X_test)).squeeze()).numpy()
+    preds = (probs >= 0.40).astype(int)  # Eşik 0.40: recall öncelikli
+
+print(classification_report(y_test, preds, target_names=["Kalan", "Ayrılan"]))
+print(f"ROC-AUC: {roc_auc_score(y_test, probs):.4f}")
+</code></pre>
+
+        <div class="teaching">
+          <strong>Bu problemdeki kritik öğrenme noktaları:</strong>
+          <ul>
+            <li><strong>Sınıf dengesizliği:</strong> %26 churn oranı ile model her zaman "kalmayacak" dese %74 doğruluk alır ama hiç işe yaramaz. SMOTE veya class weights şarttır.</li>
+            <li><strong>Eşik seçimi:</strong> İş problemi "kaçırdığımız churner'ın maliyeti" ile "gereksiz teklif maliyeti"ni tartmayı gerektirir. Bu, teknik değil iş kararıdır.</li>
+            <li><strong>Özellik mühendisliği:</strong> "Tenure / MonthlyCharges" oranı gibi türetilmiş özellikler modeli geliştirebilir.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 11 ─── -->
+      <section class="card fade" id="bolum11">
+        <h2 class="section-title">11. Gerçek Hayat Problemi 3: Görüntü Sınıflandırma — MNIST El Yazısı Rakamları</h2>
+
+        <p class="lead serif">
+          Görüntü işleme dersinin doğal bir parçası olarak, en bilinen benchmark veri setlerinden biri olan
+          MNIST üzerinde el yazısı rakam sınıflandırması yapacağız.
+          Burada özellikle <strong>düz MLP ile görüntü üzerinde çalışmanın sınırlarını</strong> görecek,
+          ancak aynı zamanda iyi tasarlanmış bir MLP'nin %97+ doğruluğa ulaşabildiğini deneyimleyeceğiz.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>MNIST Veri Seti</h4>
+            <ul>
+              <li>28×28 piksel gri tonlamalı görüntüler</li>
+              <li>60.000 eğitim, 10.000 test örneği</li>
+              <li>10 sınıf: 0'dan 9'a rakamlar</li>
+              <li>PyTorch'ta <code>torchvision.datasets.MNIST</code> ile doğrudan yüklenir</li>
+            </ul>
+          </div>
+          <div class="mini">
+            <h4>MLP ile Görüntü İşleme Yaklaşımı</h4>
+            <p>28×28 = 784 piksel, düzleştirilerek 784 boyutlu girdi vektörü olarak kullanılır.
+            Uzamsal bilgi (komşuluk ilişkileri) kaybolur. CNN bu kayıptan kurtulmak için geliştirilmiştir.
+            Ancak MNIST gibi basit görevlerde MLP yeterince başarılıdır.</p>
+          </div>
+        </div>
+
+        <div class="code-label">Python — mnist_mlp.py</div>
+<pre><code>import torch
+import torch.nn as nn
+import torchvision
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
+
+# ══ DEVICE AYARI ══
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Kullanılan cihaz: {device}")
+
+# ══ VERİ HAZIRLAMA ══
+donusum = transforms.Compose([
+    transforms.ToTensor(),              # [0,255] → [0.0,1.0] tensor
+    transforms.Normalize((0.1307,), (0.3081,))  # MNIST ortalama ve std
+])
+
+# PyTorch otomatik indirir ve önbelleğe alır
+train_veri = torchvision.datasets.MNIST(
+    root='./data', train=True,  download=True, transform=donusum
+)
+test_veri  = torchvision.datasets.MNIST(
+    root='./data', train=False, download=True, transform=donusum
+)
+
+# DataLoader — num_workers paralel veri yükleme için
+train_loader = DataLoader(train_veri, batch_size=256, shuffle=True,  num_workers=2)
+test_loader  = DataLoader(test_veri,  batch_size=256, shuffle=False, num_workers=2)
+
+print(f"Eğitim örnekleri: {len(train_veri):,}")
+print(f"Test örnekleri:   {len(test_veri):,}")
+print(f"Eğitim batch sayısı: {len(train_loader)}")
+
+# ══ MODEL ══
+class MnistMLP(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.ag = nn.Sequential(
+            nn.Flatten(),             # (N, 1, 28, 28) → (N, 784)
+            
+            # Katman 1: 784 → 512
+            nn.Linear(784, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            
+            # Katman 2: 512 → 256
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            
+            # Katman 3: 256 → 128
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            
+            # Çıktı: 128 → 10 sınıf
+            nn.Linear(128, 10)
+            # CrossEntropyLoss içinde Softmax var, burada uygulamaya gerek yok
+        )
+    
+    def forward(self, x):
+        return self.ag(x)
+
+model = MnistMLP().to(device)
+
+# Parametre özeti
+toplam = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(f"\nToplam parametre: {toplam:,}")  # → ~567.178
+
+# ══ EĞİTİM ══
+kayip_fn  = nn.CrossEntropyLoss()         # Softmax + log + NLL hepsi burada
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+scheduler = torch.optim.lr_scheduler.OneCycleLR(
+    optimizer, max_lr=1e-2,
+    steps_per_epoch=len(train_loader), epochs=20
+)
+
+def bir_epoch_egit(model, loader, kayip_fn, optimizer, scheduler):
+    model.train()
+    toplam_kayip = 0; toplam_dogru = 0
+    
+    for goruntuler, etiketler in loader:
+        goruntuler, etiketler = goruntuler.to(device), etiketler.to(device)
+        
+        optimizer.zero_grad()
+        ciktilar = model(goruntuler)              # (N, 10)
+        kayip = kayip_fn(ciktilar, etiketler)     # CrossEntropy
+        kayip.backward()
+        optimizer.step()
+        scheduler.step()
+        
+        toplam_kayip  += kayip.item()
+        _, tahmin      = ciktilar.max(1)          # En yüksek logit → sınıf
+        toplam_dogru  += (tahmin == etiketler).sum().item()
+    
+    kayip_ort = toplam_kayip / len(loader)
+    acc       = toplam_dogru / len(loader.dataset) * 100
+    return kayip_ort, acc
+
+def degerlendir(model, loader):
+    model.eval()
+    toplam_kayip = 0; toplam_dogru = 0
+    
+    with torch.no_grad():
+        for goruntuler, etiketler in loader:
+            goruntuler, etiketler = goruntuler.to(device), etiketler.to(device)
+            ciktilar  = model(goruntuler)
+            toplam_kayip += kayip_fn(ciktilar, etiketler).item()
+            _, tahmin  = ciktilar.max(1)
+            toplam_dogru += (tahmin == etiketler).sum().item()
+    
+    return toplam_kayip / len(loader), toplam_dogru / len(loader.dataset) * 100
+
+print("\nEpoch | Train Loss | Train Acc | Test Loss | Test Acc")
+print("-" * 57)
+for epoch in range(1, 21):
+    t_loss, t_acc = bir_epoch_egit(model, train_loader, kayip_fn, optimizer, scheduler)
+    v_loss, v_acc = degerlendir(model, test_loader)
+    
+    print(f"  {epoch:2d}  |   {t_loss:.4f}   |  {t_acc:.2f}%  |  {v_loss:.4f}  |  {v_acc:.2f}%")
+</code></pre>
+
+        <div class="result-box">
+          <div class="label">Beklenen eğitim çıktısı (NVIDIA GPU veya CPU):</div>
+          Epoch | Train Loss | Train Acc | Test Loss | Test Acc<br>
+          ─────────────────────────────────────────────────────<br>
+          &nbsp; 1  |   0.2341   |  92.88%  |  0.1012  |  96.87%<br>
+          &nbsp; 5  |   0.0891   |  97.23%  |  0.0763  |  97.65%<br>
+          &nbsp;10  |   0.0612   |  98.15%  |  0.0711  |  97.93%<br>
+          &nbsp;20  |   0.0398   |  98.74%  |  0.0689  |  98.12%
+        </div>
+
+        <div class="warning">
+          <strong>Gözlem:</strong> MNIST üzerinde saf MLP ile %98 doğruluğa ulaşmak mümkündür.
+          Ancak bu, görüntünün uzamsal yapısını tamamen yok sayarak elde edilir.
+          Daha büyük ve karmaşık görüntülerde (CIFAR-10, ImageNet) MLP başarısız olur.
+          Uzamsal yapıyı koruyarak işlem yapan <strong>CNN mimarisi</strong>, bu yüzden görüntü işlemede
+          standart haline gelmiştir.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 12 ─── -->
+      <section class="card fade" id="bolum12">
+        <h2 class="section-title">12. Aşırı Öğrenme, Düzenlileştirme ve Model Seçimi</h2>
+
+        <p class="lead serif">
+          İyi bir model, sadece eğitim verisini değil, daha önce görmediği yeni verileri de doğru sınıflandırabilmelidir.
+          Bunun için overfitting ile underfitting arasındaki dengeyi kurmak, yani bias-variance trade-off'u
+          yönetmek gerekmektedir.
+        </p>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Training ve validation loss eğrileri: sağlıklı öğrenme, underfitting, overfitting olmak üzere üç senaryoyu gösteren yatay üçlü grafik.</div>
+
+        <h3>12.1. Düzenlileştirme teknikleri</h3>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>L2 Düzenlileştirmesi (Weight Decay)</h4>
+            <p>Kayıp fonksiyonuna ağırlıkların karelerinin toplamını ekler:
+            <code>L_toplam = L + λ Σ w²</code><br>
+            Bu, ağırlıkları sıfıra çeker ve modelin basit çözümleri tercih etmesini sağlar.
+            PyTorch'ta optimizer'ın <code>weight_decay</code> parametresiyle uygulanır.</p>
+          </div>
+          <div class="mini">
+            <h4>L1 Düzenlileştirmesi (Lasso)</h4>
+            <p>Ağırlıkların mutlak değerlerini cezalandırır:
+            <code>L_toplam = L + λ Σ|w|</code><br>
+            Bazı ağırlıkları tam sıfıra iter — bu, otomatik özellik seçimi etkisi yaratır.
+            Seyrek modeller elde etmek için kullanılır.</p>
+          </div>
+          <div class="mini">
+            <h4>Dropout</h4>
+            <p>Eğitim sırasında nöronları rastgele sıfırlar. Model, herhangi bir nörona bağımlı kalmadan
+            birden fazla yoldan aynı bilgiyi öğrenir. Çıkarım sırasında tüm nöronlar aktif, ancak
+            <code>(1-p)</code> ile ölçeklenir.</p>
+          </div>
+          <div class="mini">
+            <h4>Data Augmentation</h4>
+            <p>Eğitim verisini yapay dönüşümlerle artırma: görüntü döndürme, kırpma, renk değiştirme, gürültü ekleme.
+            Modelin değişimlere karşı dayanıklılığını artırır ve fiilen veri kümesini büyütür.</p>
+          </div>
+        </div>
+
+        <h3>12.2. Cross-Validation</h3>
+        <p>
+          Az veri olduğunda tek bir train/val bölünmesi güvenilmez olabilir.
+          K-Fold Cross Validation veriyi K eşit parçaya böler; her seferinde bir parça validation,
+          kalanlar train olarak kullanılır. K model eğitilir ve ortalama performans raporlanır.
+        </p>
+
+        <div class="code-label">Python — kfold.py</div>
+<pre><code>from sklearn.model_selection import StratifiedKFold
+import torch
+import numpy as np
+
+def kfold_egitim(X, y, model_sinifi, k=5, epochs=50, lr=1e-3):
+    skf    = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+    sonuclar = []
+    
+    for fold, (train_idx, val_idx) in enumerate(skf.split(X, y)):
+        print(f"\n{'='*40}")
+        print(f"Fold {fold+1}/{k}")
+        
+        X_tr, X_v = X[train_idx], X[val_idx]
+        y_tr, y_v = y[train_idx], y[val_idx]
+        
+        scaler = StandardScaler()
+        X_tr = scaler.fit_transform(X_tr)
+        X_v  = scaler.transform(X_v)
+        
+        model = model_sinifi(input_dim=X_tr.shape[1]).to(device)
+        opt   = torch.optim.Adam(model.parameters(), lr=lr)
+        kayip = nn.BCEWithLogitsLoss()
+        
+        # [Eğitim döngüsü...]
+        
+        # Sonuçları kaydet
+        with torch.no_grad():
+            probs = torch.sigmoid(
+                model(torch.FloatTensor(X_v).to(device)).squeeze()
+            ).cpu().numpy()
+        auc = roc_auc_score(y_v, probs)
+        sonuclar.append(auc)
+        print(f"Fold {fold+1} AUC: {auc:.4f}")
+    
+    print(f"\nOrtalama AUC: {np.mean(sonuclar):.4f} ± {np.std(sonuclar):.4f}")
+    return sonuclar
+</code></pre>
+
+        <h3>12.3. Hyperparameter tuning</h3>
+        <div class="code-label">Python — optuna ile otomatik hyperparameter tuning</div>
+<pre><code>import optuna
+
+def objective(trial):
+    # Optuna arama uzayını tanımla
+    lr         = trial.suggest_float('lr', 1e-5, 1e-2, log=True)
+    batch_size = trial.suggest_categorical('batch_size', [32, 64, 128, 256])
+    n_layers   = trial.suggest_int('n_layers', 1, 4)
+    dropout    = trial.suggest_float('dropout', 0.1, 0.5)
+    
+    hidden_dims = [
+        trial.suggest_int(f'n_units_l{i}', 32, 256)
+        for i in range(n_layers)
+    ]
+    
+    model = YapaysinirAgi(
+        input_dim=X_train.shape[1],
+        hidden_dims=hidden_dims,
+        output_dim=1,
+        dropout_p=dropout
+    )
+    
+    # [Kısa eğitim + validation AUC hesapla]
+    val_auc = ...  # eğitimden dönen değer
+    return val_auc  # Optuna bunu maksimize eder
+
+study = optuna.create_study(direction='maximize')
+study.optimize(objective, n_trials=100)
+
+print("En iyi parametreler:", study.best_params)
+print("En iyi AUC:", study.best_value)
+</code></pre>
+      </section>
+
+      <!-- ─── BÖLÜM 13 ─── -->
+      <section class="card fade" id="bolum13">
+        <h2 class="section-title">13. Yapay Sinir Ağı Mimarilerinin Tarihi ve Türleri</h2>
+
+        <p class="lead serif">
+          Yapay sinir ağları tek bir mimari değil; farklı problem türlerine, veri yapılarına ve
+          hesaplama gereksinimlerine göre geliştirilmiş onlarca mimarinin genel adıdır.
+          Bu bölümde en önemli YSA mimarilerini, ortaya çıkış hikâyeleriyle birlikte ele alıyoruz.
+        </p>
+
+        <div class="timeline">
+          <div class="timeline-item"><strong>1943 — McCulloch-Pitts Nöronu:</strong> Biyolojik nöronun ilk matematiksel modeli. Öğrenme yoktu; yalnızca mantıksal işlemler yapıyordu.</div>
+          <div class="timeline-item"><strong>1958 — Perceptron (Rosenblatt):</strong> Öğrenebilen ilk yapı. Tek katman, doğrusal karar sınırı. XOR'u çözemez.</div>
+          <div class="timeline-item"><strong>1969 — Minsky & Papert Eleştirisi:</strong> Perceptronun sınırlılıklarını ispatladılar. YZ kışının başlangıcı.</div>
+          <div class="timeline-item"><strong>1974-1986 — Geri Yayılım:</strong> Werbos (1974) ilk türetti; Rumelhart, Hinton, Williams (1986) çok katmanlı ağlara uyguladı ve duyurdu. MLP pratikte öğrenebilir hale geldi.</div>
+          <div class="timeline-item"><strong>1989 — LeNet (LeCun):</strong> Konvolüsyonel ağların ilk başarılı uygulaması. Posta kodu tanıma için tasarlandı.</div>
+          <div class="timeline-item"><strong>1991 — LSTM (Hochreiter & Schmidhuber):</strong> Uzun vadeli bağımlılıkları öğrenebilen yinelemeli ağ.</div>
+          <div class="timeline-item"><strong>1998 — LeNet-5:</strong> Çok katmanlı CNN mimarisi. Modern CNN'lerin öncüsü.</div>
+          <div class="timeline-item"><strong>2006 — Derin İnanç Ağları (Hinton):</strong> Katman-katman ön eğitim yaklaşımı. Derin öğrenmenin yeniden doğuşu.</div>
+          <div class="timeline-item"><strong>2012 — AlexNet (Krizhevsky vd.):</strong> ImageNet'te ezici zafer. GPU tabanlı derin öğrenmenin patlamasını başlattı.</div>
+          <div class="timeline-item"><strong>2014 — GAN (Goodfellow vd.):</strong> Üretici ve ayırt edici ağlar birbirini eğitir. Sentetik veri üretimi devri başladı.</div>
+          <div class="timeline-item"><strong>2015 — ResNet (He vd.):</strong> Artık bağlantılar (skip connections) sayesinde 152 katmanlı ağ eğitimi mümkün oldu.</div>
+          <div class="timeline-item"><strong>2017 — Transformer (Vaswani vd.):</strong> "Attention is all you need." NLP'de CNN ve RNN'i geride bıraktı. BERT ve GPT ailelerinin temeli.</div>
+          <div class="timeline-item"><strong>2020 sonrası — Büyük Dil Modelleri:</strong> GPT-3, ChatGPT, LLaMA. Transformer mimarisini milyarlarca parametre ve çok modlu verilerle ölçekleme.</div>
+        </div>
+
+        <div id="bolum13-2"></div>
+        <h3>13.2. Konvolüsyonel Sinir Ağları (CNN)</h3>
+
+        <div class="arch-card" style="border-color:#3b82f6;background:#eff6ff;">
+          <h4 style="color:#1d4ed8;">🔵 Konvolüsyonel Sinir Ağı (Convolutional Neural Network — CNN)</h4>
+          <p><strong>Ne yapar:</strong> Görüntülerdeki uzamsal ve hiyerarşik özellikleri öğrenir. Kenarlar → dokular → parçalar → nesneler şeklinde soyutlama hiyerarşisi oluşturur.</p>
+          <p><strong>Temel bileşenler:</strong>
+            <span class="tag blue">Conv2d</span>
+            <span class="tag blue">MaxPool2d</span>
+            <span class="tag blue">BatchNorm2d</span>
+            <span class="tag blue">ReLU</span>
+            <span class="tag blue">Fully Connected</span>
+          </p>
+          <p><strong>Neden avantajlı:</strong> Parametre paylaşımı sayesinde çok az parametre ile uzamsal bilgiyi öğrenir. Translasyona (konumsal kaymaya) dayanıklıdır. MLP'nin "tüm pikseli herkesle bağla" yaklaşımından astronomik ölçüde verimlidir.</p>
+          <p><strong>Kullanım alanları:</strong> Görüntü sınıflandırma, nesne tespiti, segmentasyon, tıbbi görüntü analizi, yüz tanıma.</p>
+          <p><strong>Önemli mimariler:</strong> LeNet-5, AlexNet, VGG-16, GoogLeNet, ResNet, DenseNet, EfficientNet, MobileNet.</p>
+        </div>
+
+        <div class="code-label">Python — basit CNN (CIFAR-10)</div>
+<pre><code>class BasitCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        
+        # Konvolüsyon bloğu 1: 3 kanal → 32 özellik haritası
+        self.conv_blok1 = nn.Sequential(
+            nn.Conv2d(3, 32, kernel_size=3, padding=1),  # (N,3,32,32)→(N,32,32,32)
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2)                           # (N,32,32,32)→(N,32,16,16)
+        )
+        
+        # Konvolüsyon bloğu 2
+        self.conv_blok2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=3, padding=1), # (N,32,16,16)→(N,64,16,16)
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2)                           # (N,64,16,16)→(N,64,8,8)
+        )
+        
+        # Tam bağlı katmanlar
+        self.tam_bagla = nn.Sequential(
+            nn.Flatten(),        # (N,64,8,8) → (N,4096)
+            nn.Linear(4096, 256),
+            nn.ReLU(), nn.Dropout(0.4),
+            nn.Linear(256, num_classes)
+        )
+    
+    def forward(self, x):
+        x = self.conv_blok1(x)
+        x = self.conv_blok2(x)
+        return self.tam_bagla(x)
+</code></pre>
+
+        <div id="bolum13-3"></div>
+        <h3>13.3. Yinelemeli Sinir Ağları (RNN, LSTM, GRU)</h3>
+
+        <div class="arch-card" style="border-color:#7c3aed;background:#f5f3ff;">
+          <h4 style="color:#6d28d9;">🟣 RNN / LSTM / GRU</h4>
+          <p><strong>Ne yapar:</strong> Sıralı (sequential) veriyi işler. Her adımda hem mevcut girdiyi hem de önceki adımın gizli durumunu (memory) kullanır.</p>
+          <p><strong>Temel bileşenler:</strong>
+            <span class="tag violet">nn.RNN</span>
+            <span class="tag violet">nn.LSTM</span>
+            <span class="tag violet">nn.GRU</span>
+            <span class="tag violet">Hidden State</span>
+            <span class="tag violet">Cell State</span>
+          </p>
+          <p><strong>LSTM neden RNN'den iyi:</strong> Standart RNN'de gradyan vanishing sorunu, uzun bağımlılıkları öğrenemez. LSTM'in "kapı mekanizmaları" (forget, input, output kapıları) neyi hatırlayıp neyi unutacağını öğrenir.</p>
+          <p><strong>Kullanım alanları:</strong> Metin sınıflandırma, dil modelleme, zaman serisi tahmini, hisse senedi tahmini, anomali tespiti, ses tanıma.</p>
+          <p><strong>GRU vs LSTM:</strong> GRU, LSTM'den daha az parametreyle benzer başarıyı sağlar. Daha az veri varken tercih edilir.</p>
+        </div>
+
+        <div class="code-label">Python — LSTM ile zaman serisi tahmini</div>
+<pre><code>class LSTMModeli(nn.Module):
+    def __init__(self, giris_boyutu, gizli_boyut, katman_sayisi, cikis_boyutu):
+        super().__init__()
+        self.gizli_boyut  = gizli_boyut
+        self.katman_sayisi = katman_sayisi
+        
+        self.lstm = nn.LSTM(
+            input_size=giris_boyutu,
+            hidden_size=gizli_boyut,
+            num_layers=katman_sayisi,
+            batch_first=True,    # (N, seq_len, features)
+            dropout=0.2          # Katmanlar arası dropout
+        )
+        
+        self.fc = nn.Linear(gizli_boyut, cikis_boyutu)
+    
+    def forward(self, x):
+        # x: (N, seq_len, features)
+        # out: (N, seq_len, hidden_size)
+        # (hn, cn): son gizli durum ve hücre durumu
+        out, (hn, cn) = self.lstm(x)
+        
+        # Son zaman adımının çıktısını kullan
+        son_cikti = out[:, -1, :]    # (N, hidden_size)
+        return self.fc(son_cikti)    # (N, output_size)
+
+# Kullanım: 30 günlük fiyat geçmişiyle bir sonraki günü tahmin et
+model = LSTMModeli(
+    giris_boyutu=5,   # OHLCV: açılış, yüksek, düşük, kapanış, hacim
+    gizli_boyut=64,
+    katman_sayisi=2,
+    cikis_boyutu=1    # Yarınki kapanış fiyatı
+)
+</code></pre>
+
+        <div id="bolum13-4"></div>
+        <h3>13.4. Otokodlayıcılar (Autoencoder)</h3>
+
+        <div class="arch-card" style="border-color:#0f766e;background:#f0fdf4;">
+          <h4 style="color:#0f766e;">🟢 Autoencoder</h4>
+          <p><strong>Ne yapar:</strong> Girdiyi sıkıştırılmış (latent) bir temsile dönüştürür (encoder), sonra bu temsili geri açar (decoder). Gözetimsiz öğrenme mimarisidir.</p>
+          <p><strong>Neden avantajlı:</strong> Etiketli veriye ihtiyaç duymaz. Gürültü azaltma, boyut indirgeme, anomali tespiti ve görüntü üretimi için kullanılır.</p>
+          <p><strong>Varyantlar:</strong>
+            <span class="tag teal">Vanilla AE</span>
+            <span class="tag teal">Denoising AE</span>
+            <span class="tag teal">Sparse AE</span>
+            <span class="tag teal">Variational AE (VAE)</span>
+            <span class="tag teal">Convolutional AE</span>
+          </p>
+          <p><strong>Kullanım alanları:</strong> Anomali/aykırı değer tespiti (fraud detection, arıza tespiti), görüntü gürültü giderme, özellik öğrenimi, veri sıkıştırma.</p>
+        </div>
+
+        <div class="code-label">Python — Anomali tespiti için Autoencoder</div>
+<pre><code>class Autoencoder(nn.Module):
+    """
+    Tabular veri için anomali tespiti.
+    Normal veriye fit edilir; anomaliler yüksek reconstruction error üretir.
+    """
+    def __init__(self, giris_dim, latent_dim=8):
+        super().__init__()
+        
+        # Encoder: sıkıştır
+        self.encoder = nn.Sequential(
+            nn.Linear(giris_dim, 32), nn.ReLU(),
+            nn.Linear(32, 16), nn.ReLU(),
+            nn.Linear(16, latent_dim), nn.ReLU()
+        )
+        
+        # Decoder: geri aç
+        self.decoder = nn.Sequential(
+            nn.Linear(latent_dim, 16), nn.ReLU(),
+            nn.Linear(16, 32), nn.ReLU(),
+            nn.Linear(32, giris_dim)   # Çıktı, giriş boyutunda
+        )
+    
+    def forward(self, x):
+        latent = self.encoder(x)
+        return self.decoder(latent)
+    
+    def anomali_skoru(self, x):
+        """Yüksek skor → anomali"""
+        with torch.no_grad():
+            yeniden = self.forward(x)
+            return torch.mean((x - yeniden) ** 2, dim=1)  # MSE per örnek
+
+# Kullanım:
+model = Autoencoder(giris_dim=30, latent_dim=8)
+# Kayıp: giriş ile yeniden yapılandırma arasındaki MSE
+kayip_fn = nn.MSELoss()
+</code></pre>
+
+        <div id="bolum13-5"></div>
+        <h3>13.5. Üretici Çekişimsel Ağlar (GAN)</h3>
+
+        <div class="arch-card" style="border-color:#be123c;background:#fff1f2;">
+          <h4 style="color:#be123c;">🔴 Generative Adversarial Network (GAN)</h4>
+          <p><strong>Ne yapar:</strong> İki ağı birbirine karşı eğitir. <strong>Üretici (Generator)</strong> sahte veri üretmeye çalışır; <strong>Ayırt Edici (Discriminator)</strong> gerçek ile sahteyi ayırt etmeye çalışır. Eğitim ilerledikçe üretici, ayırt ediciyi kandıracak kadar gerçekçi veri üretebilir hale gelir.</p>
+          <p><strong>Neden devrim yarattı:</strong> Denetimsiz biçimde gerçekçi veri üretimini mümkün kıldı. "Var olmayan insan yüzleri" (thispersondoesnotexist.com) GAN'ın çıktısıdır.</p>
+          <p><strong>Varyantlar:</strong>
+            <span class="tag rose">DCGAN</span>
+            <span class="tag rose">WGAN</span>
+            <span class="tag rose">CycleGAN</span>
+            <span class="tag rose">StyleGAN</span>
+            <span class="tag rose">Pix2Pix</span>
+            <span class="tag rose">Conditional GAN</span>
+          </p>
+          <p><strong>Kullanım alanları:</strong> Sentetik veri üretimi (tıp, otonom araç), görüntüden görüntüye dönüşüm, fotoğraf süper çözünürlüğü, sanat üretimi, veri artırma.</p>
+          <p><strong>Zorluk:</strong> Eğitim dengesizdir; mod çöküşü (mode collapse), gradyan kaybı gibi sorunlar yaygındır. Eğitimi kararlı hâle getirmek aktif araştırma konusudur.</p>
+        </div>
+
+        <div id="bolum13-6"></div>
+        <h3>13.6. Transformer Mimarisi</h3>
+
+        <div class="arch-card" style="border-color:#92400e;background:#fffbeb;">
+          <h4 style="color:#92400e;">🟡 Transformer</h4>
+          <p><strong>Ne yapar:</strong> "Self-attention" mekanizması ile giriş dizisinin her elemanını diğer tüm elemanlarla ilişkilendirir. RNN/LSTM'in sıralı işlemesinin aksine tümüyle paralel çalışır.</p>
+          <p><strong>2017'deki kırılma noktası:</strong> Vaswani ve arkadaşlarının "Attention is All You Need" makalesi, makine çevirisinde CNN ve RNN'i geride bıraktı. Ardından BERT, GPT, T5, LLaMA gibi devasa modeller bu mimariden türedi.</p>
+          <p><strong>Temel bileşenler:</strong>
+            <span class="tag amber">Multi-Head Attention</span>
+            <span class="tag amber">Positional Encoding</span>
+            <span class="tag amber">Feed-Forward</span>
+            <span class="tag amber">Layer Norm</span>
+            <span class="tag amber">Residual Connection</span>
+          </p>
+          <p><strong>Neden avantajlı:</strong>
+            (1) Uzun menzilli bağımlılıkları RNN'den çok daha iyi öğrenir.
+            (2) Tamamen paralel — GPU'larda son derece verimli.
+            (3) Ölçekleme mükemmel çalışır: daha fazla veri + daha büyük model = daha iyi sonuç.
+          </p>
+          <p><strong>Görüntü işlemede Transformer:</strong> Vision Transformer (ViT, 2020) görüntüleri "patch" adı verilen küçük karelere bölerek Transformer'a besledi ve büyük veri setlerinde CNN'leri geride bıraktı.</p>
+          <p><strong>Kullanım alanları:</strong> NLP (çeviri, özetleme, soru yanıt), görüntü sınıflandırma (ViT, Swin Transformer), ses tanıma (Whisper), çok modlu sistemler (CLIP, GPT-4V).</p>
+        </div>
+
+        <h3>13.7. Karşılaştırmalı mimari tablosu</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mimari</th>
+                <th>Veri Türü</th>
+                <th>Temel Avantaj</th>
+                <th>Temel Sınırlılık</th>
+                <th>Tipik Uygulama</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>MLP</strong></td>
+                <td>Tabular, vektör</td>
+                <td>Esnek, anlaşılır, hızlı</td>
+                <td>Uzamsal / sıralı yapıyı kavrayamaz</td>
+                <td>Kredi skoru, gelir tahmini</td>
+              </tr>
+              <tr>
+                <td><strong>CNN</strong></td>
+                <td>Görüntü, video, ses spektrumu</td>
+                <td>Uzamsal özellik öğrenir, parametre verimliliği</td>
+                <td>Küresel (global) bağımlılıkları iyi öğrenemez</td>
+                <td>Görüntü sınıflandırma, tıbbi görüntü</td>
+              </tr>
+              <tr>
+                <td><strong>RNN/LSTM</strong></td>
+                <td>Dizi, metin, zaman serisi</td>
+                <td>Sıralı bellek, değişken uzunluklu giriş</td>
+                <td>Sıralı hesaplama (yavaş), çok uzun bağımlılık zor</td>
+                <td>Çeviri, zaman serisi, ses</td>
+              </tr>
+              <tr>
+                <td><strong>Autoencoder</strong></td>
+                <td>Her tür (gözetimsiz)</td>
+                <td>Etiket gerekmez, özellik öğrenimi, anomali</td>
+                <td>Latent uzay kontrol zor</td>
+                <td>Anomali tespiti, gürültü giderme</td>
+              </tr>
+              <tr>
+                <td><strong>GAN</strong></td>
+                <td>Görüntü, ses, metin</td>
+                <td>Yüksek kaliteli sentetik veri üretimi</td>
+                <td>Eğitim kararsız, mod çöküşü riski</td>
+                <td>Sentetik görüntü, süper çözünürlük</td>
+              </tr>
+              <tr>
+                <td><strong>Transformer</strong></td>
+                <td>Dizi, görüntü, ses</td>
+                <td>Uzun menzil, paralel, ölçeklenebilir</td>
+                <td>Büyük veri ve hesaplama gerektirir</td>
+                <td>LLM, metin-görüntü, çeviri</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 14 ─── -->
+      <section class="card fade" id="bolum14">
+        <h2 class="section-title">14. Öğretim Önerileri ve Bu Haftanın Özeti</h2>
+
+        <div class="teaching">
+          <strong>Kavramsal sıralama önerisi:</strong>
+          <p>Bu konuları anlatırken şu sıranın işe yaradığı gözlemlenmiştir:</p>
+          <ol>
+            <li>XOR problemiyle perceptronun sınırını gösterin → "Nasıl aşarız?" sorusunu doğal olarak doğurur.</li>
+            <li>Katman eklemenin nasıl çalıştığını küçük bir sayısal örnekle ileri beslemeli gösterin.</li>
+            <li>Aktivasyon fonksiyonunu "doğrusallığı kırmak için neden şart" sorusuyla motivate edin.</li>
+            <li>Geri yayılımı sezgisel: "hatayı kimin üstleneceğini bulmak" olarak anlatın, matematiği ondan sonra kurun.</li>
+            <li>PyTorch kodunu öğrencilerle birlikte adım adım çalıştırın; her satırın ne yaptığını sorun.</li>
+            <li>Overfitting'i canlı gösterin: küçük veriyle büyük model eğitin, eğri ayrışmasını grafik üzerinde işaret edin.</li>
+          </ol>
+        </div>
+
+        <h3>14.1. Bu haftanın anahtar mesajları</h3>
+
+        <div class="grid2">
+          <div class="mini green">
+            <h4>✅ Perceptron'dan MLP'ye</h4>
+            <p>Tek nöronun doğrusal sınırı XOR'u çözemez. Katmanlar ve aktivasyon fonksiyonu eklenmesi bu engeli ortadan kaldırır ve evrensel yaklaşım kapısını açar.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Geri yayılım</h4>
+            <p>Zincir kuralı ile gradyanların çıktıdan girişe hesaplanması, derin ağların öğrenmesini mümkün kılan temel algoritmadır. PyTorch bunu otomatik yapar.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Eğitim terminolojisi</h4>
+            <p>Epoch, batch size, learning rate, dropout, early stopping kavramlarının birbirleriyle ilişkisi, iyi bir model elde etmenin pratik çerçevesini oluşturur.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Mimari çeşitliliği</h4>
+            <p>MLP tabular veri için, CNN görüntü için, LSTM/Transformer sıralı veri için optimize edilmiş mimarilerdir. "Her işe yarayan tek mimari" yoktur.</p>
+          </div>
+        </div>
+
+        <h3>14.2. İleri haftalara köprü</h3>
+        <div class="highlight">
+          <p>Bu hafta öğrendikleriniz şu konulara doğrudan zemin hazırlar:</p>
+          <ul>
+            <li><strong>CNN'lere geçiş:</strong> MLP'nin görüntüdeki uzamsal bilgiyi kaybettiğini gördük. CNN, bu kaybı konvolüsyon operatörleriyle nasıl önlüyor?</li>
+            <li><strong>Transfer Learning:</strong> ImageNet'te önceden eğitilmiş ağırlıklar, az etiketli görüntü veri setlerinde nasıl kullanılır?</li>
+            <li><strong>Nesne tespiti (YOLO, Faster R-CNN):</strong> Sınıflandırmayı lokalizasyonla birleştirmek.</li>
+            <li><strong>Segmentasyon (U-Net):</strong> Tıbbi görüntülemede piksel bazlı sınıflandırma.</li>
+          </ul>
+        </div>
+
+        <h3>14.3. Ödev ve alıştırmalar</h3>
+        <div class="exercise">
+          <strong>Temel Seviye:</strong>
+          <ol>
+            <li>Bu haftaki diyabet modelinin mimari yapısını değiştirin (katman sayısı, nöron sayısı, dropout oranı). En iyi validation AUC'yi yakalayan mimariyi bulun ve neyin değiştiğini açıklayın.</li>
+            <li>MNIST modelini eğitin. Aktivasyon fonksiyonunu Sigmoid olarak değiştirin ve ReLU ile arasındaki eğitim hızı farkını learning curve grafikleriyle karşılaştırın.</li>
+          </ol>
+          <strong>Orta Seviye:</strong>
+          <ol start="3">
+            <li>Churn tahmin problemine k-fold cross-validation uygulayın (k=5). Her fold için ayrı AUC ve F1 skoru raporlayın. Sonuçların ne kadar kararlı olduğunu tartışın.</li>
+            <li>Diyabet veri setine L1 ve L2 düzenlileştirmesini ayrı ayrı uygulayın. λ değerini sweepleyerek underfitting-overfitting sınırını bulun.</li>
+          </ol>
+          <strong>İleri Seviye:</strong>
+          <ol start="5">
+            <li>Optuna ile MNIST MLP için hyperparameter optimizasyonu yapın. En iyi parametreleri ve arama sürecini Gantt tipi grafikle görselleştirin.</li>
+            <li>Tabular anomali tespiti için autoencoder tasarlayın: normal satışlar üzerinde eğitin, sahte/fraud işlemleri yüksek reconstruction error ile tespit edin. Credit Card Fraud Detection veri setini (Kaggle) kullanın.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ─── ATIFLAR ─── -->
+      <section class="card fade" id="atiflar">
+        <h2 class="section-title">Atıflar ve Temel Kaynaklar</h2>
+        <ol class="footnotes">
+          <li>Rumelhart, D. E., Hinton, G. E., &amp; Williams, R. J. (1986). Learning representations by back-propagating errors. <em>Nature</em>, 323, 533–536.</li>
+          <li>Cybenko, G. (1989). Approximation by superpositions of a sigmoidal function. <em>Mathematics of Control, Signals and Systems</em>, 2(4), 303–314.</li>
+          <li>Hornik, K., Stinchcombe, M., &amp; White, H. (1989). Multilayer feedforward networks are universal approximators. <em>Neural Networks</em>, 2(5), 359–366.</li>
+          <li>LeCun, Y., Bottou, L., Bengio, Y., &amp; Haffner, P. (1998). Gradient-based learning applied to document recognition. <em>Proceedings of the IEEE</em>, 86(11), 2278–2324.</li>
+          <li>Hochreiter, S., &amp; Schmidhuber, J. (1997). Long Short-Term Memory. <em>Neural Computation</em>, 9(8), 1735–1780.</li>
+          <li>Goodfellow, I., Pouget-Abadie, J., Mirza, M., et al. (2014). Generative Adversarial Nets. <em>NeurIPS 2014</em>.</li>
+          <li>He, K., Zhang, X., Ren, S., &amp; Sun, J. (2016). Deep Residual Learning for Image Recognition. <em>CVPR 2016</em>.</li>
+          <li>Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). Attention Is All You Need. <em>NeurIPS 2017</em>.</li>
+          <li>Kingma, D. P., &amp; Ba, J. (2015). Adam: A Method for Stochastic Optimization. <em>ICLR 2015</em>.</li>
+          <li>Srivastava, N., Hinton, G., Krizhevsky, A., Sutskever, I., &amp; Salakhutdinov, R. (2014). Dropout: A Simple Way to Prevent Neural Networks from Overfitting. <em>JMLR</em>, 15(1), 1929–1958.</li>
+          <li>Ioffe, S., &amp; Szegedy, C. (2015). Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift. <em>ICML 2015</em>.</li>
+          <li>Paszke, A., et al. (2019). PyTorch: An Imperative Style, High-Performance Deep Learning Library. <em>NeurIPS 2019</em>.</li>
+        </ol>
+      </section>
+
+      <!-- ─── KAYNAKLAR ─── -->
+      <section class="card fade" id="kaynaklar">
+        <h2 class="section-title">Daha Ayrıntılı Kaynaklar</h2>
+
+        <h3>📚 Kitaplar</h3>
+        <ul class="resources">
+          <li><a href="https://www.deeplearningbook.org/" target="_blank">Goodfellow, Bengio &amp; Courville — Deep Learning (MIT Press, 2016)</a> — Teori ağırlıklı, kapsamlı referans kitap. MLP ve optimizasyon bölümleri bu hafta için doğrudan ilgili.</li>
+          <li><a href="https://d2l.ai/" target="_blank">Zhang vd. — Dive into Deep Learning (d2l.ai)</a> — İnteraktif Jupyter not defterler, PyTorch ve MXNet ile.</li>
+          <li>Bishop, C. M. (2006). <em>Pattern Recognition and Machine Learning</em>. Springer. — Olasılıksal bakış açısıyla sinir ağları.</li>
+          <li>Géron, A. (2022). <em>Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow</em>, 3rd ed. O'Reilly. — Uygulamalı, örnek odaklı.</li>
+        </ul>
+
+        <h3>🎓 Online Kurslar</h3>
+        <ul class="resources">
+          <li><a href="https://www.coursera.org/specializations/deep-learning" target="_blank">Andrew Ng — Deep Learning Specialization (Coursera)</a> — Teorik altyapı ve matematiksel türetme için.</li>
+          <li><a href="https://course.fast.ai/" target="_blank">fast.ai — Practical Deep Learning for Coders</a> — Hızlı pratiğe geçiş için, top-down yaklaşım.</li>
+          <li><a href="https://www.youtube.com/playlist?list=PLkDaE6sCZn6Ec-XTbcX1uRg2_u4xOEky0" target="_blank">Stanford CS229 — Machine Learning (Andrew Ng, YouTube)</a></li>
+          <li><a href="https://cs231n.github.io/" target="_blank">Stanford CS231n — CNNs for Visual Recognition</a> — Görüntü işleme için temel kaynak. Notlar açık erişimde.</li>
+        </ul>
+
+        <h3>🛠️ PyTorch Dokümantasyon ve Öğreticiler</h3>
+        <ul class="resources">
+          <li><a href="https://pytorch.org/tutorials/" target="_blank">pytorch.org/tutorials</a> — Resmi öğreticiler. "60 Minute Blitz" ve "Training a Classifier" ile başlamanızı öneririz.</li>
+          <li><a href="https://pytorch.org/docs/stable/index.html" target="_blank">pytorch.org/docs</a> — Kapsamlı API referansı.</li>
+          <li><a href="https://github.com/pytorch/examples" target="_blank">github.com/pytorch/examples</a> — MNIST, ImageNet, VAE, GAN örnekleri.</li>
+        </ul>
+
+        <h3>📊 Veri Setleri</h3>
+        <ul class="resources">
+          <li><a href="https://archive.ics.uci.edu/dataset/34/diabetes" target="_blank">UCI — Pima Indians Diabetes Dataset</a></li>
+          <li><a href="https://www.kaggle.com/datasets/blastchar/telco-customer-churn" target="_blank">Kaggle — Telco Customer Churn Dataset</a></li>
+          <li><a href="https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud" target="_blank">Kaggle — Credit Card Fraud Detection</a></li>
+          <li><a href="http://yann.lecun.com/exdb/mnist/" target="_blank">Yann LeCun — MNIST Database</a></li>
+          <li><a href="https://www.cs.toronto.edu/~kriz/cifar.html" target="_blank">University of Toronto — CIFAR-10 Dataset</a></li>
+        </ul>
+
+        <h3>📄 Bu Haftayla Doğrudan İlgili Makaleler</h3>
+        <ul class="resources">
+          <li>Rumelhart et al. (1986) — Geri yayılım: <a href="https://www.nature.com/articles/323533a0" target="_blank">nature.com</a></li>
+          <li>Srivastava et al. (2014) — Dropout: <a href="https://jmlr.org/papers/v15/srivastava14a.html" target="_blank">jmlr.org</a></li>
+          <li>Ioffe &amp; Szegedy (2015) — Batch Norm: <a href="https://arxiv.org/abs/1502.03167" target="_blank">arxiv.org/abs/1502.03167</a></li>
+          <li>Kingma &amp; Ba (2015) — Adam: <a href="https://arxiv.org/abs/1412.6980" target="_blank">arxiv.org/abs/1412.6980</a></li>
+        </ul>
+      </section>
+
+    </main><!-- /content -->
+  </div><!-- /layout -->
+
+  <footer class="footer">
+    <p>Derin Öğrenme ile Görüntü İşleme &nbsp;·&nbsp; 9. Hafta Ders Notu</p>
+    <p>Perceptron'dan Yapay Sinir Ağlarına — MLP, PyTorch, Gerçek Hayat Problemleri ve Mimari Evrimi</p>
+    <a href="#top" class="backtop">↑ Sayfanın başına dön</a>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+  // Scroll-triggered fade animations
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    }),
+    { threshold: 0.06 }
+  );
+  document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

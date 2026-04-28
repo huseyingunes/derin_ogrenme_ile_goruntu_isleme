@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyTorch ile Yapay Sinir Ağı — Adım Adım Ders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1014;
+    --bg-elev: #161a21;
+    --bg-card: #1c212a;
+    --ink: #ecead5;
+    --ink-dim: #9ba0aa;
+    --ink-muted: #6b7280;
+    --accent: #d4a574;
+    --accent-bright: #f5cf7b;
+    --danger: #e07b67;
+    --success: #88b478;
+    --info: #7a9cc6;
+    --rule: #2a2f3a;
+    --code-bg: #0a0c10;
+    --highlight: rgba(212, 165, 116, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.6;
+  }
+
+  .deck { height: 100vh; width: 100vw; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 56px 80px 100px;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .slide.active { opacity: 1; pointer-events: auto; }
+
+  .slide::-webkit-scrollbar { width: 8px; }
+  .slide::-webkit-scrollbar-track { background: transparent; }
+  .slide::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; }
+
+  /* Header */
+  .slide-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .slide-meta .chapter { color: var(--accent); }
+  .slide-meta .step-badge {
+    border: 1px solid var(--rule);
+    padding: 6px 14px;
+    border-radius: 2px;
+    color: var(--ink-dim);
+  }
+
+  /* Typography */
+  h1.title-mega {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(48px, 6.5vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+  h1.title-mega em { font-style: italic; color: var(--accent); font-weight: 400; }
+
+  h2.slide-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  h2.slide-title em { font-style: italic; color: var(--accent); font-weight: 400; }
+
+  h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .lede {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(18px, 1.6vw, 22px);
+    line-height: 1.55;
+    color: var(--ink-dim);
+    max-width: 760px;
+    margin-bottom: 40px;
+  }
+
+  p { line-height: 1.6; color: var(--ink-dim); margin-bottom: 14px; }
+  p strong { color: var(--ink); font-weight: 600; }
+
+  /* Code blocks */
+  pre.code {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 22px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    overflow-x: auto;
+    border-radius: 4px;
+    color: #d6d3c2;
+    margin: 18px 0;
+    position: relative;
+  }
+  pre.code::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -10px;
+    left: 18px;
+    background: var(--bg);
+    padding: 0 10px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  pre.code .kw { color: #c792ea; font-weight: 500; }
+  pre.code .str { color: #c3e88d; }
+  pre.code .num { color: #f78c6c; }
+  pre.code .com { color: #5d6677; font-style: italic; }
+  pre.code .fn { color: #82aaff; }
+  pre.code .cls { color: #ffcb6b; }
+  pre.code .self { color: #f07178; font-style: italic; }
+  pre.code .op { color: #89ddff; }
+  pre.code::-webkit-scrollbar { height: 6px; }
+  pre.code::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+  /* Cards & layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    padding: 24px;
+    border-radius: 4px;
+    position: relative;
+  }
+  .card .corner-tag {
+    position: absolute;
+    top: -10px;
+    right: 18px;
+    background: var(--bg);
+    padding: 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .stat-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    padding: 20px 22px;
+    border-radius: 4px;
+  }
+  .stat-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+  }
+  .stat-card .value {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-card .value em { font-style: italic; color: var(--accent); }
+  .stat-card .sub { font-size: 12px; color: var(--ink-muted); margin-top: 8px; }
+
+  /* Feature list */
+  .feature-list {
+    list-style: none;
+    counter-reset: feature;
+  }
+  .feature-list li {
+    counter-increment: feature;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--rule);
+    color: var(--ink);
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    font-size: 15px;
+  }
+  .feature-list li::before {
+    content: counter(feature, decimal-leading-zero);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+  .feature-list .unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Note box */
+  .note-box {
+    background: var(--highlight);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    margin: 18px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .note-box .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .note-box p { margin: 0; color: var(--ink); font-size: 14px; }
+  .warn-box { background: rgba(224, 123, 103, 0.08); border-left: 3px solid var(--danger); }
+  .warn-box .label { color: var(--danger); }
+  .success-box { background: rgba(136, 180, 120, 0.08); border-left: 3px solid var(--success); }
+  .success-box .label { color: var(--success); }
+  .info-box { background: rgba(122, 156, 198, 0.08); border-left: 3px solid var(--info); }
+  .info-box .label { color: var(--info); }
+
+  /* Action checklist */
+  .do-list { list-style: none; margin-top: 14px; }
+  .do-list li {
+    padding: 10px 0 10px 32px;
+    position: relative;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .do-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+  }
+  .do-list li::after {
+    content: '✓';
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    color: var(--accent);
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .do-list li:hover::after { opacity: 1; }
+  .do-list li:hover { color: var(--accent-bright); cursor: pointer; }
+
+  /* Building blocks grid */
+  .blocks-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 12px;
+  }
+  .block-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    padding: 24px 26px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .block-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle at top right, var(--highlight) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .block-card .num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .block-card h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--accent-bright);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .block-card p { margin: 0; font-size: 13.5px; line-height: 1.55; }
+
+  /* Architecture diagram */
+  .arch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+  }
+  .arch-block {
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    padding: 14px 18px;
+    border-radius: 4px;
+    text-align: center;
+    min-width: 100px;
+  }
+  .arch-block.input { border-color: var(--info); }
+  .arch-block.hidden { border-color: var(--accent); }
+  .arch-block.output { border-color: var(--success); }
+  .arch-block .neurons {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 300;
+  }
+  .arch-block .neurons em { color: var(--accent); font-style: italic; }
+  .arch-block .layer-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 6px;
+  }
+  .arrow { color: var(--ink-muted); font-size: 16px; }
+
+  /* Steps numbered for inner loop */
+  .step-flow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .step-flow .step {
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    gap: 16px;
+    padding: 14px 18px;
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    align-items: center;
+  }
+  .step-flow .step .n {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 32px;
+    color: var(--accent);
+    text-align: center;
+    line-height: 1;
+  }
+  .step-flow .step .body {
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .step-flow .step .body strong {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-bright);
+    font-weight: 500;
+    font-size: 12.5px;
+  }
+
+  /* Results table */
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+  .results-table th, .results-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+  }
+  .results-table th {
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .results-table td.num-cell {
+    color: var(--accent-bright);
+    text-align: right;
+    font-weight: 600;
+  }
+
+  /* Confusion matrix mini */
+  .cm-grid {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr;
+    grid-template-rows: 40px 1fr 1fr;
+    gap: 4px;
+    max-width: 380px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .cm-grid .cm-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .cm-grid .cm-cell {
+    padding: 18px 12px;
+    text-align: center;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+  .cm-grid .cm-cell .label {
+    font-size: 9px;
+    color: var(--ink-muted);
+    letter-spacing: 0.15em;
+    margin-bottom: 6px;
+  }
+  .cm-grid .cm-cell .val {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 300;
+  }
+  .cm-grid .cm-cell.tp { background: rgba(136, 180, 120, 0.12); border-color: var(--success); }
+  .cm-grid .cm-cell.tn { background: rgba(122, 156, 198, 0.10); border-color: var(--info); }
+  .cm-grid .cm-cell.fp { background: rgba(224, 123, 103, 0.08); border-color: var(--danger); }
+  .cm-grid .cm-cell.fn { background: rgba(224, 123, 103, 0.08); border-color: var(--danger); }
+  .cm-grid .cm-cell.tp .val { color: var(--success); }
+  .cm-grid .cm-cell.tn .val { color: var(--info); }
+  .cm-grid .cm-cell.fp .val,
+  .cm-grid .cm-cell.fn .val { color: var(--danger); }
+
+  /* Navigation */
+  .nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(14, 16, 20, 0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    z-index: 50;
+  }
+  .nav-progress {
+    flex: 1;
+    margin: 0 32px;
+    height: 2px;
+    background: var(--rule);
+    position: relative;
+    border-radius: 1px;
+  }
+  .nav-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease;
+    border-radius: 1px;
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 10px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.18em;
+    min-width: 80px;
+    text-align: center;
+  }
+  .nav-counter strong { color: var(--accent); font-weight: 500; }
+
+  /* Cover */
+  .cover { justify-content: center; padding-bottom: 100px; }
+  .cover .institute {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 40px;
+  }
+  .cover .subtitle {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 24px;
+    color: var(--ink-dim);
+    margin-bottom: 60px;
+    max-width: 720px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 60px;
+    border-top: 1px solid var(--rule);
+    padding-top: 24px;
+    max-width: 800px;
+  }
+  .cover-meta div span {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+  .cover-meta div strong {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--ink);
+  }
+
+  /* Section divider */
+  .section-divider {
+    background: linear-gradient(135deg, var(--bg) 0%, var(--bg-elev) 100%);
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+  }
+  .section-divider .roman {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 24px;
+  }
+  .section-divider h2 { font-size: clamp(56px, 7vw, 110px); }
+
+  /* Pill */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* Terminal output */
+  .terminal {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    padding: 22px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    border-radius: 4px;
+    color: #b8b6a3;
+    margin: 16px 0;
+    position: relative;
+  }
+  .terminal::before {
+    content: attr(data-cmd);
+    display: block;
+    color: var(--success);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--rule);
+    font-size: 11px;
+  }
+  .terminal .num-out { color: var(--accent-bright); }
+  .terminal .lbl-out { color: var(--info); }
+
+  .help-hint {
+    position: fixed;
+    bottom: 78px;
+    right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.15em;
+    z-index: 49;
+    opacity: 0.7;
+  }
+  .help-hint kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    margin: 0 2px;
+    color: var(--accent);
+  }
+
+  @media (max-width: 900px) {
+    .slide { padding: 32px 28px 90px; }
+    .grid-2, .grid-3, .grid-4, .blocks-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ════════ COVER ════════ -->
+  <section class="slide cover active">
+    <div class="institute">Yapay Sinir Ağları · Bölüm 8</div>
+    <h1 class="title-mega">PyTorch ile<br><em>Sıfırdan</em> YSA.</h1>
+    <p class="subtitle">PyTorch'un temel yapı taşlarını tanıyacak; bir sinir ağı sınıfı yazacak, eğitim döngüsünü kuracak ve eğitilmiş modeli değerlendireceğiz.</p>
+    <div class="cover-meta">
+      <div><span>Çerçeve</span><strong>PyTorch 2.x</strong></div>
+      <div><span>Yapı taşı</span><strong>Tensor · Module · Optim</strong></div>
+      <div><span>Çıktı</span><strong>Eğitim & Değerlendirme</strong></div>
+      <div><span>Süre</span><strong>~70 dakika</strong></div>
+    </div>
+  </section>
+
+  <!-- ════════ ROADMAP ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">00 · Yol Haritası</span><span class="step-badge">Plan</span></div>
+    <h2 class="slide-title">Bugünün <em>akışı</em>.</h2>
+    <p class="lede">Önce dilbilgisini öğreneceğiz (yapı taşları), sonra cümle kurmayı (model), nihayet de kompozisyon yazmayı (eğitim &amp; değerlendirme).</p>
+    <div class="grid-2" style="gap: 40px;">
+      <div>
+        <ol class="feature-list">
+          <li>PyTorch yapı taşları <span class="unit">10 dk</span></li>
+          <li>Esnek model sınıfı yazma <span class="unit">15 dk</span></li>
+          <li>Modeli kullanma örneği <span class="unit">5 dk</span></li>
+        </ol>
+      </div>
+      <div>
+        <ol class="feature-list" style="counter-reset: feature 3;">
+          <li>Eğitim döngüsü kurulumu <span class="unit">10 dk</span></li>
+          <li>İleri-geri yayılım 6 adımı <span class="unit">15 dk</span></li>
+          <li>Erken durdurma <span class="unit">5 dk</span></li>
+          <li>Değerlendirme &amp; metrikler <span class="unit">10 dk</span></li>
+        </ol>
+      </div>
+    </div>
+    <div class="note-box" style="margin-top: 28px;">
+      <div class="label">Hazırlık</div>
+      <p>Jupyter veya VS Code açın. Gerekli kütüphaneler: <span class="pill">torch</span> <span class="pill">torchvision</span> <span class="pill">scikit-learn</span> <span class="pill">matplotlib</span> <span class="pill">seaborn</span></p>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION I ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm I —</div>
+    <h2 class="slide-title">Yapı <em>taşları</em></h2>
+    <p class="lede" style="margin-top: 24px;">PyTorch'un dört temel kavramı.</p>
+  </section>
+
+  <!-- ════════ BUILDING BLOCKS ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">01 · Yapı Taşları</span><span class="step-badge">Adım 1</span></div>
+    <h2 class="slide-title">PyTorch'un <em>dört</em> ayağı.</h2>
+    <p class="lede">Bu dört kavramı anladığında, PyTorch'taki neredeyse her şey yerine oturur.</p>
+
+    <div class="blocks-grid">
+      <div class="block-card">
+        <div class="num">— 01 —</div>
+        <h3>torch.Tensor</h3>
+        <p>NumPy array'inin GPU üzerinde çalışan, otomatik türev (autograd) destekli versiyonu. Her veri ve ağırlık aslında bir tensör'dür.</p>
+      </div>
+      <div class="block-card">
+        <div class="num">— 02 —</div>
+        <h3>nn.Module</h3>
+        <p>Tüm model bileşenlerinin temel sınıfı. Parametreleri otomatik takip eder; <span class="pill">forward()</span> metodu zorunludur.</p>
+      </div>
+      <div class="block-card">
+        <div class="num">— 03 —</div>
+        <h3>nn.Linear</h3>
+        <p>Tam bağlı katman: <strong>y = Wx + b</strong> işlemini yapar. <span class="pill">in_features</span> ve <span class="pill">out_features</span> parametreleri ile boyutları belirlersin.</p>
+      </div>
+      <div class="block-card">
+        <div class="num">— 04 —</div>
+        <h3>torch.optim</h3>
+        <p>Optimizasyon algoritmaları (SGD, Adam, AdamW). Öğrenme adımı <span class="pill">optimizer.step()</span> ile gerçekleşir.</p>
+      </div>
+    </div>
+
+    <div class="note-box info-box" style="margin-top: 24px;">
+      <div class="label">Sınıfta vurgu</div>
+      <p>Bu dört taşı bir cümle ile özetleyin: <strong>"Tensor veridir, Module modeldir, Linear katmandır, Optim güncelleyicidir."</strong> Sonra bu cümleyi tüm ders boyunca referans alın.</p>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION II ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm II —</div>
+    <h2 class="slide-title">Esnek bir <em>model sınıfı</em></h2>
+    <p class="lede" style="margin-top: 24px;">Tek bir mimari değil; her veriye uyarlanabilir bir şablon yazacağız.</p>
+  </section>
+
+  <!-- ════════ MODEL CLASS PART 1 ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">02 · Model · İskelet</span><span class="step-badge">Adım 2</span></div>
+    <h2 class="slide-title">Sınıfı <em>parametrik</em> yazıyoruz.</h2>
+    <p>Sabit boyutlu bir model yerine; girdi boyutu, gizli katman sayısı, çıktı boyutu ve dropout oranı parametre olarak verilen genel bir sınıf yazacağız. Böylece bu sınıfı her veri setinde yeniden kullanabiliriz.</p>
+
+    <pre class="code" data-label="model.py · İmza"><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="kw">class</span> <span class="cls">YapaysinirAgi</span>(nn.Module):
+    <span class="str">"""
+    Genel amaçlı tam bağlı (fully connected) yapay sinir ağı.
+    - input_dim  : girdi özellik sayısı
+    - hidden_dims: gizli katman nöron sayılarını tutan liste
+    - output_dim : çıktı boyutu (sınıf sayısı ya da regresyon çıktısı)
+    - dropout_p  : dropout olasılığı (0 = dropout yok)
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, input_dim, hidden_dims, output_dim, dropout_p<span class="op">=</span><span class="num">0.3</span>):
+        <span class="fn">super</span>(YapaysinirAgi, <span class="self">self</span>).<span class="fn">__init__</span>()
+        <span class="com"># Burada katmanlar inşa edilecek...</span></pre>
+
+    <div class="grid-3" style="margin-top: 24px;">
+      <div class="stat-card">
+        <div class="label">input_dim</div>
+        <div class="value"><em>?</em></div>
+        <div class="sub">veri setine göre</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">hidden_dims</div>
+        <div class="value"><em>[ ]</em></div>
+        <div class="sub">liste — esneklik bu</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">output_dim</div>
+        <div class="value"><em>?</em></div>
+        <div class="sub">göreve göre</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ MODEL CLASS PART 2 ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">02 · Model · Katman İnşası</span><span class="step-badge">Adım 2 · devam</span></div>
+    <h2 class="slide-title">Bir <em>for döngüsüyle</em> ağı kuruyoruz.</h2>
+    <p class="lede">Her gizli katman için 4 elemanlı bir blok ekliyoruz: <strong>Linear → BatchNorm → ReLU → Dropout</strong>. En sonda aktivasyonsuz çıktı katmanı.</p>
+
+    <pre class="code" data-label="__init__ — gövde">katmanlar <span class="op">=</span> []
+onceki_dim <span class="op">=</span> input_dim
+
+<span class="kw">for</span> gizli_dim <span class="kw">in</span> hidden_dims:
+    katmanlar.append(nn.Linear(onceki_dim, gizli_dim))
+    katmanlar.append(nn.BatchNorm1d(gizli_dim))   <span class="com"># Batch normalizasyon</span>
+    katmanlar.append(nn.ReLU())                   <span class="com"># Aktivasyon</span>
+    katmanlar.append(nn.Dropout(p<span class="op">=</span>dropout_p))     <span class="com"># Dropout</span>
+    onceki_dim <span class="op">=</span> gizli_dim
+
+<span class="com"># Çıktı katmanı — aktivasyonsuz (kayıp fonksiyonu içinde uygulanacak)</span>
+katmanlar.append(nn.Linear(onceki_dim, output_dim))
+
+<span class="self">self</span>.ag <span class="op">=</span> nn.Sequential(<span class="op">*</span>katmanlar)
+
+<span class="kw">def</span> <span class="fn">forward</span>(<span class="self">self</span>, x):
+    <span class="kw">return</span> <span class="self">self</span>.ag(x)</pre>
+
+    <div class="grid-2" style="margin-top: 20px;">
+      <div class="note-box">
+        <div class="label">nn.Sequential nedir?</div>
+        <p>Verilen katmanları sırayla uygulayan bir konteyner. <span class="pill">*katmanlar</span> ile listeyi açıyoruz; Python'un "unpacking" özelliği.</p>
+      </div>
+      <div class="note-box warn-box">
+        <div class="label">Çıktıda aktivasyon YOK</div>
+        <p>Sigmoid veya softmax eklemeyin! <span class="pill">BCEWithLogitsLoss</span> ya da <span class="pill">CrossEntropyLoss</span> bunu içeride, sayısal olarak kararlı şekilde yapar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ MODEL USAGE ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">03 · Model · Kullanım</span><span class="step-badge">Adım 3</span></div>
+    <h2 class="slide-title">Modeli <em>somutlaştıralım</em>.</h2>
+
+    <div class="arch">
+      <div class="arch-block input">
+        <div class="neurons">10</div>
+        <div class="layer-name">girdi</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="arch-block hidden">
+        <div class="neurons"><em>64</em></div>
+        <div class="layer-name">Linear+BN+ReLU+Drop</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="arch-block hidden">
+        <div class="neurons"><em>32</em></div>
+        <div class="layer-name">Linear+BN+ReLU+Drop</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="arch-block output">
+        <div class="neurons">1</div>
+        <div class="layer-name">çıktı (logit)</div>
+      </div>
+    </div>
+
+    <pre class="code" data-label="Modeli oluştur ve yazdır">model <span class="op">=</span> YapaysinirAgi(
+    input_dim<span class="op">=</span><span class="num">10</span>,          <span class="com"># 10 özellik</span>
+    hidden_dims<span class="op">=</span>[<span class="num">64</span>, <span class="num">32</span>],  <span class="com"># İki gizli katman: 64 ve 32 nöron</span>
+    output_dim<span class="op">=</span><span class="num">1</span>,          <span class="com"># İkili sınıflandırma için 1 çıktı</span>
+    dropout_p<span class="op">=</span><span class="num">0.3</span>
+)
+
+<span class="fn">print</span>(model)
+
+<span class="com"># Toplam eğitilebilir parametre sayısı</span>
+toplam_param <span class="op">=</span> <span class="fn">sum</span>(p.numel() <span class="kw">for</span> p <span class="kw">in</span> model.parameters() <span class="kw">if</span> p.requires_grad)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Toplam eğitilebilir parametre: {toplam_param:,}"</span>)</pre>
+
+    <div class="terminal" data-cmd="$ python model.py">YapaysinirAgi(
+  (ag): Sequential(
+    (<span class="num-out">0</span>): Linear(in_features=<span class="num-out">10</span>, out_features=<span class="num-out">64</span>, bias=True)
+    (<span class="num-out">1</span>): BatchNorm1d(<span class="num-out">64</span>, ...)
+    (<span class="num-out">2</span>): ReLU()
+    (<span class="num-out">3</span>): Dropout(p=<span class="num-out">0.3</span>, ...)
+    (<span class="num-out">4</span>): Linear(in_features=<span class="num-out">64</span>, out_features=<span class="num-out">32</span>, bias=True)
+    ...
+    (<span class="num-out">8</span>): Linear(in_features=<span class="num-out">32</span>, out_features=<span class="num-out">1</span>, bias=True)
+  )
+)
+<span class="lbl-out">Toplam eğitilebilir parametre:</span> <span class="num-out">2,945</span></div>
+
+    <ul class="do-list">
+      <li>Modeli oluşturup <span class="pill">print(model)</span> yapın.</li>
+      <li><span class="pill">hidden_dims=[128, 64, 32]</span> verip parametre sayısının nasıl değiştiğini gözleyin.</li>
+    </ul>
+  </section>
+
+  <!-- ════════ SECTION III ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm III —</div>
+    <h2 class="slide-title"><em>Eğitim</em> döngüsü</h2>
+    <p class="lede" style="margin-top: 24px;">Modelin gerçekten öğrendiği yer.</p>
+  </section>
+
+  <!-- ════════ TRAINING SETUP ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">04 · Eğitim · Kurulum</span><span class="step-badge">Adım 4</span></div>
+    <h2 class="slide-title">Önce <em>üç bileşen</em>: yükleyici, kayıp, optimizer.</h2>
+    <p class="lede">Eğitim döngüsüne girmeden önce: veriyi nasıl çağıracağız, hatayı nasıl ölçeceğiz, ağırlıkları nasıl güncelleyeceğiz?</p>
+
+    <pre class="code" data-label="egitim.py · BÖLÜM 1 — Kurulum"><span class="com"># ─── Veri yükleyiciler ───</span>
+train_dataset <span class="op">=</span> TensorDataset(
+    torch.FloatTensor(X_train).to(device),
+    torch.FloatTensor(y_train).to(device)
+)
+train_loader <span class="op">=</span> DataLoader(train_dataset, batch_size<span class="op">=</span>batch_size, shuffle<span class="op">=</span><span class="kw">True</span>)
+val_loader   <span class="op">=</span> DataLoader(val_dataset,   batch_size<span class="op">=</span>batch_size, shuffle<span class="op">=</span><span class="kw">False</span>)
+
+<span class="com"># ─── Kayıp, optimizer, scheduler ───</span>
+kayip_fn  <span class="op">=</span> nn.BCEWithLogitsLoss()                  <span class="com"># Sigmoid + BCE birleşimi</span>
+optimizer <span class="op">=</span> torch.optim.AdamW(model.parameters(), lr<span class="op">=</span>lr, weight_decay<span class="op">=</span><span class="num">1e-4</span>)
+scheduler <span class="op">=</span> torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, mode<span class="op">=</span><span class="str">'min'</span>, patience<span class="op">=</span><span class="num">5</span>, factor<span class="op">=</span><span class="num">0.5</span>
+)</pre>
+
+    <div class="grid-3" style="margin-top: 24px;">
+      <div class="card">
+        <div class="corner-tag">DataLoader</div>
+        <h3 style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent);">Mini-batch'ler</h3>
+        <p style="font-size: 13px;">Veriyi <span class="pill">batch_size</span>'lık parçalara böler. <span class="pill">shuffle=True</span> sadece eğitimde — validasyonda gerek yok.</p>
+      </div>
+      <div class="card">
+        <div class="corner-tag">AdamW</div>
+        <h3 style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent);">Adam + L2</h3>
+        <p style="font-size: 13px;">Standart Adam'a göre weight_decay'i daha doğru uygular. Modern derin öğrenmede tercih edilir.</p>
+      </div>
+      <div class="card">
+        <div class="corner-tag">Scheduler</div>
+        <h3 style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent);">LR azaltma</h3>
+        <p style="font-size: 13px;">Validasyon kaybı 5 epoch iyileşmezse öğrenme hızını yarıya düşürür. "Plateau" — yayla.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ TRAINING LOOP ANATOMI ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">05 · Eğitim · Kalp</span><span class="step-badge">Adım 5</span></div>
+    <h2 class="slide-title">İç döngünün <em>altı adımı</em>.</h2>
+    <p class="lede">Her batch için PyTorch'ta tekrarladığımız altı adım. Bu altı adımı ezbere bilmeden ileri gidemezsiniz.</p>
+
+    <div class="step-flow">
+      <div class="step">
+        <div class="n">1</div>
+        <div class="body"><strong>optimizer.zero_grad()</strong> — Önceki batch'in gradyanlarını sıfırla. PyTorch varsayılan olarak biriktirir; istemediğimiz şey.</div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div class="body"><strong>cikti = model(X_batch)</strong> — İleri besleme. Verilen girdiyle modelin tahminini al.</div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div class="body"><strong>kayip = kayip_fn(cikti, y_batch)</strong> — Tahminle gerçek arasındaki hatayı ölç.</div>
+      </div>
+      <div class="step">
+        <div class="n">4</div>
+        <div class="body"><strong>kayip.backward()</strong> — Geri yayılım. Her parametre için <em>"hatayı ne kadar etkiledim"</em> hesabı.</div>
+      </div>
+      <div class="step">
+        <div class="n">5</div>
+        <div class="body"><strong>clip_grad_norm_(...)</strong> — Patlayan gradyanları kırp. RNN'lerde kritik; FFN'de güvenlik kemeri.</div>
+      </div>
+      <div class="step">
+        <div class="n">6</div>
+        <div class="body"><strong>optimizer.step()</strong> — Hesaplanan gradyanları kullanarak ağırlıkları güncelle.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ TRAINING CODE ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">05 · Eğitim · Kod</span><span class="step-badge">Adım 5 · uygulama</span></div>
+    <h2 class="slide-title">Adımları <em>koda</em> dökelim.</h2>
+
+    <pre class="code" data-label="Eğitim aşaması — bir epoch"><span class="com"># ━━━ EĞİTİM AŞAMASI ━━━</span>
+model.train()       <span class="com"># Dropout ve BatchNorm aktif</span>
+toplam_train_kayip <span class="op">=</span> <span class="num">0.0</span>
+
+<span class="kw">for</span> X_batch, y_batch <span class="kw">in</span> train_loader:
+    <span class="com"># 1. Önceki gradyanları sıfırla</span>
+    optimizer.zero_grad()
+
+    <span class="com"># 2. İleri besleme</span>
+    cikti <span class="op">=</span> model(X_batch).squeeze(<span class="num">1</span>)   <span class="com"># (N,1) → (N,)</span>
+
+    <span class="com"># 3. Kayıp hesapla</span>
+    kayip <span class="op">=</span> kayip_fn(cikti, y_batch)
+
+    <span class="com"># 4. Geri yayılım</span>
+    kayip.backward()
+
+    <span class="com"># 5. Gradient clipping (patlayan gradyanları önle)</span>
+    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm<span class="op">=</span><span class="num">1.0</span>)
+
+    <span class="com"># 6. Parametre güncelleme</span>
+    optimizer.step()
+
+    toplam_train_kayip <span class="op">+=</span> kayip.item() <span class="op">*</span> X_batch.size(<span class="num">0</span>)
+
+ort_train_kayip <span class="op">=</span> toplam_train_kayip <span class="op">/</span> <span class="fn">len</span>(train_dataset)</pre>
+
+    <div class="note-box info-box">
+      <div class="label">.squeeze(1) neden?</div>
+      <p>Modelin çıktısı <span class="pill">(N, 1)</span> şeklinde. Hedef ise <span class="pill">(N,)</span>. Boyutları eşitlemezsek loss fonksiyonu broadcasting yüzünden yanlış sonuç verir. <span class="pill">.squeeze(1)</span> ekstra ekseni kaldırır.</p>
+    </div>
+  </section>
+
+  <!-- ════════ VALIDATION ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">06 · Validasyon</span><span class="step-badge">Adım 6</span></div>
+    <h2 class="slide-title">Aynı şey <em>ama gradyansız</em>.</h2>
+    <p class="lede">Validasyonda öğrenmiyoruz, sadece kontrol ediyoruz. Bu yüzden iki şeyi değiştiriyoruz: <strong>model.eval()</strong> ve <strong>torch.no_grad()</strong>.</p>
+
+    <pre class="code" data-label="Validasyon aşaması"><span class="com"># ━━━ VALİDASYON AŞAMASI ━━━</span>
+model.eval()        <span class="com"># Dropout kapalı, BatchNorm tahmin modunda</span>
+toplam_val_kayip <span class="op">=</span> <span class="num">0.0</span>
+dogru <span class="op">=</span> <span class="num">0</span>
+
+<span class="kw">with</span> torch.no_grad():   <span class="com"># Gradyan hesaplanmaz → hız + bellek tasarrufu</span>
+    <span class="kw">for</span> X_batch, y_batch <span class="kw">in</span> val_loader:
+        cikti <span class="op">=</span> model(X_batch).squeeze(<span class="num">1</span>)
+        kayip <span class="op">=</span> kayip_fn(cikti, y_batch)
+        toplam_val_kayip <span class="op">+=</span> kayip.item() <span class="op">*</span> X_batch.size(<span class="num">0</span>)
+
+        <span class="com"># Doğruluk hesaplama</span>
+        tahmin <span class="op">=</span> (torch.sigmoid(cikti) <span class="op">&gt;=</span> <span class="num">0.5</span>).float()
+        dogru <span class="op">+=</span> (tahmin <span class="op">==</span> y_batch).sum().item()
+
+ort_val_kayip <span class="op">=</span> toplam_val_kayip <span class="op">/</span> <span class="fn">len</span>(val_dataset)
+val_acc <span class="op">=</span> dogru <span class="op">/</span> <span class="fn">len</span>(val_dataset) <span class="op">*</span> <span class="num">100</span></pre>
+
+    <div class="grid-2" style="margin-top: 20px;">
+      <div class="note-box">
+        <div class="label">model.train() vs model.eval()</div>
+        <p><strong>train()</strong> → Dropout aktif, BatchNorm batch istatistiklerini öğrenir.<br><strong>eval()</strong> → Dropout kapalı, BatchNorm öğrenilmiş istatistikleri kullanır.</p>
+      </div>
+      <div class="note-box">
+        <div class="label">torch.no_grad()</div>
+        <p>Bu blok içinde tensörlerin <span class="pill">requires_grad</span> özelliği geçici olarak devre dışı. Bellek yarıya iner, hız iki katına çıkar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ EARLY STOPPING ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">07 · Erken Durdurma</span><span class="step-badge">Adım 7</span></div>
+    <h2 class="slide-title">Daha fazla epoch <em>her zaman</em> daha iyi değildir.</h2>
+    <p class="lede">Validasyon kaybı bir noktadan sonra artmaya başlar — overfitting'in kanıtı. Tam o noktadan önceki en iyi modeli saklayıp orada durmalıyız.</p>
+
+    <pre class="code" data-label="Erken durdurma + scheduler"><span class="com"># ━━━ EARLY STOPPING ━━━</span>
+<span class="kw">if</span> ort_val_kayip <span class="op">&lt;</span> en_iyi_val_kayip:
+    en_iyi_val_kayip <span class="op">=</span> ort_val_kayip
+    sabir_sayaci <span class="op">=</span> <span class="num">0</span>
+    <span class="com"># En iyi model ağırlıklarını kopyala</span>
+    en_iyi_agirliklar <span class="op">=</span> {k: v.clone() <span class="kw">for</span> k, v <span class="kw">in</span> model.state_dict().items()}
+<span class="kw">else</span>:
+    sabir_sayaci <span class="op">+=</span> <span class="num">1</span>
+    <span class="kw">if</span> sabir_sayaci <span class="op">&gt;=</span> patience:
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Erken durdurma! {patience} epoch boyunca iyileşme olmadı."</span>)
+        <span class="kw">break</span>
+
+<span class="com"># Scheduler de validasyona bağlı</span>
+scheduler.step(ort_val_kayip)
+
+<span class="com"># Döngü bittikten sonra → en iyi ağırlıklara geri dön</span>
+<span class="kw">if</span> en_iyi_agirliklar:
+    model.load_state_dict(en_iyi_agirliklar)</pre>
+
+    <div class="note-box success-box">
+      <div class="label">Kritik fark — scheduler vs early stopping</div>
+      <p><strong>Scheduler</strong> → eğitime devam ediyoruz, ama daha küçük adımlarla.<br><strong>Early stopping</strong> → eğitim tamamen sona eriyor, en iyi modele geri dönüyoruz.<br>İkisini birlikte kullanırken patience'lar farklı olmalı: scheduler 5, early stopping 10. Önce LR düşsün, sonra hâlâ iyileşmiyorsa dur.</p>
+    </div>
+
+    <ul class="do-list">
+      <li><span class="pill">.clone()</span>'un neden gerekli olduğunu öğrencilere sorun (referans vs kopya).</li>
+      <li>Patience değerini 3'e düşürüp etkisini gözleyin.</li>
+    </ul>
+  </section>
+
+  <!-- ════════ TRAINING OUTPUT ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">07 · Eğitim · Çıktı</span><span class="step-badge">Sonuç</span></div>
+    <h2 class="slide-title">Çalıştırınca <em>böyle</em> görmelisiniz.</h2>
+    <p>Her 10 epoch'ta bir eğitim ve validasyon kaybını yazdırıyoruz. Validasyon kaybı düştüğü sürece model öğreniyor demektir.</p>
+
+    <pre class="code" data-label="Loglama"><span class="kw">if</span> epoch <span class="op">%</span> <span class="num">10</span> <span class="op">==</span> <span class="num">0</span> <span class="kw">or</span> epoch <span class="op">==</span> <span class="num">1</span>:
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Epoch [{epoch:3d}/{epochs}] | "</span>
+          <span class="fn">f</span><span class="str">"Train Loss: {ort_train_kayip:.4f} | "</span>
+          <span class="fn">f</span><span class="str">"Val Loss: {ort_val_kayip:.4f} | "</span>
+          <span class="fn">f</span><span class="str">"Val Acc: {val_acc:.1f}%"</span>)</pre>
+
+    <div class="terminal" data-cmd="$ python egitim.py">Epoch [  <span class="num-out">1</span>/100] | Train Loss: <span class="num-out">0.6892</span> | Val Loss: <span class="num-out">0.6701</span> | Val Acc: <span class="num-out">61.2</span>%
+Epoch [ <span class="num-out">10</span>/100] | Train Loss: <span class="num-out">0.5234</span> | Val Loss: <span class="num-out">0.5012</span> | Val Acc: <span class="num-out">74.8</span>%
+Epoch [ <span class="num-out">20</span>/100] | Train Loss: <span class="num-out">0.4581</span> | Val Loss: <span class="num-out">0.4623</span> | Val Acc: <span class="num-out">77.5</span>%
+Epoch [ <span class="num-out">30</span>/100] | Train Loss: <span class="num-out">0.4102</span> | Val Loss: <span class="num-out">0.4421</span> | Val Acc: <span class="num-out">78.9</span>%
+Epoch [ <span class="num-out">40</span>/100] | Train Loss: <span class="num-out">0.3845</span> | Val Loss: <span class="num-out">0.4398</span> | Val Acc: <span class="num-out">79.2</span>%
+Epoch <span class="num-out">00043</span>: reducing learning rate of group 0 to <span class="num-out">5.0e-04</span>.
+
+<span class="lbl-out">Erken durdurma!</span> 10 epoch boyunca iyileşme olmadı.
+<span class="lbl-out">En iyi validation kaybı:</span> <span class="num-out">0.4385</span></div>
+
+    <div class="note-box warn-box">
+      <div class="label">Dikkat: Tipik overfitting belirtisi</div>
+      <p><strong>Train Loss düşmeye devam ediyor</strong> ama <strong>Val Loss yatay/yükseliyor</strong> ise model artık ezberliyor demektir. Erken durdurma tam burada devreye girer.</p>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION IV ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm IV —</div>
+    <h2 class="slide-title"><em>Değerlendirme</em></h2>
+    <p class="lede" style="margin-top: 24px;">Eğitim bitti. Şimdi soru: model gerçekten iyi mi?</p>
+  </section>
+
+  <!-- ════════ EVALUATION FUNCTION ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">08 · Değerlendirme · Fonksiyon</span><span class="step-badge">Adım 8</span></div>
+    <h2 class="slide-title">Tek <em>fonksiyon</em>, dört metrik.</h2>
+    <p>Test seti üzerinde tahmin yap, sonra <strong>classification_report</strong>, <strong>confusion matrix</strong>, <strong>ROC-AUC</strong> ve <strong>ROC eğrisi</strong>'ni birden üret.</p>
+
+    <pre class="code" data-label="degerlendirme.py"><span class="kw">def</span> <span class="fn">modeli_degerlendir</span>(model, X_test, y_test, device<span class="op">=</span><span class="str">'cpu'</span>, esik<span class="op">=</span><span class="num">0.5</span>):
+    <span class="str">"""Kapsamlı model değerlendirmesi"""</span>
+    model.eval()
+
+    <span class="kw">with</span> torch.no_grad():
+        X_tensor <span class="op">=</span> torch.FloatTensor(X_test).to(device)
+        logits   <span class="op">=</span> model(X_tensor).squeeze(<span class="num">1</span>)
+        probs    <span class="op">=</span> torch.sigmoid(logits).cpu().numpy()
+        preds    <span class="op">=</span> (probs <span class="op">&gt;=</span> esik).astype(<span class="fn">int</span>)
+
+    <span class="fn">print</span>(classification_report(y_test, preds,
+          target_names<span class="op">=</span>[<span class="str">"Negatif"</span>, <span class="str">"Pozitif"</span>]))
+
+    roc_auc <span class="op">=</span> roc_auc_score(y_test, probs)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"ROC-AUC Skoru: {roc_auc:.4f}"</span>)
+
+    <span class="com"># ─── Confusion Matrix ───</span>
+    cm <span class="op">=</span> confusion_matrix(y_test, preds)
+    sns.heatmap(cm, annot<span class="op">=</span><span class="kw">True</span>, fmt<span class="op">=</span><span class="str">'d'</span>, cmap<span class="op">=</span><span class="str">'Blues'</span>)
+    plt.savefig(<span class="str">"confusion_matrix.png"</span>, dpi<span class="op">=</span><span class="num">150</span>)
+
+    <span class="com"># ─── ROC Eğrisi ───</span>
+    fpr, tpr, _ <span class="op">=</span> roc_curve(y_test, probs)
+    plt.plot(fpr, tpr, label<span class="op">=</span><span class="fn">f</span><span class="str">'ROC AUC = {roc_auc:.3f}'</span>)
+    plt.savefig(<span class="str">"roc_curve.png"</span>, dpi<span class="op">=</span><span class="num">150</span>)
+
+    <span class="kw">return</span> probs, preds</pre>
+
+    <div class="note-box">
+      <div class="label">Ham çıktı yerine olasılık</div>
+      <p>Modelin <span class="pill">logits</span>'ine <span class="pill">sigmoid</span> uygulayıp <span class="pill">[0,1]</span> aralığında olasılık elde ediyoruz. Sonra <span class="pill">esik</span> ile sınıfa dönüştürüyoruz. Eşiği değiştirerek precision/recall dengesini ayarlayabilirsin.</p>
+    </div>
+  </section>
+
+  <!-- ════════ CONFUSION MATRIX EXPLAIN ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">09 · Confusion Matrix</span><span class="step-badge">Yorum</span></div>
+    <h2 class="slide-title">Dört kutu, <em>tüm gerçek</em>.</h2>
+    <p class="lede">Confusion matrix bir sınıflandırıcının yaptığı dört tip hatayı/başarıyı görselleştirir. Dersi burada yavaşlatın — bu görsel modelin tüm hikayesini anlatır.</p>
+
+    <div class="grid-2" style="gap: 36px; align-items: center;">
+      <div>
+        <div class="cm-grid">
+          <div class="cm-label"></div>
+          <div class="cm-label">Tahmin: 0</div>
+          <div class="cm-label">Tahmin: 1</div>
+
+          <div class="cm-label">Gerçek: 0</div>
+          <div class="cm-cell tn">
+            <div class="label">TN</div>
+            <div class="val">85</div>
+          </div>
+          <div class="cm-cell fp">
+            <div class="label">FP</div>
+            <div class="val">12</div>
+          </div>
+
+          <div class="cm-label">Gerçek: 1</div>
+          <div class="cm-cell fn">
+            <div class="label">FN</div>
+            <div class="val">18</div>
+          </div>
+          <div class="cm-cell tp">
+            <div class="label">TP</div>
+            <div class="val">35</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="color: var(--success);">TP — True Positive</h3>
+        <p style="font-size: 13.5px;">Pozitif dedik, gerçekten pozitifmiş. <em>İyi.</em></p>
+
+        <h3 style="color: var(--info); margin-top: 16px;">TN — True Negative</h3>
+        <p style="font-size: 13.5px;">Negatif dedik, gerçekten negatifmiş. <em>İyi.</em></p>
+
+        <h3 style="color: var(--danger); margin-top: 16px;">FP — False Positive (Tip I)</h3>
+        <p style="font-size: 13.5px;">Pozitif dedik ama negatifmiş. <em>Yanlış alarm.</em></p>
+
+        <h3 style="color: var(--danger); margin-top: 16px;">FN — False Negative (Tip II)</h3>
+        <p style="font-size: 13.5px;">Negatif dedik ama pozitifmiş. <em>Atlanmış vaka — sağlıkta tehlikeli.</em></p>
+      </div>
+    </div>
+
+    <div class="note-box success-box" style="margin-top: 24px;">
+      <div class="label">Sınıfta tartışma</div>
+      <p>Spam filtresi ve kanser tarama testi için "hangi hata daha kötü?" sorusunu öğrencilere sordurun. Cevap aynı değil — bu yüzden tek bir "doğruluk" sayısı yetmez.</p>
+    </div>
+  </section>
+
+  <!-- ════════ ROC AUC ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">10 · ROC-AUC</span><span class="step-badge">Yorum</span></div>
+    <h2 class="slide-title">Eşikten <em>bağımsız</em> başarı.</h2>
+    <p class="lede">Confusion matrix tek bir eşikteki sonucu gösterir. ROC eğrisi <strong>tüm olası eşiklerdeki</strong> performansı tek bir grafikte özetler.</p>
+
+    <div class="grid-2" style="gap: 36px; align-items: start;">
+      <div>
+        <h3>ROC eğrisi</h3>
+        <p>X ekseni: <strong>FPR</strong> (yanlış alarm oranı). Y ekseni: <strong>TPR</strong> (doğru tespit oranı). Eşiği değiştirdikçe iki ölçü de değişir; eğri bunu çizer.</p>
+        <h3 style="margin-top: 20px;">AUC nedir?</h3>
+        <p>Eğrinin altındaki alan. <span class="pill">0.5</span> = rastgele tahmin. <span class="pill">1.0</span> = mükemmel ayrım. Pratikte:</p>
+
+        <table class="results-table" style="margin-top: 12px;">
+          <tbody>
+            <tr><td>0.50 – 0.60</td><td class="num-cell" style="color: var(--danger);">Kötü</td></tr>
+            <tr><td>0.60 – 0.70</td><td class="num-cell" style="color: var(--danger);">Zayıf</td></tr>
+            <tr><td>0.70 – 0.80</td><td class="num-cell" style="color: var(--accent);">Makul</td></tr>
+            <tr><td>0.80 – 0.90</td><td class="num-cell" style="color: var(--success);">İyi</td></tr>
+            <tr><td>0.90 – 1.00</td><td class="num-cell" style="color: var(--success);">Mükemmel</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 320px; background: var(--bg-elev); border: 1px solid var(--rule); border-radius: 4px; padding: 12px;">
+          <!-- axes -->
+          <line x1="40" y1="180" x2="260" y2="180" stroke="#6b7280" stroke-width="1"/>
+          <line x1="40" y1="180" x2="40" y2="20" stroke="#6b7280" stroke-width="1"/>
+          <!-- diagonal random -->
+          <line x1="40" y1="180" x2="260" y2="20" stroke="#6b7280" stroke-width="1" stroke-dasharray="4 4"/>
+          <text x="170" y="120" font-family="JetBrains Mono" font-size="9" fill="#6b7280" transform="rotate(-32 170 120)">Rastgele (AUC=0.5)</text>
+          <!-- ROC curve -->
+          <path d="M 40 180 Q 60 80 130 50 Q 200 28 260 20" fill="none" stroke="#d4a574" stroke-width="2.5"/>
+          <!-- shaded AUC area -->
+          <path d="M 40 180 Q 60 80 130 50 Q 200 28 260 20 L 260 180 Z" fill="rgba(212,165,116,0.12)"/>
+          <!-- labels -->
+          <text x="150" y="200" font-family="JetBrains Mono" font-size="9" fill="#9ba0aa" text-anchor="middle">FPR (yanlış pozitif)</text>
+          <text x="20" y="100" font-family="JetBrains Mono" font-size="9" fill="#9ba0aa" text-anchor="middle" transform="rotate(-90 20 100)">TPR (gerçek pozitif)</text>
+          <!-- AUC label -->
+          <text x="150" y="100" font-family="Fraunces" font-style="italic" font-size="20" fill="#f5cf7b" text-anchor="middle">AUC = 0.83</text>
+        </svg>
+        <p style="font-size: 12px; color: var(--ink-muted); text-align: center; margin-top: 8px; font-style: italic;">İyi bir model eğrisi sol üst köşeye yapışır.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ SAVE LOAD ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">11 · Kaydet & Yükle</span><span class="step-badge">Adım 9</span></div>
+    <h2 class="slide-title">Modeli <em>diske</em>, sonra geri.</h2>
+    <p>Eğittiğin modeli kaybetmek istemezsin. Ağırlıkları ve mimari konfigürasyonunu birlikte kaydedip ileride aynı sınıfla yeniden hayata getireceğiz.</p>
+
+    <pre class="code" data-label="Kaydet — checkpoint"><span class="kw">def</span> <span class="fn">modeli_kaydet</span>(model, dosya_yolu<span class="op">=</span><span class="str">"en_iyi_model.pth"</span>):
+    torch.save({
+        <span class="str">'model_state_dict'</span>: model.state_dict(),
+        <span class="str">'model_config'</span>: {
+            <span class="str">'input_dim'</span>: <span class="num">10</span>,
+            <span class="str">'hidden_dims'</span>: [<span class="num">64</span>, <span class="num">32</span>],
+            <span class="str">'output_dim'</span>: <span class="num">1</span>
+        }
+    }, dosya_yolu)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Model kaydedildi: {dosya_yolu}"</span>)</pre>
+
+    <pre class="code" data-label="Yükle — yeniden inşa"><span class="kw">def</span> <span class="fn">modeli_yukle</span>(model_sinifi, dosya_yolu<span class="op">=</span><span class="str">"en_iyi_model.pth"</span>):
+    checkpoint <span class="op">=</span> torch.load(dosya_yolu, map_location<span class="op">=</span><span class="str">'cpu'</span>)
+    cfg <span class="op">=</span> checkpoint[<span class="str">'model_config'</span>]
+    model <span class="op">=</span> model_sinifi(<span class="op">**</span>cfg)            <span class="com"># Mimariyi yeniden kur</span>
+    model.load_state_dict(checkpoint[<span class="str">'model_state_dict'</span>])
+    model.eval()
+    <span class="kw">return</span> model</pre>
+
+    <div class="note-box warn-box">
+      <div class="label">Niye sadece state_dict?</div>
+      <p>Tüm modeli pickle ile kaydedebilirdik ama bu kötü bir fikirdir: kod taşıdığında yol farkları, sınıf yeniden adlandırmaları her şeyi bozar. <strong>state_dict + config</strong> taşınabilirliğin altın kuralıdır.</p>
+    </div>
+
+    <ul class="do-list">
+      <li>Modeli kaydedin, kerneli yeniden başlatın, sınıfı tekrar import edin, modeli yükleyin.</li>
+      <li>Yüklenen modelle test verisinde aynı tahminleri ürettiğini doğrulayın.</li>
+    </ul>
+  </section>
+
+  <!-- ════════ SUMMARY ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">12 · Kapanış</span><span class="step-badge">Özet</span></div>
+    <h2 class="slide-title">Bugün <em>ne öğrendik</em>?</h2>
+
+    <div class="grid-2" style="gap: 36px; margin-top: 24px;">
+      <div>
+        <h3 style="color: var(--accent);">Teknik kazanımlar</h3>
+        <ul class="feature-list">
+          <li>nn.Module ile özel sınıf yazma</li>
+          <li>nn.Sequential ile katman zinciri</li>
+          <li>BatchNorm + ReLU + Dropout şablonu</li>
+          <li>DataLoader &amp; TensorDataset</li>
+          <li>İleri-geri yayılımın 6 adımı</li>
+          <li>Gradient clipping</li>
+          <li>LR scheduler (ReduceLROnPlateau)</li>
+          <li>Erken durdurma + en iyi ağırlık koruma</li>
+          <li>state_dict ile kayıt/yükleme</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="color: var(--accent);">Kavramsal dersler</h3>
+        <ul class="feature-list">
+          <li>train() ve eval() neden farklıdır</li>
+          <li>torch.no_grad() ne zaman gerekir</li>
+          <li>Logit ile olasılık arasındaki fark</li>
+          <li>BCEWithLogitsLoss neden tercih edilir</li>
+          <li>Confusion matrix'in 4 hücresi</li>
+          <li>Eşik değiştirmek hangi metrikleri etkiler</li>
+          <li>ROC-AUC eşikten neden bağımsızdır</li>
+          <li>Overfitting'in eğitim grafiğindeki imzası</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note-box info-box" style="margin-top: 28px;">
+      <div class="label">Ödev önerisi</div>
+      <p>Bu üç dosyayı (model.py, egitim.py, degerlendirme.py) bir sonraki dersteki <strong>diyabet veri seti</strong> üzerinde birleştirin. <span class="pill">hidden_dims</span>'i [16], [32, 16], [64, 32, 16] olarak değiştirip ROC-AUC değerlerini karşılaştırın.</p>
+    </div>
+  </section>
+
+  <!-- ════════ Q&A ════════ -->
+  <section class="slide cover" style="text-align: left;">
+    <div class="institute">— Ders Sonu —</div>
+    <h1 class="title-mega">Sorular?<br><em>Hadi tartışalım.</em></h1>
+    <p class="subtitle" style="margin-top: 24px;">Hangi adım kafanızı karıştırdı? Hangi parametreyi değiştirsek model nasıl davranır? En çok hangi blok size mantıklı geldi?</p>
+    <div class="cover-meta">
+      <div><span>Sonraki ders</span><strong>Pima Indians — Gerçek Hayat Uygulaması</strong></div>
+      <div><span>Hazırlık</span><strong>Bu sunumdaki üç dosyayı yanınıza alın</strong></div>
+    </div>
+  </section>
+
+</div>
+
+<div class="help-hint">
+  <kbd>←</kbd> <kbd>→</kbd> ile gez · <kbd>F</kbd> tam ekran
+</div>
+
+<nav class="nav-bar">
+  <button class="nav-btn" id="prevBtn">← Önceki</button>
+  <div class="nav-progress"><div class="nav-progress-fill" id="progressFill"></div></div>
+  <div class="nav-counter"><strong id="currentSlide">01</strong> / <span id="totalSlides">21</span></div>
+  <div class="nav-progress"><div class="nav-progress-fill" style="width: 0;"></div></div>
+  <button class="nav-btn" id="nextBtn">Sonraki →</button>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const progressFill = document.getElementById('progressFill');
+  const currentSlideEl = document.getElementById('currentSlide');
+  const totalSlidesEl = document.getElementById('totalSlides');
+  let current = 0;
+
+  totalSlidesEl.textContent = String(total).padStart(2, '0');
+
+  function show(i) {
+    if (i < 0 || i >= total) return;
+    slides[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    slides[current].scrollTop = 0;
+    progressFill.style.width = `${((current + 1) / total) * 100}%`;
+    currentSlideEl.textContent = String(current + 1).padStart(2, '0');
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  prevBtn.addEventListener('click', () => show(current - 1));
+  nextBtn.addEventListener('click', () => show(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault();
+      show(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      show(current - 1);
+    } else if (e.key === 'Home') {
+      show(0);
+    } else if (e.key === 'End') {
+      show(total - 1);
+    } else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+  });
+
+  show(0);
+</script>
+
+</body>
+</html>

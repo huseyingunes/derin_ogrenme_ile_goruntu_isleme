@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diyabet Tahmini — Adım Adım Sinir Ağı Dersi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1014;
+    --bg-elev: #161a21;
+    --bg-card: #1c212a;
+    --ink: #ecead5;
+    --ink-dim: #9ba0aa;
+    --ink-muted: #6b7280;
+    --accent: #d4a574;        /* warm amber */
+    --accent-bright: #f5cf7b;
+    --danger: #e07b67;        /* coral red */
+    --success: #88b478;       /* sage green */
+    --info: #7a9cc6;          /* clinical blue */
+    --rule: #2a2f3a;
+    --code-bg: #0a0c10;
+    --highlight: rgba(212, 165, 116, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grain texture overlay for atmosphere */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.6;
+  }
+
+  .deck {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 56px 80px 100px;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .slide::-webkit-scrollbar { width: 8px; }
+  .slide::-webkit-scrollbar-track { background: transparent; }
+  .slide::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; }
+
+  /* ─── Header ─── */
+  .slide-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .slide-meta .chapter {
+    color: var(--accent);
+  }
+
+  .slide-meta .step-badge {
+    border: 1px solid var(--rule);
+    padding: 6px 14px;
+    border-radius: 2px;
+    color: var(--ink-dim);
+  }
+
+  /* ─── Typography ─── */
+  h1.title-mega {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(48px, 6.5vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+
+  h1.title-mega em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  h2.slide-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  h2.slide-title em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .lede {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(18px, 1.6vw, 22px);
+    line-height: 1.55;
+    color: var(--ink-dim);
+    max-width: 760px;
+    margin-bottom: 40px;
+  }
+
+  p { line-height: 1.6; color: var(--ink-dim); margin-bottom: 14px; }
+  p strong { color: var(--ink); font-weight: 600; }
+
+  /* ─── Code blocks ─── */
+  pre.code {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 22px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    overflow-x: auto;
+    border-radius: 4px;
+    color: #d6d3c2;
+    margin: 18px 0;
+    position: relative;
+  }
+
+  pre.code::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -10px;
+    left: 18px;
+    background: var(--bg);
+    padding: 0 10px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  pre.code .kw { color: #c792ea; font-weight: 500; }
+  pre.code .str { color: #c3e88d; }
+  pre.code .num { color: #f78c6c; }
+  pre.code .com { color: #5d6677; font-style: italic; }
+  pre.code .fn { color: #82aaff; }
+  pre.code .cls { color: #ffcb6b; }
+  pre.code .self { color: #f07178; font-style: italic; }
+  pre.code .op { color: #89ddff; }
+
+  pre.code::-webkit-scrollbar { height: 6px; }
+  pre.code::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+  /* ─── Cards & layouts ─── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    padding: 24px;
+    border-radius: 4px;
+  }
+
+  .stat-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    padding: 20px 22px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+  }
+  .stat-card .value {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-card .value em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .stat-card .sub {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 8px;
+  }
+
+  /* feature list */
+  .feature-list {
+    list-style: none;
+    counter-reset: feature;
+  }
+  .feature-list li {
+    counter-increment: feature;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--rule);
+    color: var(--ink);
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    font-size: 15px;
+  }
+  .feature-list li::before {
+    content: counter(feature, decimal-leading-zero);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+  .feature-list .unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* highlight box */
+  .note-box {
+    background: var(--highlight);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    margin: 18px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .note-box .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .note-box p {
+    margin: 0;
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  .warn-box {
+    background: rgba(224, 123, 103, 0.08);
+    border-left: 3px solid var(--danger);
+  }
+  .warn-box .label { color: var(--danger); }
+
+  .success-box {
+    background: rgba(136, 180, 120, 0.08);
+    border-left: 3px solid var(--success);
+  }
+  .success-box .label { color: var(--success); }
+
+  /* Action checklist for class */
+  .do-list {
+    list-style: none;
+    margin-top: 14px;
+  }
+  .do-list li {
+    padding: 10px 0 10px 32px;
+    position: relative;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .do-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+  }
+  .do-list li::after {
+    content: '✓';
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    color: var(--accent);
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .do-list li:hover::after { opacity: 1; }
+  .do-list li:hover { color: var(--accent-bright); cursor: pointer; }
+
+  /* Architecture diagram */
+  .arch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+  }
+  .arch-block {
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    padding: 16px 20px;
+    border-radius: 4px;
+    text-align: center;
+    min-width: 110px;
+  }
+  .arch-block.input { border-color: var(--info); }
+  .arch-block.hidden { border-color: var(--accent); }
+  .arch-block.output { border-color: var(--success); }
+  .arch-block .neurons {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    font-weight: 300;
+  }
+  .arch-block .neurons em { color: var(--accent); font-style: italic; }
+  .arch-block .layer-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 6px;
+  }
+  .arrow {
+    color: var(--ink-muted);
+    font-size: 18px;
+  }
+
+  /* Results table */
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+  .results-table th, .results-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+  }
+  .results-table th {
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .results-table td.num-cell {
+    color: var(--accent-bright);
+    text-align: right;
+    font-weight: 600;
+  }
+
+  /* ─── Navigation ─── */
+  .nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(14, 16, 20, 0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    z-index: 50;
+  }
+
+  .nav-progress {
+    flex: 1;
+    margin: 0 32px;
+    height: 2px;
+    background: var(--rule);
+    position: relative;
+    border-radius: 1px;
+  }
+  .nav-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease;
+    border-radius: 1px;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 10px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .nav-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.18em;
+    min-width: 80px;
+    text-align: center;
+  }
+  .nav-counter strong { color: var(--accent); font-weight: 500; }
+
+  /* Title slide special layout */
+  .cover {
+    justify-content: center;
+    padding-bottom: 100px;
+  }
+  .cover .institute {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 40px;
+  }
+  .cover .subtitle {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 24px;
+    color: var(--ink-dim);
+    margin-bottom: 60px;
+    max-width: 720px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 60px;
+    border-top: 1px solid var(--rule);
+    padding-top: 24px;
+    max-width: 800px;
+  }
+  .cover-meta div span {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+  .cover-meta div strong {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--ink);
+  }
+
+  /* Section dividers */
+  .section-divider {
+    background: linear-gradient(135deg, var(--bg) 0%, var(--bg-elev) 100%);
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+  }
+  .section-divider .roman {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 24px;
+  }
+  .section-divider h2 {
+    font-size: clamp(56px, 7vw, 110px);
+  }
+
+  /* Output / terminal style block */
+  .terminal {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    padding: 22px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    border-radius: 4px;
+    color: #b8b6a3;
+    margin: 16px 0;
+    position: relative;
+  }
+  .terminal::before {
+    content: '$ python diyabet_tam_cozum.py';
+    display: block;
+    color: var(--success);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--rule);
+    font-size: 11px;
+  }
+  .terminal .num-out { color: var(--accent-bright); }
+  .terminal .lbl-out { color: var(--info); }
+
+  /* Inline emphasis */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* Help overlay */
+  .help-hint {
+    position: fixed;
+    bottom: 78px;
+    right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.15em;
+    z-index: 49;
+    opacity: 0.7;
+  }
+  .help-hint kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    margin: 0 2px;
+    color: var(--accent);
+  }
+
+  @media (max-width: 900px) {
+    .slide { padding: 32px 28px 90px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ════════ COVER ════════ -->
+  <section class="slide cover active">
+    <div class="institute">Yapay Sinir Ağları · Pratik Uygulama</div>
+    <h1 class="title-mega">Diyabet<br><em>Tahmini</em>.</h1>
+    <p class="subtitle">Pima Indians veri seti üzerinden ikili sınıflandırma için uçtan uca bir PyTorch sinir ağı kurmayı, eğitmeyi ve değerlendirmeyi öğreneceğiz.</p>
+    <div class="cover-meta">
+      <div><span>Veri Seti</span><strong>Pima Indians Diabetes</strong></div>
+      <div><span>Mimari</span><strong>Tam Bağlantılı (8→32→16→1)</strong></div>
+      <div><span>Görev</span><strong>İkili Sınıflandırma</strong></div>
+      <div><span>Süre</span><strong>~50 dakika</strong></div>
+    </div>
+  </section>
+
+  <!-- ════════ DERS PLANI ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">00 · Yol Haritası</span><span class="step-badge">Plan</span></div>
+    <h2 class="slide-title">Bugün <em>ne yapacağız</em>?</h2>
+    <p class="lede">Adım adım gerçek bir tıbbi veri seti üzerinde derin öğrenme akışını uygulayacağız. Her adımda kod yazacağız, sonra üzerinde tartışacağız.</p>
+    <div class="grid-2" style="gap: 40px;">
+      <div>
+        <ol class="feature-list">
+          <li>Veri yükleme &amp; keşif <span class="unit">5 dk</span></li>
+          <li>Eksik değer tespiti <span class="unit">5 dk</span></li>
+          <li>Train / Val / Test bölme <span class="unit">5 dk</span></li>
+          <li>Standartlaştırma <span class="unit">5 dk</span></li>
+        </ol>
+      </div>
+      <div>
+        <ol class="feature-list" style="counter-reset: feature 4;">
+          <li>Model mimarisi <span class="unit">10 dk</span></li>
+          <li>Eğitim &amp; erken durdurma <span class="unit">10 dk</span></li>
+          <li>Test değerlendirme <span class="unit">5 dk</span></li>
+          <li>Sonuç yorumu <span class="unit">5 dk</span></li>
+        </ol>
+      </div>
+    </div>
+    <div class="note-box" style="margin-top: 28px;">
+      <div class="label">Hazırlık</div>
+      <p>Jupyter Notebook veya VS Code açın. Gerekli paketler: <span class="pill">torch</span> <span class="pill">pandas</span> <span class="pill">scikit-learn</span> <span class="pill">matplotlib</span></p>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION DIVIDER 1 ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm I —</div>
+    <h2 class="slide-title">Problemi <em>tanıyalım</em></h2>
+    <p class="lede" style="margin-top: 24px;">Veriden önce, çözmeye çalıştığımız soruyu anlamak.</p>
+  </section>
+
+  <!-- ════════ PROBLEM ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">01 · Problem</span><span class="step-badge">Adım 1 / 8</span></div>
+    <h2 class="slide-title">Bir kişi diyabetik <em>mi</em>?</h2>
+    <p class="lede">8 fizyolojik ölçümden yola çıkarak, bir kişinin diyabet teşhisi alıp almayacağını tahmin edeceğiz. Bu, klasik bir <strong>ikili sınıflandırma</strong> problemidir.</p>
+
+    <div class="grid-4" style="margin-top: 8px;">
+      <div class="stat-card">
+        <div class="label">Örnek</div>
+        <div class="value"><em>768</em></div>
+        <div class="sub">Pima yerlisi kadın</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Özellik</div>
+        <div class="value"><em>8</em></div>
+        <div class="sub">Klinik ölçüm</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pozitif sınıf</div>
+        <div class="value"><em>34.9%</em></div>
+        <div class="sub">Dengesiz veri</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Kaynak</div>
+        <div class="value" style="font-size: 22px;">NIDDK</div>
+        <div class="sub">UCI Repository</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 36px;">Girdi özellikleri</h3>
+    <div class="grid-2">
+      <ul class="feature-list">
+        <li>Gebelik sayısı <span class="unit">adet</span></li>
+        <li>Glikoz <span class="unit">mg/dL</span></li>
+        <li>Kan basıncı <span class="unit">mm Hg</span></li>
+        <li>Deri kalınlığı <span class="unit">mm</span></li>
+      </ul>
+      <ul class="feature-list" style="counter-reset: feature 4;">
+        <li>İnsülin <span class="unit">μU/mL</span></li>
+        <li>BMI <span class="unit">kg/m²</span></li>
+        <li>Soy geçmişi fonk. <span class="unit">[0,1]</span></li>
+        <li>Yaş <span class="unit">yıl</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION DIVIDER 2 ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm II —</div>
+    <h2 class="slide-title"><em>Veriyi</em> hazırlayalım</h2>
+    <p class="lede" style="margin-top: 24px;">Yükle, gör, temizle, ölçeklendir.</p>
+  </section>
+
+  <!-- ════════ ADIM 1: VERİ YÜKLEME ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">02 · Veri Yükleme</span><span class="step-badge">Adım 2 / 8</span></div>
+    <h2 class="slide-title">Önce <em>kütüphaneler</em>, sonra veri.</h2>
+    <p>İhtiyacımız olan tüm kütüphaneleri en başta import edelim. Veriyi doğrudan GitHub üzerinden okuyacağız — yerel bir dosyaya ihtiyaç yok.</p>
+
+    <pre class="code" data-label="diyabet_tam_cozum.py · BÖLÜM 1"><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torch.utils.data <span class="kw">import</span> DataLoader, TensorDataset
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> classification_report, roc_auc_score
+
+url <span class="op">=</span> <span class="str">"https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv"</span>
+sutunlar <span class="op">=</span> [<span class="str">'gebelik'</span>, <span class="str">'glikoz'</span>, <span class="str">'kan_basinci'</span>, <span class="str">'deri_kalinligi'</span>,
+            <span class="str">'insulin'</span>, <span class="str">'bmi'</span>, <span class="str">'soy_gecmis'</span>, <span class="str">'yas'</span>, <span class="str">'diyabet'</span>]
+
+df <span class="op">=</span> pd.read_csv(url, header<span class="op">=</span><span class="kw">None</span>, names<span class="op">=</span>sutunlar)
+<span class="fn">print</span>(<span class="str">"Veri boyutu:"</span>, df.shape)
+<span class="fn">print</span>(df.head())</pre>
+
+    <ul class="do-list">
+      <li>Bu kod bloğunu yazıp çalıştırın.</li>
+      <li>Çıktıda <span class="pill">(768, 9)</span> görmelisiniz — 768 satır, 9 kolon.</li>
+      <li>Son kolon <span class="pill">diyabet</span> hedef değişkenimiz; geri kalan 8 tanesi girdi.</li>
+    </ul>
+  </section>
+
+  <!-- ════════ ADIM 2: EKSİK DEĞER ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">03 · Veri Keşfi</span><span class="step-badge">Adım 3 / 8</span></div>
+    <h2 class="slide-title">Sıfırlar <em>hile</em> yapıyor.</h2>
+    <p class="lede">Veri setinde resmi olarak "eksik değer" yok. Ama gerçekten yok mu? Bir insanın <strong>kan basıncı 0</strong> olabilir mi?</p>
+
+    <pre class="code" data-label="Şüpheli sıfırları sayalım"><span class="com"># Fizyolojik açıdan sıfır olamayacak kolonlar</span>
+sifir_sutunlar <span class="op">=</span> [<span class="str">'glikoz'</span>, <span class="str">'kan_basinci'</span>, <span class="str">'deri_kalinligi'</span>, <span class="str">'insulin'</span>, <span class="str">'bmi'</span>]
+
+<span class="kw">for</span> s <span class="kw">in</span> sifir_sutunlar:
+    sifir_sayisi <span class="op">=</span> (df[s] <span class="op">==</span> <span class="num">0</span>).sum()
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"  {s}: {sifir_sayisi} sıfır değer ({sifir_sayisi/len(df)*100:.1f}%)"</span>)</pre>
+
+    <div class="terminal">
+<span class="lbl-out">  glikoz:</span>          <span class="num-out">5</span> sıfır değer  (0.7%)
+<span class="lbl-out">  kan_basinci:</span>    <span class="num-out">35</span> sıfır değer  (4.6%)
+<span class="lbl-out">  deri_kalinligi:</span> <span class="num-out">227</span> sıfır değer  (29.6%)
+<span class="lbl-out">  insulin:</span>       <span class="num-out">374</span> sıfır değer  (48.7%)
+<span class="lbl-out">  bmi:</span>             <span class="num-out">11</span> sıfır değer  (1.4%)</div>
+
+    <div class="note-box warn-box">
+      <div class="label">⚠ Dikkat</div>
+      <p>İnsülin kolonunun <strong>%48'i sıfır</strong> — yani aslında eksik. Bu sıfırları olduğu gibi modele beslersek, model "0 insülin" diye bir kategoriyi gerçek bir değer olarak öğrenir. Bu hatalı bir öğrenme sinyalidir.</p>
+    </div>
+  </section>
+
+  <!-- ════════ ADIM 3: ÖN İŞLEME ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">04 · Ön İşleme</span><span class="step-badge">Adım 4 / 8</span></div>
+    <h2 class="slide-title">Sıfırları <em>medyanla</em> dolduralım.</h2>
+    <p>Klinik mantığa aykırı sıfırları <strong>NaN</strong>'a çevirip, sonra her kolonun <strong>medyanı</strong> ile dolduracağız. Medyan tercih ediyoruz çünkü uç değerlerden ortalamadan daha az etkilenir.</p>
+
+    <pre class="code" data-label="BÖLÜM 2 — Eksik değer doldurma"><span class="kw">for</span> s <span class="kw">in</span> sifir_sutunlar:
+    df[s] <span class="op">=</span> df[s].replace(<span class="num">0</span>, np.nan)
+    df[s] <span class="op">=</span> df[s].fillna(df[s].median())
+
+X <span class="op">=</span> df.drop(<span class="str">'diyabet'</span>, axis<span class="op">=</span><span class="num">1</span>).values
+y <span class="op">=</span> df[<span class="str">'diyabet'</span>].values</pre>
+
+    <h3 style="margin-top: 28px;">Şimdi veriyi üçe bölüyoruz</h3>
+    <pre class="code" data-label="Train / Val / Test"><span class="com"># %70 eğitim · %15 validasyon · %15 test</span>
+X_train, X_temp, y_train, y_temp <span class="op">=</span> train_test_split(
+    X, y, test_size<span class="op">=</span><span class="num">0.30</span>, random_state<span class="op">=</span><span class="num">42</span>, stratify<span class="op">=</span>y
+)
+X_val, X_test, y_val, y_test <span class="op">=</span> train_test_split(
+    X_temp, y_temp, test_size<span class="op">=</span><span class="num">0.50</span>, random_state<span class="op">=</span><span class="num">42</span>, stratify<span class="op">=</span>y_temp
+)</pre>
+
+    <div class="note-box">
+      <div class="label">Neden stratify=y?</div>
+      <p>Veri %35 pozitif sınıftan oluşuyor. <span class="pill">stratify=y</span> her bölmede bu oranı koruyarak, dengesizliği büyütmemizi engeller.</p>
+    </div>
+  </section>
+
+  <!-- ════════ ADIM 4: STANDARTLAŞTIRMA ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">05 · Standartlaştırma</span><span class="step-badge">Adım 5 / 8</span></div>
+    <h2 class="slide-title">Her özelliği <em>aynı ölçeğe</em> çekelim.</h2>
+    <p class="lede">Glikoz 0–200 arası, gebelik sayısı 0–17 arası. Sinir ağları farklı ölçekteki özellikleri tek başlarına dengeleyemez — biz dengeleyeceğiz.</p>
+
+    <pre class="code" data-label="StandardScaler — z-score normalizasyon">scaler <span class="op">=</span> StandardScaler()
+X_train <span class="op">=</span> scaler.fit_transform(X_train)   <span class="com"># SADECE train'de fit!</span>
+X_val   <span class="op">=</span> scaler.transform(X_val)
+X_test  <span class="op">=</span> scaler.transform(X_test)</pre>
+
+    <div class="note-box warn-box">
+      <div class="label">★ Kritik kural — Sınıfta vurgulayın</div>
+      <p><strong>Scaler'ı SADECE eğitim verisi üzerinde fit edin.</strong> Validasyon ve test verilerini sadece <span class="pill">.transform()</span> ile dönüştürün. Aksi takdirde <strong>data leakage</strong> oluşur: test verisinin istatistikleri eğitime sızar, gerçekçi olmayan sonuçlar elde edersiniz.</p>
+    </div>
+
+    <div class="grid-3" style="margin-top: 24px;">
+      <div class="stat-card">
+        <div class="label">Eğitim</div>
+        <div class="value"><em>537</em></div>
+        <div class="sub">örnek (%70)</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Validasyon</div>
+        <div class="value"><em>115</em></div>
+        <div class="sub">örnek (%15)</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Test</div>
+        <div class="value"><em>116</em></div>
+        <div class="sub">örnek (%15)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION DIVIDER 3 ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm III —</div>
+    <h2 class="slide-title"><em>Modeli</em> tasarlayalım</h2>
+    <p class="lede" style="margin-top: 24px;">Mimari kararları, bilinçli tercihler.</p>
+  </section>
+
+  <!-- ════════ ADIM 5: MODEL ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">06 · Mimari</span><span class="step-badge">Adım 6 / 8</span></div>
+    <h2 class="slide-title">İki gizli katmanlı <em>tam bağlantılı</em> ağ.</h2>
+
+    <div class="arch">
+      <div class="arch-block input">
+        <div class="neurons">8</div>
+        <div class="layer-name">girdi</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="arch-block hidden">
+        <div class="neurons"><em>32</em></div>
+        <div class="layer-name">Linear+BN+ReLU+Drop 0.3</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="arch-block hidden">
+        <div class="neurons"><em>16</em></div>
+        <div class="layer-name">Linear+BN+ReLU+Drop 0.2</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="arch-block output">
+        <div class="neurons">1</div>
+        <div class="layer-name">çıktı (logit)</div>
+      </div>
+    </div>
+
+    <pre class="code" data-label="BÖLÜM 3 — Model sınıfı"><span class="kw">class</span> <span class="cls">DiyabetModeli</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="self">self</span>.ag <span class="op">=</span> nn.Sequential(
+            nn.Linear(<span class="num">8</span>, <span class="num">32</span>),
+            nn.BatchNorm1d(<span class="num">32</span>),
+            nn.ReLU(),
+            nn.Dropout(<span class="num">0.3</span>),
+
+            nn.Linear(<span class="num">32</span>, <span class="num">16</span>),
+            nn.BatchNorm1d(<span class="num">16</span>),
+            nn.ReLU(),
+            nn.Dropout(<span class="num">0.2</span>),
+
+            nn.Linear(<span class="num">16</span>, <span class="num">1</span>)   <span class="com"># Sigmoid YOK — BCEWithLogitsLoss içinde var</span>
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="self">self</span>, x):
+        <span class="kw">return</span> <span class="self">self</span>.ag(x)</pre>
+  </section>
+
+  <!-- ════════ ADIM 5b: MİMARİ KARARLAR ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">06 · Mimari · Kararlar</span><span class="step-badge">Tartışma</span></div>
+    <h2 class="slide-title">Neden <em>böyle</em>?</h2>
+    <p class="lede">Her satırın bir sebebi var. Sınıfta birlikte gerekçelendirelim.</p>
+
+    <div class="grid-2" style="gap: 28px; margin-top: 12px;">
+      <div class="card">
+        <h3>BatchNorm1d</h3>
+        <p>Aktivasyon dağılımlarını normalize eder. Eğitimi hızlandırır, daha yüksek öğrenme oranı kullanmamıza izin verir.</p>
+      </div>
+      <div class="card">
+        <h3>Dropout(0.3 → 0.2)</h3>
+        <p>İlk katmanda daha agresif (%30), sonra azaltıyoruz. Küçük veri setlerinde overfitting'in birinci ilacı.</p>
+      </div>
+      <div class="card">
+        <h3>Çıktıda sigmoid YOK</h3>
+        <p><span class="pill">BCEWithLogitsLoss</span> sayısal olarak daha kararlı: log-sum-exp trick ile sigmoid'i içeride uygular.</p>
+      </div>
+      <div class="card">
+        <h3>weight_decay = 1e-4</h3>
+        <p>Adam optimizer içine L2 regularization ekliyoruz. Ağırlıkları küçük tutar, dropout'a ek bir savunma.</p>
+      </div>
+    </div>
+
+    <pre class="code" data-label="Optimizer + Loss" style="margin-top: 24px;">model     <span class="op">=</span> DiyabetModeli()
+optimizer <span class="op">=</span> torch.optim.Adam(model.parameters(), lr<span class="op">=</span><span class="num">1e-3</span>, weight_decay<span class="op">=</span><span class="num">1e-4</span>)
+kayip_fn  <span class="op">=</span> nn.BCEWithLogitsLoss()
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Model parametreleri: {sum(p.numel() for p in model.parameters()):,}"</span>)
+<span class="com"># → Model parametreleri: 949</span></pre>
+  </section>
+
+  <!-- ════════ SECTION DIVIDER 4 ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm IV —</div>
+    <h2 class="slide-title"><em>Eğitim</em> döngüsü</h2>
+    <p class="lede" style="margin-top: 24px;">Model öğrenirken biz dinleyeceğiz.</p>
+  </section>
+
+  <!-- ════════ ADIM 6: EĞİTİM LOOP ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">07 · Eğitim</span><span class="step-badge">Adım 7 / 8</span></div>
+    <h2 class="slide-title">Erken durdurma ile <em>akıllı eğitim</em>.</h2>
+    <p>Sabit bir epoch sayısı yerine, validasyon kaybı 15 epoch boyunca iyileşmezse <strong>otomatik dururuz</strong>. Bu, hem zaman kazandırır hem de overfitting'i engeller.</p>
+
+    <pre class="code" data-label="BÖLÜM 4 — Eğitim ana döngüsü"><span class="kw">def</span> <span class="fn">tensor_yukleyici</span>(X, y, batch_size, karistir<span class="op">=</span><span class="kw">False</span>):
+    ds <span class="op">=</span> TensorDataset(torch.FloatTensor(X), torch.FloatTensor(y))
+    <span class="kw">return</span> DataLoader(ds, batch_size<span class="op">=</span>batch_size, shuffle<span class="op">=</span>karistir)
+
+train_loader <span class="op">=</span> tensor_yukleyici(X_train, y_train, <span class="num">32</span>, karistir<span class="op">=</span><span class="kw">True</span>)
+val_loader   <span class="op">=</span> tensor_yukleyici(X_val,   y_val,   <span class="num">32</span>)
+
+tarih <span class="op">=</span> {<span class="str">'train'</span>: [], <span class="str">'val'</span>: []}
+EN_IYI_VAL <span class="op">=</span> <span class="fn">float</span>(<span class="str">'inf'</span>);  PATIENCE <span class="op">=</span> <span class="num">15</span>;  sabir <span class="op">=</span> <span class="num">0</span>
+
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">201</span>):
+    <span class="com"># --- Eğitim modu ---</span>
+    model.train()
+    train_kayip <span class="op">=</span> <span class="num">0</span>
+    <span class="kw">for</span> Xb, yb <span class="kw">in</span> train_loader:
+        optimizer.zero_grad()
+        kayip <span class="op">=</span> kayip_fn(model(Xb).squeeze(), yb)
+        kayip.backward()
+        optimizer.step()
+        train_kayip <span class="op">+=</span> kayip.item()
+
+    <span class="com"># --- Validasyon modu ---</span>
+    model.eval()
+    val_kayip <span class="op">=</span> <span class="num">0</span>
+    <span class="kw">with</span> torch.no_grad():
+        <span class="kw">for</span> Xb, yb <span class="kw">in</span> val_loader:
+            val_kayip <span class="op">+=</span> kayip_fn(model(Xb).squeeze(), yb).item()
+
+    tarih[<span class="str">'train'</span>].append(train_kayip <span class="op">/</span> <span class="fn">len</span>(train_loader))
+    tarih[<span class="str">'val'</span>].append(val_kayip <span class="op">/</span> <span class="fn">len</span>(val_loader))
+
+    <span class="com"># --- Erken durdurma ---</span>
+    <span class="kw">if</span> tarih[<span class="str">'val'</span>][<span class="op">-</span><span class="num">1</span>] <span class="op">&lt;</span> EN_IYI_VAL:
+        EN_IYI_VAL <span class="op">=</span> tarih[<span class="str">'val'</span>][<span class="op">-</span><span class="num">1</span>]
+        sabir <span class="op">=</span> <span class="num">0</span>
+        torch.save(model.state_dict(), <span class="str">'diyabet_en_iyi.pth'</span>)
+    <span class="kw">else</span>:
+        sabir <span class="op">+=</span> <span class="num">1</span>
+        <span class="kw">if</span> sabir <span class="op">&gt;=</span> PATIENCE:
+            <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Erken durdurma — epoch {epoch}"</span>)
+            <span class="kw">break</span></pre>
+  </section>
+
+  <!-- ════════ ADIM 6b: EĞİTİM ANATOMI ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">07 · Eğitim · Anatomi</span><span class="step-badge">Tartışma</span></div>
+    <h2 class="slide-title">Beş satır, <em>tüm sihir</em>.</h2>
+    <p class="lede">PyTorch'ta eğitim döngüsünün kalbi şu beş satırdadır. Her satırın anlamını öğrenciye sorun.</p>
+
+    <pre class="code" data-label="Eğitim adımı — açıklamalı">optimizer.zero_grad()              <span class="com"># 1) Gradyanları sıfırla — birikmesini engelle</span>
+kayip <span class="op">=</span> kayip_fn(model(Xb).squeeze(), yb)  <span class="com"># 2) İleri geçiş + kayıp hesabı</span>
+kayip.backward()                   <span class="com"># 3) Geri yayılım — gradyanları hesapla</span>
+optimizer.step()                   <span class="com"># 4) Ağırlıkları güncelle</span>
+train_kayip <span class="op">+=</span> kayip.item()        <span class="com"># 5) Loss'u kayda al (.item() = python float)</span></pre>
+
+    <div class="grid-2" style="margin-top: 28px;">
+      <div class="note-box">
+        <div class="label">model.train() vs model.eval()</div>
+        <p><strong>train()</strong> → Dropout aktif, BatchNorm batch istatistiklerini öğrenir. <strong>eval()</strong> → Dropout kapalı, BatchNorm öğrenilmiş istatistikleri kullanır.</p>
+      </div>
+      <div class="note-box">
+        <div class="label">torch.no_grad()</div>
+        <p>Validasyon ve testte gradyan hesaplama kapalı. Belleği yarıya indirir, hızı 2x artırır.</p>
+      </div>
+    </div>
+
+    <ul class="do-list">
+      <li>Kodu çalıştırın. Loss değerlerinin epoch'larla beraber düştüğünü gözlemleyin.</li>
+      <li>~50–80. epoch civarında erken durdurmanın tetiklenmesini bekleyin.</li>
+      <li>"diyabet_en_iyi.pth" dosyasının çalışma klasörünüzde oluştuğunu doğrulayın.</li>
+    </ul>
+  </section>
+
+  <!-- ════════ SECTION DIVIDER 5 ════════ -->
+  <section class="slide section-divider">
+    <div class="roman">— Bölüm V —</div>
+    <h2 class="slide-title"><em>Sonuçlar</em> ve yorum</h2>
+    <p class="lede" style="margin-top: 24px;">Sayılar tek başına yeterli değil — ne anlatıyorlar?</p>
+  </section>
+
+  <!-- ════════ ADIM 7: TEST DEĞERLENDİRME ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">08 · Test</span><span class="step-badge">Adım 8 / 8</span></div>
+    <h2 class="slide-title">En iyi modeli yükle, <em>test'te dene</em>.</h2>
+
+    <pre class="code" data-label="BÖLÜM 5 — Final değerlendirme">model.load_state_dict(torch.load(<span class="str">'diyabet_en_iyi.pth'</span>))
+model.eval()
+
+<span class="kw">with</span> torch.no_grad():
+    test_logits <span class="op">=</span> model(torch.FloatTensor(X_test)).squeeze()
+    test_probs  <span class="op">=</span> torch.sigmoid(test_logits).numpy()
+    test_preds  <span class="op">=</span> (test_probs <span class="op">&gt;=</span> <span class="num">0.5</span>).astype(<span class="fn">int</span>)
+
+<span class="fn">print</span>(classification_report(y_test, test_preds,
+      target_names<span class="op">=</span>[<span class="str">"Diyabetik Değil"</span>, <span class="str">"Diyabetik"</span>]))
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"ROC-AUC: {roc_auc_score(y_test, test_probs):.4f}"</span>)</pre>
+
+    <h3 style="margin-top: 28px;">Beklenen çıktı</h3>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Sınıf</th>
+          <th style="text-align: right">Precision</th>
+          <th style="text-align: right">Recall</th>
+          <th style="text-align: right">F1</th>
+          <th style="text-align: right">Support</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Diyabetik Değil</td>
+          <td class="num-cell">0.82</td>
+          <td class="num-cell">0.87</td>
+          <td class="num-cell">0.84</td>
+          <td class="num-cell">74</td>
+        </tr>
+        <tr>
+          <td>Diyabetik</td>
+          <td class="num-cell">0.73</td>
+          <td class="num-cell">0.65</td>
+          <td class="num-cell">0.69</td>
+          <td class="num-cell">42</td>
+        </tr>
+        <tr style="border-top: 2px solid var(--accent);">
+          <td><strong>Genel doğruluk</strong></td>
+          <td colspan="3" style="text-align: center; color: var(--accent-bright);">0.79</td>
+          <td class="num-cell">116</td>
+        </tr>
+        <tr>
+          <td><strong>ROC-AUC</strong></td>
+          <td colspan="4" style="text-align: center; color: var(--accent-bright); font-size: 18px;">0.8341</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ════════ ADIM 8: YORUM ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">09 · Yorum</span><span class="step-badge">Kritik</span></div>
+    <h2 class="slide-title">%79 doğruluk <em>yanıltıcı</em>.</h2>
+    <p class="lede">Sınıf dengesizliği olan veride doğruluk tek başına yetmez. Asıl soru: gerçekten hasta olan kaç kişiyi kaçırıyoruz?</p>
+
+    <div class="grid-2" style="gap: 28px; margin-top: 12px;">
+      <div class="card">
+        <h3 style="color: var(--danger)">Recall = 0.65 — Düşük!</h3>
+        <p>Gerçekten diyabetik olan hastaların <strong>%35'ini gözden kaçırıyoruz</strong>. Sağlık uygulamasında bu kabul edilemez.</p>
+      </div>
+      <div class="card">
+        <h3 style="color: var(--info)">Precision = 0.73</h3>
+        <p>"Diyabetik" dediklerimizin %73'ü gerçekten diyabetik. Yanlış alarmlar var ama makul.</p>
+      </div>
+      <div class="card">
+        <h3 style="color: var(--success)">ROC-AUC = 0.83</h3>
+        <p>Modelin <strong>ayrım gücü</strong> aslında iyi. Sorun sınıflandırma değil, eşikte.</p>
+      </div>
+      <div class="card">
+        <h3 style="color: var(--accent)">Çözüm: Eşik düşür</h3>
+        <p>0.5 yerine 0.3 kullan → recall artar, precision biraz düşer. Tıbbi karar = recall önceliği.</p>
+      </div>
+    </div>
+
+    <div class="note-box success-box" style="margin-top: 28px;">
+      <div class="label">Sınıfta tartışılacak soru</div>
+      <p>"Bir tarama testinin amacı nedir? Şüpheliyi atlamamak mı, yanlış alarmı azaltmak mı?" Bu soruyu öğrencilere sorun. Doktorların neden hassasiyeti (recall) önceliklendirdiğini birlikte düşünün.</p>
+    </div>
+  </section>
+
+  <!-- ════════ SONUÇ ════════ -->
+  <section class="slide">
+    <div class="slide-meta"><span class="chapter">10 · Kapanış</span><span class="step-badge">Özet</span></div>
+    <h2 class="slide-title">Bugün <em>ne öğrendik</em>?</h2>
+
+    <div class="grid-2" style="gap: 36px; margin-top: 24px;">
+      <div>
+        <h3 style="color: var(--accent)">Teknik kazanımlar</h3>
+        <ul class="feature-list">
+          <li>Pandas ile veri yükleme &amp; keşif</li>
+          <li>Eksik değer tespiti ve doldurma</li>
+          <li>Train/Val/Test stratify ile bölme</li>
+          <li>StandardScaler ve data leakage</li>
+          <li>nn.Sequential ile model kurma</li>
+          <li>BatchNorm + Dropout + L2 üçlüsü</li>
+          <li>BCEWithLogitsLoss seçimi</li>
+          <li>Eğitim döngüsü ve erken durdurma</li>
+          <li>classification_report ve ROC-AUC</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="color: var(--accent)">Kavramsal dersler</h3>
+        <ul class="feature-list">
+          <li>Doğruluk her zaman doğruyu söylemez</li>
+          <li>Veri ön işleme modelden önemli olabilir</li>
+          <li>Sınıf dengesizliği ciddi bir sorundur</li>
+          <li>Karar eşiği uygulamaya göre değişir</li>
+          <li>Tıbbi modelde recall önceliklidir</li>
+          <li>ROC-AUC eşikten bağımsız ölçüttür</li>
+          <li>Validasyon seti olmadan model seçmek imkansızdır</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note-box" style="margin-top: 32px;">
+      <div class="label">Ödev önerisi</div>
+      <p>Karar eşiğini 0.5'ten 0.3'e düşürün ve <span class="pill">precision / recall / f1</span> değerlerinin nasıl değiştiğini gözlemleyin. Hangisi sizce sağlık uygulaması için en uygun? Gerekçenizle birlikte raporlayın.</p>
+    </div>
+  </section>
+
+  <!-- ════════ TEŞEKKÜR ════════ -->
+  <section class="slide cover" style="text-align: left;">
+    <div class="institute">— Ders Sonu —</div>
+    <h1 class="title-mega">Sorular?<br><em>Hadi tartışalım.</em></h1>
+    <p class="subtitle" style="margin-top: 24px;">Çalıştırdığınız kodda farklı sonuçlar mı çıktı? Modeli nasıl iyileştirebileceğinizi düşünüyorsunuz? Şimdi paylaşın.</p>
+    <div class="cover-meta">
+      <div><span>Sonraki ders</span><strong>Konvolüsyonel Sinir Ağları</strong></div>
+      <div><span>Hazırlık</span><strong>Görüntü işleme temelleri</strong></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ════════ NAVIGATION ════════ -->
+<div class="help-hint">
+  <kbd>←</kbd> <kbd>→</kbd> ile gez · <kbd>F</kbd> tam ekran
+</div>
+
+<nav class="nav-bar">
+  <button class="nav-btn" id="prevBtn">← Önceki</button>
+  <div class="nav-progress"><div class="nav-progress-fill" id="progressFill"></div></div>
+  <div class="nav-counter"><strong id="currentSlide">01</strong> / <span id="totalSlides">17</span></div>
+  <div class="nav-progress"><div class="nav-progress-fill" style="width: 0;"></div></div>
+  <button class="nav-btn" id="nextBtn">Sonraki →</button>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const progressFill = document.getElementById('progressFill');
+  const currentSlideEl = document.getElementById('currentSlide');
+  const totalSlidesEl = document.getElementById('totalSlides');
+  let current = 0;
+
+  totalSlidesEl.textContent = String(total).padStart(2, '0');
+
+  function show(i) {
+    if (i < 0 || i >= total) return;
+    slides[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    slides[current].scrollTop = 0;
+    progressFill.style.width = `${((current + 1) / total) * 100}%`;
+    currentSlideEl.textContent = String(current + 1).padStart(2, '0');
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  prevBtn.addEventListener('click', () => show(current - 1));
+  nextBtn.addEventListener('click', () => show(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault();
+      show(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      show(current - 1);
+    } else if (e.key === 'Home') {
+      show(0);
+    } else if (e.key === 'End') {
+      show(total - 1);
+    } else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+  });
+
+  show(0);
+</script>
+
+</body>
+</html>
