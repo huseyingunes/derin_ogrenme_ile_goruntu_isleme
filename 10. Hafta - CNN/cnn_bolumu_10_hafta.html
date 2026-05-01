@@ -1,0 +1,3528 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10. Hafta | Konvolüsyonel Sinir Ağları (CNN)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --paper:#ffffff;
+      --ink:#1f2937;
+      --muted:#5b6577;
+      --line:#d9e2ec;
+      --blue:#1d4ed8;
+      --blue-2:#3b82f6;
+      --blue-soft:#dbeafe;
+      --violet:#7c3aed;
+      --violet-soft:#ede9fe;
+      --teal:#0f766e;
+      --teal-soft:#ccfbf1;
+      --amber:#92400e;
+      --amber-soft:#fef3c7;
+      --rose:#be123c;
+      --rose-soft:#ffe4e6;
+      --green:#166534;
+      --green-soft:#dcfce7;
+      --orange:#c2410c;
+      --orange-soft:#ffedd5;
+      --code:#0f172a;
+      --code-ink:#e2e8f0;
+      --shadow:0 14px 38px rgba(15,23,42,.08);
+      --radius:22px;
+      --radius-sm:16px;
+      --maxw:1240px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(59,130,246,.10), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(124,58,237,.10), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(15,118,110,.06), transparent 24%),
+        var(--bg);
+      line-height:1.85;
+    }
+
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:28px}
+    .hero{
+      position:relative;
+      overflow:hidden;
+      padding:56px 44px;
+      border-radius:28px;
+      background:linear-gradient(135deg, #0a1f5c 0%, #1d4ed8 35%, #0891b2 70%, #0f766e 100%);
+      color:#fff;
+      box-shadow:var(--shadow);
+    }
+    .hero:before,.hero:after{
+      content:"";
+      position:absolute;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      filter:blur(.4px);
+    }
+    .hero:before{width:320px;height:320px;right:-80px;top:-60px}
+    .hero:after{width:260px;height:260px;left:-50px;bottom:-60px}
+    .hero .kicker{
+      display:inline-block;
+      margin-bottom:14px;
+      padding:8px 14px;
+      border:1px solid rgba(255,255,255,.24);
+      background:rgba(255,255,255,.10);
+      border-radius:999px;
+      font-size:.92rem;
+      letter-spacing:.01em;
+    }
+    .hero h1{
+      margin:0 0 10px;
+      font-size:clamp(2.1rem,4.2vw,3.9rem);
+      line-height:1.08;
+      letter-spacing:-.03em;
+      font-weight:800;
+    }
+    .hero h2{
+      margin:0;
+      max-width:960px;
+      font-weight:500;
+      font-size:clamp(1.05rem,1.8vw,1.32rem);
+      color:#e9efff;
+    }
+    .hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;}
+    .pill{
+      padding:9px 13px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:.9rem;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:320px minmax(0,1fr);
+      gap:26px;
+      margin-top:26px;
+      align-items:start;
+    }
+
+    .toc{
+      position:sticky;
+      top:18px;
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
+      max-height:calc(100vh - 36px);
+      overflow-y:auto;
+    }
+    .toc h3{margin:0 0 14px;color:var(--blue);font-size:1.08rem;}
+    .toc ol{margin:0;padding-left:18px}
+    .toc li{margin:7px 0;font-size:.95rem}
+    .toc a{color:var(--ink);text-decoration:none;}
+    .toc a:hover{color:var(--blue);text-decoration:underline}
+    .toc .toc-sub{padding-left:14px;margin:4px 0 4px 0;list-style:none;}
+    .toc .toc-sub li{font-size:.88rem;color:var(--muted)}
+    .toc .toc-sub a{color:var(--muted)}
+    .toc .toc-sub a:hover{color:var(--blue)}
+
+    .content{display:flex;flex-direction:column;gap:26px;}
+
+    .card{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:36px 36px 32px;
+    }
+
+    h2.section-title{
+      margin:0 0 18px;
+      font-family:"Source Serif 4", Georgia, serif;
+      font-size:clamp(1.75rem,2.6vw,2.3rem);
+      line-height:1.18;
+      letter-spacing:-.02em;
+      color:#12325f;
+    }
+
+    h3{margin:28px 0 10px;font-size:1.2rem;line-height:1.3;color:var(--violet);}
+    h4{margin:18px 0 8px;color:#17458f;font-size:1.02rem;}
+    h5{margin:14px 0 6px;color:var(--teal);font-size:.98rem;font-weight:700;}
+
+    p{margin:0 0 14px;font-size:1.04rem;}
+    .lead{font-size:1.14rem;color:#354153;}
+    .serif{font-family:"Source Serif 4", Georgia, serif;font-size:1.08rem;}
+
+    .highlight,.insight,.warning,.historical,.exercise,.teaching,.success,.pytorch{
+      border-radius:18px;
+      padding:16px 20px;
+      margin:18px 0;
+      border:1px solid transparent;
+    }
+    .highlight{background:linear-gradient(90deg,var(--blue-soft),#eef6ff);border-color:#bfdbfe;}
+    .insight{background:linear-gradient(90deg,var(--teal-soft),#effefb);border-color:#99f6e4;}
+    .warning{background:linear-gradient(90deg,var(--amber-soft),#fff8df);border-color:#fcd34d;}
+    .historical{background:linear-gradient(90deg,var(--violet-soft),#f5f0ff);border-color:#d8b4fe;}
+    .exercise{background:linear-gradient(90deg,var(--rose-soft),#fff1f3);border-color:#fda4af;}
+    .teaching{background:#f8fafc;border-color:#cbd5e1;}
+    .success{background:linear-gradient(90deg,var(--green-soft),#f0fdf4);border-color:#86efac;}
+    .pytorch{background:linear-gradient(90deg,#fff7ed,#fef3c7);border-color:#fdba74;border-left:4px solid #ea580c;}
+
+    .formula{
+      margin:14px 0;
+      padding:16px 20px;
+      border-radius:16px;
+      background:#fbfdff;
+      border:1px dashed #bfd0e4;
+      font-family:"Source Serif 4", Georgia, serif;
+      overflow:auto;
+      font-size:1.08rem;
+    }
+
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:18px 0;}
+    .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin:18px 0;}
+    .mini{
+      background:#fbfdff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+    }
+    .mini h4{margin-top:0}
+    .mini.blue{background:var(--blue-soft);border-color:#93c5fd;}
+    .mini.violet{background:var(--violet-soft);border-color:#c4b5fd;}
+    .mini.teal{background:var(--teal-soft);border-color:#5eead4;}
+    .mini.amber{background:var(--amber-soft);border-color:#fcd34d;}
+    .mini.green{background:var(--green-soft);border-color:#86efac;}
+    .mini.rose{background:var(--rose-soft);border-color:#fda4af;}
+    .mini.orange{background:var(--orange-soft);border-color:#fdba74;}
+
+    .placeholder{
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;color:#334155;font-weight:700;
+      padding:18px;border-radius:20px;
+      border:2px dashed #94a3b8;
+      background:linear-gradient(135deg,rgba(219,234,254,.6),rgba(237,233,254,.55));
+      min-height:180px;margin:20px 0 10px;
+    }
+    .placeholder.tall{min-height:320px}
+    .placeholder.medium{min-height:240px}
+    .caption{color:var(--muted);font-size:.95rem;font-style:italic;margin-bottom:10px;}
+
+    .timeline{
+      position:relative;margin:18px 0 6px;
+      padding-left:18px;border-left:4px solid var(--blue);
+    }
+    .timeline-item{margin:0 0 20px}
+    .timeline-item strong{color:var(--blue)}
+
+    ul,ol{margin-top:0}
+    li{margin-bottom:8px}
+
+    blockquote{
+      margin:18px 0;padding:16px 20px;
+      border-left:4px solid var(--violet);
+      background:#f8fafc;border-radius:14px;
+      color:#334155;font-style:italic;
+    }
+
+    pre{
+      background:var(--code);color:var(--code-ink);
+      padding:22px;border-radius:18px;overflow:auto;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+      line-height:1.62;font-size:.93rem;margin:14px 0 18px;
+    }
+    code{font-family:Consolas,"Courier New",monospace}
+    p code, li code, td code{
+      background:#f1f5f9;color:#1e40af;
+      padding:2px 6px;border-radius:6px;font-size:.92em;
+    }
+
+    .code-label{
+      display:inline-block;
+      background:#1e293b;color:#94a3b8;
+      font-size:.8rem;padding:4px 12px;
+      border-radius:8px 8px 0 0;
+      margin-bottom:-2px;font-family:Consolas,monospace;
+      letter-spacing:.04em;
+    }
+
+    .result-box{
+      background:#0d2137;color:#7dd3fc;
+      padding:16px 22px;border-radius:14px;
+      font-family:Consolas,monospace;font-size:.9rem;
+      margin:0 0 16px;border:1px solid #1e3a5f;
+    }
+    .result-box .label{color:#64748b;font-size:.8rem;margin-bottom:6px;}
+
+    .table-wrap{overflow-x:auto;margin:16px 0;}
+    table{width:100%;border-collapse:collapse;font-size:.97rem;}
+    th{background:#1d4ed8;color:#fff;padding:10px 14px;text-align:left;font-weight:600;}
+    td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+    tr:nth-child(even) td{background:#f8faff;}
+    tr:hover td{background:#f0f7ff;}
+
+    .tag{
+      display:inline-block;
+      padding:3px 10px;border-radius:999px;
+      font-size:.82rem;font-weight:600;
+      margin:2px 3px 2px 0;
+    }
+    .tag.blue{background:var(--blue-soft);color:#1d4ed8;}
+    .tag.violet{background:var(--violet-soft);color:#6d28d9;}
+    .tag.teal{background:var(--teal-soft);color:#0f766e;}
+    .tag.amber{background:var(--amber-soft);color:#92400e;}
+    .tag.rose{background:var(--rose-soft);color:#be123c;}
+    .tag.green{background:var(--green-soft);color:#166534;}
+    .tag.orange{background:var(--orange-soft);color:#c2410c;}
+
+    .step-flow{
+      display:flex;align-items:center;gap:0;
+      flex-wrap:wrap;margin:20px 0;
+    }
+    .step-box{
+      background:var(--blue-soft);
+      border:1px solid #93c5fd;
+      border-radius:14px;padding:12px 18px;
+      font-size:.95rem;font-weight:600;color:#1d4ed8;
+      white-space:nowrap;
+    }
+    .step-arrow{font-size:1.4rem;color:#93c5fd;padding:0 8px;}
+
+    .kv-row{
+      display:flex;gap:12px;
+      padding:10px 0;border-bottom:1px solid var(--line);
+      align-items:flex-start;
+    }
+    .kv-key{
+      min-width:200px;font-weight:700;
+      color:#17458f;font-size:.97rem;
+    }
+    .kv-val{font-size:.97rem;color:var(--ink);flex:1;}
+
+    .arch-card{
+      border-radius:18px;padding:22px;
+      border:2px solid;margin-bottom:0;
+    }
+    .arch-card h4{margin:0 0 8px;}
+    .arch-card p{margin:0 0 8px;font-size:.95rem;}
+    .arch-card p:last-child{margin:0;}
+
+    /* Görsel kernel matrisi gösterimi */
+    .matrix{
+      display:inline-grid;
+      gap:4px;
+      padding:12px;
+      border-radius:12px;
+      background:#1e293b;
+      font-family:Consolas,monospace;
+      margin:8px 0;
+    }
+    .matrix .cell{
+      background:#334155;color:#e2e8f0;
+      padding:8px 12px;
+      border-radius:6px;
+      text-align:center;
+      min-width:36px;
+    }
+    .matrix .cell.hi{background:#3b82f6;color:#fff;font-weight:700;}
+    .matrix .cell.lo{background:#1e40af;color:#bfdbfe;}
+    .matrix .cell.zero{background:#475569;color:#94a3b8;}
+    .matrix.m3 {grid-template-columns:repeat(3, 1fr);}
+    .matrix.m4 {grid-template-columns:repeat(4, 1fr);}
+    .matrix.m5 {grid-template-columns:repeat(5, 1fr);}
+    .matrix-wrap{
+      display:flex;align-items:center;justify-content:center;
+      gap:18px;flex-wrap:wrap;margin:18px 0;
+    }
+    .matrix-wrap .label{
+      text-align:center;font-size:.92rem;color:var(--muted);
+      font-weight:600;
+    }
+    .matrix-wrap .op{font-size:1.5rem;color:var(--blue);font-weight:700;}
+
+    .footnotes li,.resources li{margin-bottom:12px}
+    .footnotes a,.resources a{color:var(--blue);text-decoration:none;word-break:break-word}
+    .footnotes a:hover,.resources a:hover{text-decoration:underline}
+
+    .fade{
+      opacity:0;transform:translateY(18px);
+      transition:opacity .55s ease,transform .55s ease;
+    }
+    .fade.visible{opacity:1;transform:translateY(0);}
+
+    .footer{
+      text-align:center;padding:30px 12px 44px;
+      color:var(--muted);font-size:.96rem;
+    }
+    .backtop{
+      display:inline-block;margin-top:10px;
+      color:var(--blue);text-decoration:none;font-weight:700;
+    }
+
+    @media(max-width:1020px){
+      .layout{grid-template-columns:1fr}
+      .toc{position:relative;top:auto;max-height:none;}
+      .grid2,.grid3,.grid4{grid-template-columns:1fr}
+      .hero{padding:42px 28px}
+      .card{padding:28px 24px 24px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap" id="top">
+
+  <!-- ═══ HERO ═══ -->
+  <header class="hero fade">
+    <div class="kicker">Derin Öğrenme ile Görüntü İşleme • 10. Hafta Bölümü</div>
+    <h1>Konvolüsyonel Sinir Ağları: Görüntü için Tasarlanmış Mimari</h1>
+    <h2>
+      MLP'nin görüntüde neden yetersiz kaldığından klasik filtrelerin öğrenilebilir hale gelmesine,
+      konvolüsyon operatöründen receptive field'a, LeNet'ten EfficientNet'e, transfer learning'den
+      object detection'a uzanan kapsamlı bir CNN ders bölümü.
+    </h2>
+    <div class="hero-meta">
+      <span class="pill">Klasik görüntü işleme ↔ CNN köprüsü</span>
+      <span class="pill">PyTorch ile gerçek hayat uygulamaları</span>
+      <span class="pill">Tıbbi görüntü + transfer learning</span>
+      <span class="pill">Object detection</span>
+      <span class="pill">Grad-CAM görselleştirme</span>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ═══ TOC ═══ -->
+    <aside class="toc fade">
+      <h3>📚 İçindekiler</h3>
+      <ol>
+        <li><a href="#bolum1">YSA'dan CNN'e geçiş</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum1-1">MLP'nin görüntüdeki üç sorunu</a></li>
+            <li><a href="#bolum1-2">Parametre patlaması</a></li>
+            <li><a href="#bolum1-3">Klasik filtrelerin mirası</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum2">Konvolüsyon operatörü</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum2-1">Klasik filtrelerden CNN'e</a></li>
+            <li><a href="#bolum2-2">2B konvolüsyon mekaniği</a></li>
+            <li><a href="#bolum2-3">Çıktı boyutu formülü</a></li>
+            <li><a href="#bolum2-4">Padding, stride, dilation</a></li>
+            <li><a href="#bolum2-5">Çoklu kanallar</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum3">CNN'in temel bileşenleri</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum3-1">Conv2D katmanı</a></li>
+            <li><a href="#bolum3-2">Pooling katmanları</a></li>
+            <li><a href="#bolum3-3">BatchNorm ve Dropout</a></li>
+            <li><a href="#bolum3-4">Receptive field</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum4">Hiyerarşik özellik öğrenimi</a></li>
+        <li><a href="#bolum5">Görselleştirme: Modelin gözünden</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum5-1">Feature map gösterimi</a></li>
+            <li><a href="#bolum5-2">Grad-CAM</a></li>
+            <li><a href="#bolum5-3">Saliency maps</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum6">Tarihsel CNN mimarileri</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum6-1">LeNet-5 (1998)</a></li>
+            <li><a href="#bolum6-2">AlexNet (2012)</a></li>
+            <li><a href="#bolum6-3">VGG (2014)</a></li>
+            <li><a href="#bolum6-4">Inception/GoogLeNet (2014)</a></li>
+            <li><a href="#bolum6-5">ResNet (2015)</a></li>
+            <li><a href="#bolum6-6">DenseNet, MobileNet, EfficientNet</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum7">Transfer Learning</a></li>
+        <li><a href="#bolum8">Data Augmentation</a></li>
+        <li><a href="#bolum9">Uygulama 1: CIFAR-10 sıfırdan CNN</a></li>
+        <li><a href="#bolum10">Uygulama 2: Pnömoni X-Ray (transfer learning)</a></li>
+        <li><a href="#bolum11">Object Detection</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum11-1">Problem ve metrikler</a></li>
+            <li><a href="#bolum11-2">R-CNN ailesi</a></li>
+            <li><a href="#bolum11-3">YOLO ailesi</a></li>
+            <li><a href="#bolum11-4">PyTorch ile uygulama</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum12">Pratik notlar ve yaygın hatalar</a></li>
+        <li><a href="#bolum13">Öğretim notları ve ödevler</a></li>
+        <li><a href="#atiflar">Atıflar</a></li>
+        <li><a href="#kaynaklar">Kaynaklar</a></li>
+      </ol>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="content">
+
+      <!-- ─── BÖLÜM 1 ─── -->
+      <section class="card fade" id="bolum1">
+        <h2 class="section-title">1. YSA'dan CNN'e Geçiş: Neden Yeni Bir Mimariye İhtiyacımız Var?</h2>
+
+        <p class="lead serif">
+          Bir önceki haftada Yapay Sinir Ağlarını ayrıntılı olarak ele aldık ve MLP ile MNIST
+          üzerinde %98 doğruluğa ulaştık. Tatmin edici bir sonuç gibi görünebilir. Ancak orada
+          tam olarak ne yaptığımızı yeniden hatırlayalım: 28×28 boyutunda bir görüntüyü 784 boyutlu
+          bir vektöre düzleştirip (<code>nn.Flatten()</code>) ağa verdik. Bu adım yapıldığında
+          görüntü artık görüntü değildir; sadece bir sayı dizisidir.
+        </p>
+
+        <p>
+          Bu yaklaşım MNIST gibi küçük, sade, merkeze hizalanmış görüntülerde işe yarar. Ama
+          gerçek dünya görüntüleri böyle değildir. Bir kedi görüntüsünü düşünün: kedi sağda olabilir,
+          solda olabilir, ortada olabilir; küçük olabilir, büyük olabilir; arka planı değişebilir;
+          ışık koşulları farklı olabilir. Bu çeşitliliğe rağmen <strong>aynı</strong> nesneyi
+          tanımak gerekir. MLP bu görevde temelden zorlanır.
+        </p>
+
+        <div id="bolum1-1"></div>
+        <h3>1.1. MLP'nin görüntüdeki üç temel sorunu</h3>
+
+        <div class="grid3">
+          <div class="mini rose">
+            <h4>❌ Uzamsal yapı kaybı</h4>
+            <p>Düzleştirme işlemi piksellerin komşuluk ilişkisini yok eder. (3,4) ile (3,5)
+            konumundaki pikseller görüntüde komşudur ama vektörde 1 birim aralıkla bulunur.
+            (3,4) ile (4,4) ise dikey komşudur ama vektörde 28 birim arayla yer alır.
+            MLP bu farkı bilmez.</p>
+          </div>
+          <div class="mini rose">
+            <h4>❌ Translasyon duyarlılığı</h4>
+            <p>Bir nesne görüntünün sol üstünde öğrenildiyse, sağ alta kaydığında MLP onu
+            tanıyamaz. Çünkü farklı pikseller, farklı nöronlara bağlıdır. Aynı kedi, kameranın
+            açısı değiştiğinde "tamamen farklı bir veri" gibi gelir.</p>
+          </div>
+          <div class="mini rose">
+            <h4>❌ Parametre patlaması</h4>
+            <p>Yüksek çözünürlüklü görüntülerde tam bağlı katman, milyonlarca hatta yüz milyonlarca
+            parametre gerektirir. Bu hem belleği zorlar hem de overfitting'e davetiye çıkarır.
+            Aşağıda somut hesabı yapacağız.</p>
+          </div>
+        </div>
+
+        <div id="bolum1-2"></div>
+        <h3>1.2. Parametre patlaması: Somut bir hesap</h3>
+
+        <p>
+          Şimdi standart bir görüntü sınıflandırma probleminde MLP'nin parametre maliyetini hesaplayalım.
+          Diyelim ki 224×224 piksel boyutunda RGB renkli görüntülerle çalışıyoruz —
+          ImageNet'in standart girdi boyutu.
+        </p>
+
+        <div class="formula">
+          Girdi boyutu = 224 × 224 × 3 = 150.528 piksel<br>
+          İlk gizli katman 1.000 nöron olsun:<br>
+          Parametreler = 150.528 × 1.000 + 1.000 (bias) = <strong>150.529.000 ≈ 150 milyon</strong>
+        </div>
+
+        <p>
+          Sadece <em>ilk</em> katmanda 150 milyon parametre. Tüm AlexNet mimarisi (8 katman, ImageNet'i
+          2012'de kazanan model) yaklaşık 60 milyon parametreye sahiptir. Yani MLP, görüntü işlemek
+          için bir CNN'in tamamından 2-3 kat daha fazla parametreye <strong>tek katmanda</strong> ihtiyaç duyar.
+        </p>
+
+        <div class="warning">
+          <strong>Bu rakamların pratik anlamı:</strong>
+          <ul>
+            <li>Bellek: Her parametre 4 byte (float32). 150M × 4 = 600 MB sadece ağırlıklar.
+            Eğitim sırasında gradyanlar ve optimizer state ile bu rakam katlanır.</li>
+            <li>Veri ihtiyacı: Bu kadar parametre, milyarlarca eğitim örneği olmadan overfit olur.</li>
+            <li>Hesaplama: Her ileri besleme adımında 150M çarpma + 150M toplama. Eğitim haftalar sürer.</li>
+            <li>Ve <strong>en kötüsü:</strong> Tüm bu maliyeti ödedikten sonra bile model translasyona hâlâ duyarlıdır.</li>
+          </ul>
+        </div>
+
+        <p>
+          Buna karşılık ResNet-50 mimarisi yaklaşık 25 milyon parametreyle aynı görüntüleri
+          insan seviyesine yakın doğrulukta sınıflandırır. Bu nasıl mümkündür? İşte bu sorunun
+          cevabı CNN'in iki temel fikriyle gelir: <strong>parametre paylaşımı</strong> ve
+          <strong>yerel bağlantı</strong>.
+        </p>
+
+        <div id="bolum1-3"></div>
+        <h3>1.3. Klasik görüntü işlemenin mirası: Filtrelerden öğrenmeye</h3>
+
+        <p>
+          Görüntü işleme dersini alan bir öğrenci olarak, aslında konvolüsyona uzun zamandır aşinasınız.
+          Sobel ile kenar buldunuz, Gaussian ile bulanıklaştırdınız, Laplacian ile keskinleştirdiniz,
+          Prewitt ile gradyan hesapladınız. Tüm bu işlemler birer 2B konvolüsyon operasyonudur.
+          Her birinde küçük bir <em>çekirdek matrisi</em> (kernel) görüntü üzerinde gezdirilir
+          ve her konum için ağırlıklı toplam alınır.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Sobel X (yatay kenar dedektörü)</h4>
+            <div class="matrix m3">
+              <div class="cell lo">-1</div><div class="cell zero">0</div><div class="cell hi">+1</div>
+              <div class="cell lo">-2</div><div class="cell zero">0</div><div class="cell hi">+2</div>
+              <div class="cell lo">-1</div><div class="cell zero">0</div><div class="cell hi">+1</div>
+            </div>
+            <p>Soldan sağa parlaklık değişimini ölçer. Dik kenarları vurgular.</p>
+          </div>
+          <div class="mini">
+            <h4>Gaussian Blur (3×3, σ≈1)</h4>
+            <div class="matrix m3">
+              <div class="cell">1/16</div><div class="cell">2/16</div><div class="cell">1/16</div>
+              <div class="cell">2/16</div><div class="cell hi">4/16</div><div class="cell">2/16</div>
+              <div class="cell">1/16</div><div class="cell">2/16</div><div class="cell">1/16</div>
+            </div>
+            <p>Merkez piksele en çok ağırlığı verip komşularıyla yumuşatma yapar.</p>
+          </div>
+        </div>
+
+        <p>
+          Klasik yaklaşımda bu çekirdekleri biz <strong>elle tasarlardık</strong>. Bir mühendis
+          oturup "kenar bulmak için şu değerleri kullanırım, bulanıklaştırmak için bu değerleri"
+          diye karar verirdi. Bu, on yıllarca işe yaradı. Ama her sınıflandırma probleminde
+          insan eli tasarımına bağlı kalmak ciddi bir kısıttır.
+        </p>
+
+        <blockquote>
+          "Görüntü işlemenin son kırk yılında öğrendiğimiz şey: doğru filtreleri bulmak,
+          problemin kendisinden daha zor. Ya bu filtreleri verinin kendisi öğrenebilseydi?"
+        </blockquote>
+
+        <p>
+          CNN'in temel fikri tam olarak budur: <strong>filtre değerlerini elle tanımlamak yerine,
+          veriden geri yayılım ile öğrenmek</strong>. Ağırlıklar artık tasarlanmaz, eğitilir.
+          Hangi kenar dedektörünün hangi sınıf için faydalı olduğunu modelin kendisi keşfeder.
+          Bir sonraki katman bu kenarları birleştirip dokuları öğrenir; daha sonraki katman
+          dokuları parçalara, parçalar nesnelere dönüşür.
+        </p>
+
+        <div class="historical">
+          <strong>Tarihsel bağlam:</strong> Hubel ve Wiesel, 1959-1962'de kedi görsel korteksinde
+          yaptıkları deneylerle, basit hücrelerin (simple cells) belirli yönlerdeki kenarlara,
+          karmaşık hücrelerin (complex cells) ise hareket halindeki kenarlara duyarlı olduğunu
+          keşfetti. Görsel sistemin, hiyerarşik biçimde önce basit özelliklerden başlayıp
+          karmaşık örüntülere ilerlediği anlaşıldı. 1980'de Fukushima'nın Neocognitron mimarisi
+          ve 1989'da LeCun'un LeNet'i, bu biyolojik bilgiyi yapay sistemlere taşıdı.
+          CNN, görsel korteksin matematiksel bir karikatürü olarak doğdu.
+        </div>
+
+        <div class="placeholder tall">GÖRSEL ALANI<br>Üç panelli karşılaştırma: (1) Klasik görüntü işleme — elle tasarlanmış Sobel filtresi → kenar haritası; (2) MLP — düzleştirilmiş piksel → tam bağlı katman → tahmin; (3) CNN — öğrenilen filtreler → hiyerarşik özellik haritaları → tahmin. Her panelde parametre sayısı ve translasyon dayanıklılığı işaretli.</div>
+        <div class="caption">Üç farklı paradigmanın yan yana görseli, öğrencilerin "neden CNN" sorusunu sezgisel kavraması için en etkili anlatım aracıdır.</div>
+
+        <h3>1.4. CNN'in iki kurucu fikri</h3>
+
+        <div class="grid2">
+          <div class="mini blue">
+            <h4>🔷 Yerel bağlantı (Local Connectivity)</h4>
+            <p>Bir CNN nöronu, bir önceki katmanın <strong>tüm</strong> piksellerine değil,
+            yalnızca küçük bir komşuluğuna (örn. 3×3 ya da 5×5) bağlanır. Mantık şu:
+            görüntüdeki bilgi yereldir. Bir kenarı tespit etmek için karşı köşedeki pikseli bilmeye
+            gerek yok. Bu, parametre sayısını dramatik biçimde azaltır.</p>
+          </div>
+          <div class="mini violet">
+            <h4>🔶 Parametre paylaşımı (Weight Sharing)</h4>
+            <p>Aynı filtre, görüntünün <strong>her</strong> konumunda kullanılır. Sol üstte kenar
+            arayan filtre, sağ altta da kenar arar. Bu bir kediyi sağda da solda da tanımayı sağlar
+            (translasyon dayanıklılığı). Ayrıca aynı 9 değer tüm görüntü için kullanıldığından
+            parametre sayısı muazzam azalır.</p>
+          </div>
+        </div>
+
+        <div class="formula">
+          224×224 RGB görüntüde:<br>
+          • MLP ilk katmanı (1000 nöron): 150.528.000 parametre<br>
+          • CNN ilk katmanı (32 filtre, 3×3 boyutlu): 3 × 3 × 3 × 32 + 32 = <strong>896 parametre</strong><br>
+          <em>Yaklaşık 168.000 kat daha az parametre, aynı görüntü için.</em>
+        </div>
+
+        <div class="success">
+          <strong>Bu hafta sonunda kavramanız gereken büyük resim şudur:</strong> CNN, MLP'nin
+          görüntüdeki üç temel zaafını (uzamsal kayıp, translasyon duyarlılığı, parametre patlaması)
+          aynı anda çözer. Hem de bunu klasik görüntü işlemenin mantığını koruyup
+          filtreleri öğrenilebilir hale getirerek yapar. Yani bildiğiniz Sobel filtresi
+          kayıp olmadı; CNN onu öğrenebilen bir nesneye dönüştürdü.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 2 ─── -->
+      <section class="card fade" id="bolum2">
+        <h2 class="section-title">2. Konvolüsyon Operatörü: Görüntü İşlemenin Kalbi</h2>
+
+        <p class="lead serif">
+          Bu bölümde konvolüsyon operatörünü matematiksel ve sezgisel olarak kuracağız. Görüntü
+          işleme dersinde bu operatörü zaten gördünüz; şimdi onu öğrenilebilir bir parametre
+          olarak yeniden ele alacağız.
+        </p>
+
+        <div id="bolum2-1"></div>
+        <h3>2.1. Klasik filtrelerden CNN'e: Aynı operatör, farklı amaç</h3>
+
+        <p>
+          Hatırlayalım: klasik görüntü işlemede 2B konvolüsyon, bir görüntü <em>I</em> ile bir
+          çekirdek <em>K</em> arasında şu işlemi yapar:
+        </p>
+
+        <div class="formula">
+          (I * K)(i, j) = Σ<sub>m</sub> Σ<sub>n</sub> I(i+m, j+n) · K(m, n)
+        </div>
+
+        <p>
+          Sezgisel olarak: çekirdeği görüntü üzerinde gezdir, her konumda örtüşen piksellerin
+          ağırlıklı toplamını al, sonucu çıktıya yaz. Klasik filtrelerle CNN arasındaki tek fark:
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Klasik görüntü işleme</h4>
+            <p>Çekirdek değerleri <strong>elle tanımlanır</strong>:</p>
+            <pre style="font-size:.85rem;margin:8px 0;"><code>sobel_x = [[-1, 0, 1],
+           [-2, 0, 2],
+           [-1, 0, 1]]
+# Mühendis bunu tasarlar.</code></pre>
+            <p>Çekirdek <em>sabittir</em>; her görüntüye aynı uygulanır.</p>
+          </div>
+          <div class="mini">
+            <h4>CNN</h4>
+            <p>Çekirdek değerleri <strong>öğrenilir</strong>:</p>
+            <pre style="font-size:.85rem;margin:8px 0;"><code>conv = nn.Conv2d(
+  in_channels=1, out_channels=32,
+  kernel_size=3
+)
+# 32 farklı çekirdek, geri yayılımla öğrenir.</code></pre>
+            <p>Çekirdek <em>parametredir</em>; eğitim verisine göre uyarlanır.</p>
+          </div>
+        </div>
+
+        <div class="insight">
+          <strong>Teknik nüans:</strong> Matematiksel anlamda gerçek konvolüsyon, çekirdeği
+          flip ettikten sonra uygular. CNN'lerde aslında <em>cross-correlation</em>
+          kullanılır (çekirdek flip edilmez). Ama literatürde herkes "konvolüsyon" der ve PyTorch
+          da öyle isimlendirir. Pratikte fark, sadece çekirdek yönü açısındandır; öğrenme
+          sürecini etkilemez çünkü öğrenilen değerler buna göre kendiliğinden ayarlanır.
+        </div>
+
+        <div id="bolum2-2"></div>
+        <h3>2.2. 2B konvolüsyonun mekaniği: Adım adım örnek</h3>
+
+        <p>
+          Diyelim ki 5×5 boyutunda bir gri tonlamalı görüntü ve 3×3 boyutunda bir kenar dedektörü
+          çekirdeğimiz var. Konvolüsyon nasıl hesaplanır?
+        </p>
+
+        <div class="matrix-wrap">
+          <div>
+            <div class="label">Görüntü (5×5)</div>
+            <div class="matrix m5">
+              <div class="cell">10</div><div class="cell">10</div><div class="cell">10</div><div class="cell hi">80</div><div class="cell hi">80</div>
+              <div class="cell">10</div><div class="cell">10</div><div class="cell">10</div><div class="cell hi">80</div><div class="cell hi">80</div>
+              <div class="cell">10</div><div class="cell">10</div><div class="cell">10</div><div class="cell hi">80</div><div class="cell hi">80</div>
+              <div class="cell">10</div><div class="cell">10</div><div class="cell">10</div><div class="cell hi">80</div><div class="cell hi">80</div>
+              <div class="cell">10</div><div class="cell">10</div><div class="cell">10</div><div class="cell hi">80</div><div class="cell hi">80</div>
+            </div>
+          </div>
+          <div class="op">∗</div>
+          <div>
+            <div class="label">Sobel X çekirdeği (3×3)</div>
+            <div class="matrix m3">
+              <div class="cell lo">-1</div><div class="cell zero">0</div><div class="cell hi">+1</div>
+              <div class="cell lo">-2</div><div class="cell zero">0</div><div class="cell hi">+2</div>
+              <div class="cell lo">-1</div><div class="cell zero">0</div><div class="cell hi">+1</div>
+            </div>
+          </div>
+          <div class="op">=</div>
+          <div>
+            <div class="label">Çıktı (3×3)</div>
+            <div class="matrix m3">
+              <div class="cell">0</div><div class="cell hi">280</div><div class="cell hi">280</div>
+              <div class="cell">0</div><div class="cell hi">280</div><div class="cell hi">280</div>
+              <div class="cell">0</div><div class="cell hi">280</div><div class="cell hi">280</div>
+            </div>
+          </div>
+        </div>
+
+        <p>
+          Görüntüde sol yarı koyu (10), sağ yarı parlak (80). Sobel X dikey kenarı arar.
+          Çekirdek görüntünün sol kısmında (kenar yokken) 0 üretir. Kenarın olduğu yere geldiğinde
+          büyük bir pozitif değer (280) üretir. <strong>Çıktı, görüntüdeki dikey kenarın
+          konumunu işaret eden bir aktivasyon haritasıdır.</strong>
+        </p>
+
+        <h4>Tek bir çıkış değerinin hesaplaması</h4>
+        <p>
+          Çıktının sol üst değerini (0) elle hesaplayalım. Çekirdek görüntünün ilk 3×3 bölgesine
+          oturduğunda:
+        </p>
+
+        <div class="formula">
+          Çıkış(0,0) = (10×-1) + (10×0) + (10×+1) +<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (10×-2) + (10×0) + (10×+2) +<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (10×-1) + (10×0) + (10×+1) = 0<br><br>
+          Çıkış(0,1) = (10×-1) + (10×0) + (80×+1) +<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (10×-2) + (10×0) + (80×+2) +<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (10×-1) + (10×0) + (80×+1) = 280
+        </div>
+
+        <p>
+          Birinci konumda çekirdek tek bir gri renk gördüğünden çıkış sıfırdır (kenar yok).
+          İkinci konumda çekirdek koyu/parlak sınırına denk geldiğinden çıkış büyüktür (kenar var).
+          CNN'in tüm gücü bu basit hesabın milyarlarca kez tekrarlanmasından gelir.
+        </p>
+
+        <div id="bolum2-3"></div>
+        <h3>2.3. Çıktı boyutu formülü</h3>
+
+        <p>
+          Bir konvolüsyon operasyonunun çıktı boyutu, girdi boyutu ile çekirdek boyutu, padding
+          ve stride parametrelerine bağlıdır. Formül:
+        </p>
+
+        <div class="formula">
+          H<sub>out</sub> = ⌊(H<sub>in</sub> − K + 2P) / S⌋ + 1<br>
+          W<sub>out</sub> = ⌊(W<sub>in</sub> − K + 2P) / S⌋ + 1
+        </div>
+
+        <p>Burada:</p>
+        <ul>
+          <li><strong>H<sub>in</sub>, W<sub>in</sub>:</strong> Girdinin yükseklik ve genişliği</li>
+          <li><strong>K:</strong> Çekirdek (kernel) boyutu</li>
+          <li><strong>P:</strong> Padding (kenar dolgu) miktarı</li>
+          <li><strong>S:</strong> Stride (adım) boyutu</li>
+        </ul>
+
+        <h4>Örnek hesaplamalar</h4>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Girdi</th><th>Kernel</th><th>Padding</th><th>Stride</th><th>Çıktı</th><th>Açıklama</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>32×32</td><td>3×3</td><td>0</td><td>1</td><td>30×30</td><td>Klasik 3×3 conv, padding yok — 2 piksel kaybedilir</td></tr>
+              <tr><td>32×32</td><td>3×3</td><td>1</td><td>1</td><td>32×32</td><td>"Same" padding — boyut korunur, en çok tercih edilen</td></tr>
+              <tr><td>32×32</td><td>5×5</td><td>2</td><td>1</td><td>32×32</td><td>5×5 için "same" padding (K-1)/2 = 2 olmalı</td></tr>
+              <tr><td>32×32</td><td>3×3</td><td>0</td><td>2</td><td>15×15</td><td>Stride=2 ile yarıya iner — pooling alternatifi</td></tr>
+              <tr><td>224×224</td><td>7×7</td><td>3</td><td>2</td><td>112×112</td><td>ResNet'in ilk katmanı — agresif başlangıç downsampling</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="bolum2-4"></div>
+        <h3>2.4. Padding, Stride ve Dilation</h3>
+
+        <h4>Padding (Kenar dolgu)</h4>
+        <p>
+          Padding, görüntünün etrafına yapay piksel (genellikle sıfır) eklemektir. İki temel amacı vardır:
+        </p>
+        <ul>
+          <li><strong>Boyut koruma:</strong> Conv2d sonucu küçülür. Padding ekleyerek aynı boyutta tutarız.
+          Bu özellikle derin ağlarda önemlidir; aksi halde 50 katmandan sonra görüntü yok olur.</li>
+          <li><strong>Kenar pikselleri kullanma:</strong> Padding olmadan kenardaki pikseller, çekirdeğin
+          merkezine az gelir. Padding ile kenar bilgisi de aynı oranda işlenir.</li>
+        </ul>
+
+        <p>Padding türleri:</p>
+        <div class="kv-row">
+          <div class="kv-key">Valid (Geçerli)</div>
+          <div class="kv-val">Padding yok. Çıktı her zaman küçülür. <code>padding=0</code></div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">Same (Aynı)</div>
+          <div class="kv-val">Çıktı boyutu girdi ile aynı olacak şekilde padding eklenir. K=3 → P=1, K=5 → P=2, K=7 → P=3. Genel formül: P = (K-1)/2.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">Full</div>
+          <div class="kv-val">Çekirdeğin görüntüyle hiç örtüşmediği son konuma kadar padding. Pratikte nadiren kullanılır.</div>
+        </div>
+
+        <h4>Stride (Adım)</h4>
+        <p>
+          Stride, çekirdeğin görüntü üzerinde gezerken her adımda kaç piksel atlayacağını belirler.
+          <code>stride=1</code> her piksele uğrar; <code>stride=2</code> her ikinci piksele uğrar
+          ve böylece çıktı boyutu yarıya iner. Stride, pooling'e alternatif bir
+          downsampling (boyut azaltma) yöntemidir.
+        </p>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>İki yan yana animasyon: solda stride=1 (her piksele uğrayan kernel), sağda stride=2 (atlayan kernel). Çıktı boyutu farkı vurgulanmalı.</div>
+
+        <h4>Dilation (Genişleme/Atrous Convolution)</h4>
+        <p>
+          Dilation, çekirdeğin elemanları arasında boşluk bırakır. <code>dilation=2</code> ile
+          3×3 çekirdek aslında 5×5'lik bir alanı kaplar ama yalnızca 9 değerle. Bu, parametre
+          sayısını artırmadan receptive field'ı (modelin gördüğü alanı) büyütür.
+        </p>
+
+        <div class="formula">
+          Dilated kernel'in etkin boyutu: K<sub>etkin</sub> = K + (K−1)(d−1)<br>
+          Örnek: K=3, d=2 → K<sub>etkin</sub> = 5
+        </div>
+
+        <p>
+          Dilated convolution özellikle <strong>semantik segmentasyon</strong>da (DeepLab serisi)
+          ve büyük receptive field gerektiren görevlerde önemli bir araçtır.
+        </p>
+
+        <div id="bolum2-5"></div>
+        <h3>2.5. Çoklu kanallar: RGB ve özellik haritaları</h3>
+
+        <p>
+          Şimdiye kadar tek kanallı (gri tonlamalı) görüntülerle çalıştık. Gerçek dünyada görüntüler
+          genellikle RGB renkli, yani 3 kanallıdır. CNN bu durumu nasıl ele alır?
+        </p>
+
+        <p>
+          Cevap: çekirdek de çok kanallı olur. Bir 3×3 RGB konvolüsyon çekirdeği aslında 3×3×3 boyutundadır.
+          Her kanal için ayrı bir 3×3 alt-çekirdek vardır. Konvolüsyon hesaplaması her kanal için
+          ayrı yapılır ve sonuçlar toplanır.
+        </p>
+
+        <div class="formula">
+          Tek bir filtre için:<br>
+          out(i, j) = Σ<sub>c=0..C-1</sub> Σ<sub>m</sub> Σ<sub>n</sub> I<sub>c</sub>(i+m, j+n) · K<sub>c</sub>(m, n) + b
+        </div>
+
+        <p>Burada <em>C</em> giriş kanallarının sayısıdır (RGB için 3).</p>
+
+        <h4>Filtre sayısı = Çıktı kanalı sayısı</h4>
+        <p>
+          Bir Conv2d katmanında <strong>birden fazla filtre</strong> bulunur. Her filtre, görüntüden
+          farklı bir özellik (kenar, doku, renk geçişi vb.) çıkarır. Eğer 32 filtre kullanırsak,
+          çıkış 32 kanallı olur — buna 32 farklı <em>özellik haritası (feature map)</em> denir.
+        </p>
+
+        <div class="formula">
+          Bir Conv2d katmanının parametre sayısı:<br>
+          <strong>Parametreler = K<sub>h</sub> × K<sub>w</sub> × C<sub>in</sub> × C<sub>out</sub> + C<sub>out</sub></strong><br><br>
+          Örnek: 3×3 kernel, 3 giriş kanalı, 64 çıkış kanalı:<br>
+          Parametreler = 3 × 3 × 3 × 64 + 64 = 1.792
+        </div>
+
+        <div class="insight">
+          <strong>Önemli kavrayış:</strong> CNN'de "kanal" derinleştikçe artık RGB gibi fiziksel
+          bir anlam taşımaz. İlk katmanın 32 çıkış kanalı 32 öğrenilmiş filtreye karşılık gelir;
+          bunlar muhtemelen farklı yönlerdeki kenarlar olur. Sonraki katmanlarda kanallar dokuları,
+          parçaları temsil eder. Yani CNN'de "kanal" derinleştikçe daha soyut özelliklerin
+          gösterimine dönüşür.
+        </div>
+
+        <h4>PyTorch'ta Conv2d</h4>
+        <div class="code-label">Python — Conv2d temel kullanım</div>
+<pre><code>import torch
+import torch.nn as nn
+
+# 3 kanallı (RGB) girişten 32 kanallı çıkışa, 3×3 kernel, "same" padding
+conv = nn.Conv2d(
+    in_channels=3,      # RGB girişi
+    out_channels=32,    # 32 öğrenilebilir filtre
+    kernel_size=3,      # 3×3 kernel
+    stride=1,           # Her piksele uğra
+    padding=1,          # "Same" padding (boyut korunur)
+    bias=True
+)
+
+# Test girdisi: batch_size=4, 3 kanal, 224×224 görüntü
+x = torch.randn(4, 3, 224, 224)
+y = conv(x)
+
+print(f"Girdi şekli:  {x.shape}")    # → torch.Size([4, 3, 224, 224])
+print(f"Çıkış şekli:  {y.shape}")    # → torch.Size([4, 32, 224, 224])
+
+# Parametre sayısı
+n_params = sum(p.numel() for p in conv.parameters())
+print(f"Parametre sayısı: {n_params}")  # → 896 = 3*3*3*32 + 32
+</code></pre>
+      </section>
+
+      <!-- ─── BÖLÜM 3 ─── -->
+      <section class="card fade" id="bolum3">
+        <h2 class="section-title">3. CNN'in Temel Bileşenleri</h2>
+
+        <p class="lead serif">
+          Bir CNN mimarisi yalnızca konvolüsyon katmanlarından oluşmaz. Pooling, normalizasyon,
+          aktivasyon ve dropout katmanları belirli bir düzen içinde dizilerek çalışır.
+          Bu bölümde her bileşenin ne yaptığını, neden gerekli olduğunu ve PyTorch'ta nasıl
+          kullanıldığını ayrıntılı ele alıyoruz.
+        </p>
+
+        <div id="bolum3-1"></div>
+        <h3>3.1. Conv2D katmanı: Öğrenilebilir filtreler</h3>
+
+        <p>
+          Conv2D, CNN'in işgücünü yapan ana katmandır. Önceki bölümde mekaniğini detaylıca gördük.
+          Burada hatırlayalım: <code>nn.Conv2d</code>, belirlenen sayıda öğrenilebilir filtreyi
+          görüntü üzerinde gezdirir ve özellik haritaları üretir. Her filtre, geri yayılımla
+          eğitilen bir parametre kümesidir.
+        </p>
+
+        <div class="pytorch">
+          <strong>🔥 PyTorch'ta yaygın Conv2D parametreleri:</strong>
+          <ul>
+            <li><code>in_channels</code> — Giriş kanal sayısı (önceki katmanın çıktısı)</li>
+            <li><code>out_channels</code> — Filtre/çıkış kanal sayısı (kaç farklı özellik öğrensin?)</li>
+            <li><code>kernel_size</code> — Çekirdek boyutu (3, 5, 7 yaygın)</li>
+            <li><code>stride</code> — Adım (varsayılan 1, downsampling için 2)</li>
+            <li><code>padding</code> — Kenar dolgu (3×3 için "same" istiyorsak 1)</li>
+            <li><code>dilation</code> — Genişleme (varsayılan 1, atrous için 2 veya daha büyük)</li>
+            <li><code>groups</code> — Grouped convolution (depthwise conv için groups=in_channels)</li>
+            <li><code>bias</code> — Bias kullan/kullanma (BatchNorm sonrası gereksizdir, False yapılır)</li>
+          </ul>
+        </div>
+
+        <h4>1×1 Konvolüsyon: İlginç bir özel durum</h4>
+        <p>
+          Boyutu 1×1 olan bir kernel ne işe yarar? İlk bakışta anlamsız görünür — tek bir piksele
+          ne yapacak? Ama 1×1 conv, kanal boyutunda lineer bir kombinasyon yapar. Yani C<sub>in</sub>
+          kanaldan C<sub>out</sub> kanala geçişi sağlar. Bu özellik:
+        </p>
+        <ul>
+          <li><strong>Kanal sayısını azaltmak/artırmak</strong> için kullanılır (Inception, ResNet'in
+          bottleneck blokları).</li>
+          <li>Hesaplama maliyetini düşürmek için ön-projeksiyon yapar.</li>
+          <li>Öğrenilebilir kanal-bazlı doğrusal kombinasyon görevi görür.</li>
+        </ul>
+
+        <h4>Depthwise ve Separable Convolution</h4>
+        <p>
+          MobileNet gibi mobil cihazlar için optimize edilmiş mimarilerde kullanılan teknik:
+          standart konvolüsyonu iki parçaya böler. Depthwise conv her giriş kanalına ayrı bir
+          filtre uygular (kanallar arası karışım yok), pointwise conv (1×1) sonra bunları birleştirir.
+          Sonuç: parametre ve hesaplama maliyeti 8-9 kat azalır, doğruluk benzer kalır.
+        </p>
+
+        <div id="bolum3-2"></div>
+        <h3>3.2. Pooling katmanları: Downsampling ve invariance</h3>
+
+        <p>
+          Pooling katmanları, özellik haritalarının uzamsal boyutunu azaltır (downsampling).
+          Bunun üç önemli faydası vardır:
+        </p>
+
+        <ol>
+          <li><strong>Hesaplama azalır:</strong> Sonraki katmanlar daha küçük tensörlerle çalışır.</li>
+          <li><strong>Receptive field artar:</strong> Aynı çekirdek boyutuyla daha geniş bir alan görülür.</li>
+          <li><strong>Translasyon dayanıklılığı:</strong> Küçük konum kaymaları çıktıyı etkilemez.</li>
+        </ol>
+
+        <h4>Max Pooling vs Average Pooling</h4>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Max Pooling</h4>
+            <p>Her bölgede en yüksek değeri seçer. "Bu bölgede en güçlü aktivasyon neydi?"
+            sorusuna cevap verir. Pratikte en yaygın kullanılan tür — özellik var/yok bilgisi
+            için en güçlü sinyali korur.</p>
+            <div class="matrix-wrap" style="margin-top:10px;">
+              <div>
+                <div class="label">Girdi (4×4)</div>
+                <div class="matrix m4">
+                  <div class="cell">1</div><div class="cell">3</div><div class="cell">2</div><div class="cell hi">9</div>
+                  <div class="cell">4</div><div class="cell hi">7</div><div class="cell">5</div><div class="cell">6</div>
+                  <div class="cell">2</div><div class="cell">1</div><div class="cell">3</div><div class="cell">2</div>
+                  <div class="cell">8</div><div class="cell">2</div><div class="cell">1</div><div class="cell">4</div>
+                </div>
+              </div>
+              <div class="op">→</div>
+              <div>
+                <div class="label">MaxPool 2×2</div>
+                <div class="matrix m3" style="grid-template-columns:repeat(2,1fr);">
+                  <div class="cell hi">7</div><div class="cell hi">9</div>
+                  <div class="cell hi">8</div><div class="cell hi">4</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mini">
+            <h4>Average Pooling</h4>
+            <p>Her bölgenin ortalamasını alır. Daha yumuşak bir sinyal korur.
+            Sınıflandırma için genelde Max tercih edilir; Global Average Pooling (GAP) ise
+            ağın sonunda flatten yerine kullanılır (parametre azaltır, overfit riskini düşürür).</p>
+            <pre style="margin-top:10px;font-size:.85rem;"><code>nn.MaxPool2d(kernel_size=2, stride=2)
+nn.AvgPool2d(kernel_size=2, stride=2)
+nn.AdaptiveAvgPool2d((1,1))  # GAP</code></pre>
+          </div>
+        </div>
+
+        <div class="warning">
+          <strong>Modern trend:</strong> Bazı yeni mimariler (ResNet, EfficientNet) max pooling yerine
+          stride=2 olan konvolüsyonları downsampling için kullanır. Avantaj: pooling'in "sabit"
+          downsampling'i yerine modelin nasıl downsampling yapacağını öğrenmesidir. Ancak max pooling
+          hâlâ pek çok mimaride etkindir ve hesaplama açısından ücretsizdir.
+        </div>
+
+        <div id="bolum3-3"></div>
+        <h3>3.3. Batch Normalization ve Dropout: Düzenlileştirme</h3>
+
+        <h4>Batch Normalization (BN)</h4>
+        <p>
+          BN, bir batch içindeki aktivasyonları sıfır ortalama ve birim varyansa normalize eder,
+          ardından öğrenilebilir bir kayma ve ölçek uygular. Formül:
+        </p>
+
+        <div class="formula">
+          x̂ = (x − μ<sub>batch</sub>) / √(σ²<sub>batch</sub> + ε)<br>
+          y = γ · x̂ + β
+        </div>
+
+        <p>
+          γ ve β öğrenilebilir parametrelerdir. BN'in faydaları:
+        </p>
+        <ul>
+          <li><strong>Eğitim hızlanır:</strong> Daha yüksek learning rate kullanılabilir</li>
+          <li><strong>Ağırlık başlatmaya daha az duyarlı:</strong> İyi başlatma kritik olmaktan çıkar</li>
+          <li><strong>Hafif düzenlileştirme etkisi:</strong> Batch içi gürültü dropout benzeri etki yapar</li>
+          <li><strong>Vanishing gradient azalır:</strong> Aktivasyonlar saturasyon bölgelerinden uzakta kalır</li>
+        </ul>
+
+        <p>
+          CNN'lerde sıralama tipik olarak: <strong>Conv → BatchNorm → ReLU</strong>.
+          Conv katmanında <code>bias=False</code> kullanılır, çünkü BN'in β parametresi bias görevini görür.
+        </p>
+
+        <h4>Dropout (CNN'de farklılıklar)</h4>
+        <p>
+          MLP'de dropout standart bir araçtır. CNN'de durum biraz farklıdır:
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Standart Dropout (FC katmanlarda)</h4>
+            <p>Tam bağlı katmanlarda hâlâ etkilidir. Sınıflandırma kafasındaki FC katmanlarında
+            <code>nn.Dropout(p=0.5)</code> yaygın kullanılır.</p>
+          </div>
+          <div class="mini">
+            <h4>Spatial Dropout (Conv katmanlarda)</h4>
+            <p>Conv aktivasyonlarına standart dropout uygulamak çok etkili değildir, çünkü komşu
+            pikseller yüksek korelasyonludur. Bunun yerine tüm bir özellik haritasını kapatan
+            <code>nn.Dropout2d</code> daha mantıklıdır. Yine de modern CNN'lerde BN olduğunda
+            dropout sıklıkla atlanır — BN'in düzenlileştirme etkisi yeterlidir.</p>
+          </div>
+        </div>
+
+        <div id="bolum3-4"></div>
+        <h3>3.4. Receptive Field: Bir nöron aslında ne kadar görür?</h3>
+
+        <p>
+          Receptive field (alıcı alan), bir CNN nöronunun girdi görüntüsünde "etkilendiği"
+          piksel bölgesidir. CNN'in derin katmanlarındaki bir nöron, doğrudan birkaç piksele
+          değil, dolaylı olarak çok daha geniş bir alana bakar.
+        </p>
+
+        <p>
+          Örneğin: 3×3 conv katmanından çıkan bir aktivasyon, girdideki 3×3'lük alana bakar.
+          Üst üste 2 tane 3×3 conv eklersek, en üstteki nöron girdideki 5×5'lik alana bakar.
+          3 katmanda bu alan 7×7 olur. Genel formül:
+        </p>
+
+        <div class="formula">
+          RF<sub>L</sub> = RF<sub>L-1</sub> + (K<sub>L</sub> − 1) · Π<sub>i&lt;L</sub> S<sub>i</sub>
+        </div>
+
+        <p>
+          Yani derinleştikçe ve stride/pooling kullandıkça receptive field hızla büyür.
+          Sınıflandırma için modelin sonunda receptive field'ın görüntünün <strong>tamamını</strong>
+          kapsaması istenir — yoksa nesnenin tümünü görüp karar veremeyiz.
+        </p>
+
+        <div class="grid3">
+          <div class="mini blue">
+            <h4>3×3 conv ×2 katman</h4>
+            <p>RF = 5×5<br>
+            Parametre: 2 × (9 + 1) = 20<br>
+            <em>Aynı RF'i 5×5 tek conv ile alsak: 26 parametre</em></p>
+          </div>
+          <div class="mini blue">
+            <h4>3×3 conv ×3 katman</h4>
+            <p>RF = 7×7<br>
+            Parametre: 3 × 10 = 30<br>
+            <em>Aynı RF'i 7×7 tek conv ile alsak: 50 parametre</em></p>
+          </div>
+          <div class="mini blue">
+            <h4>VGG'nin sırrı</h4>
+            <p>Hep 3×3 conv kullanıp arada pooling. Hem parametre verimli hem daha derin → daha güçlü
+            non-lineerlik (her conv arasında ReLU).</p>
+          </div>
+        </div>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Üç katmanlı CNN'de receptive field'ın derinliğe göre nasıl büyüdüğünü gösteren diyagram. En alttaki nöron sadece 3×3 alana bakarken en üst katmanın aynı konumdaki nöronu girdide 7×7 alana bakar.</div>
+
+        <h3>3.5. Tipik bir CNN'in akışı</h3>
+
+        <div class="step-flow">
+          <div class="step-box">Girdi<br><small>3×224×224</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">Conv+BN+ReLU<br><small>64×224×224</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">MaxPool 2×2<br><small>64×112×112</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">Conv+BN+ReLU<br><small>128×112×112</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">MaxPool 2×2<br><small>128×56×56</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">...</div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">GAP<br><small>512×1×1</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">FC<br><small>10 sınıf</small></div>
+        </div>
+
+        <p>
+          Genel desen: <strong>her downsampling adımında uzamsal boyut yarıya iner, kanal sayısı
+          ikiye katlanır.</strong> Bu, bilginin uzamsal eksenden semantik eksene doğru kaymasını sağlar.
+          Başlangıçta görüntü 224×224×3 = 150K değerdir. Sonda 1×1×512 = 512 değer kalır — ama bu
+          512 değer çok daha "anlamlı"dır.
+        </p>
+      </section>
+
+      <!-- ─── BÖLÜM 4 ─── -->
+      <section class="card fade" id="bolum4">
+        <h2 class="section-title">4. Hiyerarşik Özellik Öğrenimi: Pikselden Nesneye</h2>
+
+        <p class="lead serif">
+          CNN'in derinleşen katmanları boyunca öğrenilen özellikler giderek daha soyut hâle gelir.
+          Bu hiyerarşi, modelin neden başarılı olduğunun ve nasıl genelleştirebildiğinin temelini oluşturur.
+          Bir görüntü işleme öğrencisi olarak bu hiyerarşiyi kavramak, klasik filtrelerden modern
+          mimarilere zihinsel köprüyü kurmanın anahtarıdır.
+        </p>
+
+        <h3>4.1. Katmanlar boyunca soyutlama</h3>
+
+        <p>
+          Eğitilmiş bir CNN'in her katmanındaki filtreleri görselleştirdiğimizde tutarlı bir desen ortaya çıkar:
+        </p>
+
+        <div class="grid4">
+          <div class="mini blue">
+            <h4>1. Katman</h4>
+            <p><strong>Düşük seviye özellikler</strong></p>
+            <ul style="font-size:.9rem;">
+              <li>Yatay kenarlar</li>
+              <li>Dikey kenarlar</li>
+              <li>Köşegen kenarlar</li>
+              <li>Renk geçişleri</li>
+              <li>Parlaklık değişimleri</li>
+            </ul>
+            <p style="font-size:.85rem;font-style:italic;">Sobel/Prewitt'e benzer.</p>
+          </div>
+          <div class="mini violet">
+            <h4>2-3. Katman</h4>
+            <p><strong>Orta seviye desenler</strong></p>
+            <ul style="font-size:.9rem;">
+              <li>Köşeler ve T-kavşaklar</li>
+              <li>Doku örüntüleri</li>
+              <li>Daireler, eğriler</li>
+              <li>Tekrarlayan motifler</li>
+              <li>Basit şekiller</li>
+            </ul>
+            <p style="font-size:.85rem;font-style:italic;">Birden fazla kenarın birleşimi.</p>
+          </div>
+          <div class="mini teal">
+            <h4>4-5. Katman</h4>
+            <p><strong>Parça (part) tespiti</strong></p>
+            <ul style="font-size:.9rem;">
+              <li>Göz, burun, kulak</li>
+              <li>Tekerlek, kapı</li>
+              <li>Kuş gagası, kanat</li>
+              <li>Yaprak, dal</li>
+              <li>Yazı parçaları</li>
+            </ul>
+            <p style="font-size:.85rem;font-style:italic;">Nesne parçalarına özgü filtreler.</p>
+          </div>
+          <div class="mini amber">
+            <h4>Son katmanlar</h4>
+            <p><strong>Bütün nesneler</strong></p>
+            <ul style="font-size:.9rem;">
+              <li>Yüzler</li>
+              <li>Arabalar</li>
+              <li>Kuşlar</li>
+              <li>Bina cepheleri</li>
+              <li>Sınıfa özgü konseptler</li>
+            </ul>
+            <p style="font-size:.85rem;font-style:italic;">Yüksek seviye semantik.</p>
+          </div>
+        </div>
+
+        <div class="historical">
+          <strong>Klasik gözlem (Zeiler & Fergus, 2014):</strong> "Visualizing and Understanding
+          Convolutional Networks" makalesinde araştırmacılar, AlexNet'in her katmanındaki filtrelerin
+          ne öğrendiğini görselleştirdiler. Sonuç şaşırtıcıydı: ağ kimsenin "kenar bul, sonra köşe bul,
+          sonra göz bul" demediği halde tam olarak bu hiyerarşiyi kendiliğinden keşfetmişti.
+          Bu bulgu, derin öğrenmenin neden hem güçlü hem yorumlanabilir olduğunu gösteren bir
+          dönüm noktasıdır.
+        </div>
+
+        <h3>4.2. Biyolojik koşutluk</h3>
+
+        <p>
+          Hubel ve Wiesel'in görsel korteks deneyleri (1959-1962) bu hiyerarşiyi memeli beyninde
+          keşfetti. V1 alanındaki <strong>basit hücreler</strong> belirli yönlerdeki kenarlara
+          tepki verir. <strong>Karmaşık hücreler</strong> bu kenarların translasyonuna dayanıklı
+          tepkiler üretir. V2, V4, IT gibi ileri görsel alanlar daha karmaşık örüntülere — yüzlere,
+          nesnelere, hatta belirli kişilere — duyarlı hâle gelir. CNN, bu hiyerarşinin matematiksel bir karikatürüdür.
+        </p>
+
+        <blockquote>
+          "Ağa hiyerarşik öğrenmeyi biz öğretmiyoruz; mimari onu zorunlu kılıyor.
+          Yerel bağlantı, parametre paylaşımı ve derinlik birleşince hiyerarşi
+          en doğal çözüm olarak ortaya çıkıyor."
+        </blockquote>
+
+        <div class="placeholder tall">GÖRSEL ALANI<br>4 sütunlu hiyerarşi görseli: Sol → sağ ilerledikçe (1) kenar filtreleri (2) köşe ve doku (3) göz, kulak gibi parçalar (4) yüz, kuş gibi tam nesneler. Her sütunda 6-9 örnek filtre/aktivasyon görselleştirmesi. AlexNet veya VGG'den alınan tipik örnekler kullanılabilir.</div>
+        <div class="caption">Bu görsel, "CNN ne öğreniyor?" sorusunun en güçlü görsel cevabıdır. Öğrencilerin "kara kutu" hissini büyük ölçüde kıran bir araçtır.</div>
+      </section>
+
+      <!-- ─── BÖLÜM 5 ─── -->
+      <section class="card fade" id="bolum5">
+        <h2 class="section-title">5. Görselleştirme: Modelin Gözünden Bakmak</h2>
+
+        <p class="lead serif">
+          CNN'ler güçlüdür, ama "kara kutu" oldukları sıkça eleştirilir. Bu eleştiriyi büyük ölçüde
+          yumuşatan görselleştirme teknikleri vardır. Bu bölümde üç temel yöntemi inceliyoruz:
+          özellik haritası gösterimi, Grad-CAM ve saliency haritaları. Bu araçlar hem öğrenmeyi
+          anlamlandırır hem de gerçek dünyadaki uygulamalarda (özellikle tıp ve güvenlik) kritik öneme sahiptir.
+        </p>
+
+        <div id="bolum5-1"></div>
+        <h3>5.1. Feature Map (Özellik Haritası) Görselleştirmesi</h3>
+
+        <p>
+          Bir CNN'in herhangi bir katmanının çıkışını doğrudan görüntü olarak çizebiliriz.
+          Her kanal, görüntüde "bir şey arayan" bir filtreye karşılık gelir. Kanalı görüntü olarak
+          plot ettiğimizde, o filtrenin <strong>nereye</strong> tepki verdiğini görürüz.
+        </p>
+
+        <div class="code-label">Python — feature_maps.py (Pretrained ResNet ile)</div>
+<pre><code>import torch
+import torch.nn as nn
+from torchvision import models, transforms
+from PIL import Image
+import matplotlib.pyplot as plt
+
+# Pretrained ResNet18 yükle
+model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+model.eval()
+
+# Görüntüyü hazırla
+preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225])
+])
+
+img = Image.open('kedi.jpg').convert('RGB')
+x = preprocess(img).unsqueeze(0)   # (1, 3, 224, 224)
+
+# İlk konvolüsyon katmanının çıktısını al (hook ile)
+aktivasyonlar = {}
+def hook_fn(module, input, output):
+    aktivasyonlar['conv1'] = output
+
+handle = model.conv1.register_forward_hook(hook_fn)
+with torch.no_grad():
+    _ = model(x)
+handle.remove()
+
+# Çıktı: (1, 64, 112, 112) — 64 farklı feature map
+fmaps = aktivasyonlar['conv1'][0]   # ilk batch örneği
+print(f"Feature map sayısı: {fmaps.shape[0]}")
+print(f"Her birinin boyutu: {fmaps.shape[1]} × {fmaps.shape[2]}")
+
+# İlk 16 feature map'i çiz
+fig, axes = plt.subplots(4, 4, figsize=(10, 10))
+for i, ax in enumerate(axes.flat):
+    ax.imshow(fmaps[i].cpu().numpy(), cmap='viridis')
+    ax.set_title(f'Filtre {i}')
+    ax.axis('off')
+plt.suptitle('ResNet18 — conv1 çıktısı (64 filtreden ilk 16)')
+plt.tight_layout()
+plt.savefig('feature_maps.png', dpi=150)
+plt.show()
+</code></pre>
+
+        <div class="insight">
+          <strong>Bu görselleştirmenin yorumu:</strong> İlk katmanda farklı filtrelerin farklı yönlerdeki
+          kenarlara, farklı renklere ve farklı parlaklık düzeylerine tepki verdiğini görürsünüz.
+          Bu çıktılar, klasik filtre çıktılarına şaşırtıcı derecede benzer. Ağ, kimse söylemediği halde
+          Sobel benzeri kenar dedektörleri öğrenmiştir.
+        </div>
+
+        <div id="bolum5-2"></div>
+        <h3>5.2. Grad-CAM: Sınıfa Özgü Aktivasyon Haritaları</h3>
+
+        <p>
+          Feature map gösterimi katmanın çıktısını gösterir, ama "model neye bakarak bu kararı verdi?"
+          sorusunu doğrudan cevaplamaz. Grad-CAM (Gradient-weighted Class Activation Mapping,
+          Selvaraju vd. 2017), bu soruya cevap veren en yaygın görselleştirme tekniğidir.
+        </p>
+
+        <p>
+          Mantığı şu: son konvolüsyon katmanının her feature map'inin, hedef sınıfa ne kadar
+          katkı yaptığını gradyan üzerinden hesaplar. Ardından feature map'leri bu ağırlıklarla
+          birleştirir ve görüntü üzerine ısı haritası olarak yansıtır. Sonuç: <strong>"model bu
+          sınıfı tespit ederken görüntünün hangi bölgelerine baktı?"</strong>
+        </p>
+
+        <div class="code-label">Python — grad_cam.py</div>
+<pre><code>import torch
+import torch.nn.functional as F
+from torchvision import models, transforms
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+
+class GradCAM:
+    """
+    Verilen bir modelin son conv katmanı üzerinde Grad-CAM hesaplar.
+    """
+    def __init__(self, model, hedef_katman):
+        self.model = model
+        self.model.eval()
+        self.gradyanlar = None
+        self.aktivasyonlar = None
+        
+        # Forward hook: aktivasyonu yakala
+        hedef_katman.register_forward_hook(self._forward_hook)
+        # Backward hook: gradyanı yakala
+        hedef_katman.register_full_backward_hook(self._backward_hook)
+    
+    def _forward_hook(self, module, input, output):
+        self.aktivasyonlar = output.detach()
+    
+    def _backward_hook(self, module, grad_input, grad_output):
+        self.gradyanlar = grad_output[0].detach()
+    
+    def __call__(self, x, sinif_idx=None):
+        # Forward pass
+        cikti = self.model(x)
+        
+        if sinif_idx is None:
+            sinif_idx = cikti.argmax(dim=1).item()
+        
+        # Hedef sınıf için gradyan hesapla
+        self.model.zero_grad()
+        cikti[0, sinif_idx].backward()
+        
+        # Global Average Pool ile her kanalın ağırlığını bul
+        agirliklar = self.gradyanlar.mean(dim=(2, 3), keepdim=True)   # (1, C, 1, 1)
+        
+        # Ağırlıklı feature map toplamı
+        cam = (agirliklar * self.aktivasyonlar).sum(dim=1, keepdim=True)
+        cam = F.relu(cam)   # Sadece pozitif katkılar
+        
+        # Görüntü boyutuna ölçekle ve normalize et
+        cam = F.interpolate(cam, size=(224, 224), mode='bilinear', align_corners=False)
+        cam = cam.squeeze().cpu().numpy()
+        cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
+        
+        return cam, sinif_idx
+
+# ── Kullanım ──
+model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+gradcam = GradCAM(model, model.layer4[-1])   # ResNet50'nin son conv bloku
+
+preprocess = transforms.Compose([
+    transforms.Resize(256), transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
+
+img = Image.open('kedi.jpg').convert('RGB')
+img_np = np.array(img.resize((224, 224))) / 255.0
+x = preprocess(img).unsqueeze(0)
+
+cam, sinif_idx = gradcam(x)
+
+# Görselleştir: orijinal + ısı haritası örtüşümü
+heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET) / 255.0
+overlay = 0.4 * heatmap[..., ::-1] + 0.6 * img_np   # BGR→RGB
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 5))
+axes[0].imshow(img_np);    axes[0].set_title('Orijinal');     axes[0].axis('off')
+axes[1].imshow(cam, cmap='jet'); axes[1].set_title('Grad-CAM'); axes[1].axis('off')
+axes[2].imshow(overlay);   axes[2].set_title(f'Sınıf {sinif_idx}'); axes[2].axis('off')
+plt.tight_layout()
+plt.savefig('gradcam.png', dpi=150)
+plt.show()
+</code></pre>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Üç panel: (1) Orijinal kedi fotoğrafı (2) Grad-CAM ısı haritası (3) Üst üste bindirilmiş hâli. Modelin "kedi" sınıfı için kedinin yüzüne odaklandığı görülmeli.</div>
+
+        <div class="success">
+          <strong>Grad-CAM'in pratik değeri:</strong>
+          <ul>
+            <li><strong>Tıbbi görüntü:</strong> Pnömoni teşhisinde modelin akciğerin doğru bölgesine baktığını doğrular.</li>
+            <li><strong>Hata ayıklama:</strong> Model yanlış sebeple doğru cevap veriyor olabilir (arka planı tanıyor olabilir!). Grad-CAM bunu açığa çıkarır.</li>
+            <li><strong>Açıklanabilirlik (XAI):</strong> Hekim, hâkim, sürücü gibi karar verici insan kullanıcılara modelin kararını açıklar.</li>
+            <li><strong>Veri seti tarafsızlığı:</strong> Model "yataktaki kişi → hasta" gibi bağlamsal bias öğrenmiş olabilir. Grad-CAM bunu gösterir.</li>
+          </ul>
+        </div>
+
+        <div id="bolum5-3"></div>
+        <h3>5.3. Saliency Maps</h3>
+
+        <p>
+          Saliency map, çıktı sınıfının her giriş pikseline göre türevini hesaplar. Hangi piksel
+          değişikliği skoru en çok etkiler? Bu sorunun cevabı pikseldir; cevap görüntüsü ise
+          saliency haritasıdır. Grad-CAM kabaca "katman çıkışında neresi önemli?" derken
+          saliency map "ham pikselde neresi önemli?" der. İkisi tamamlayıcıdır.
+        </p>
+
+        <div class="code-label">Python — saliency.py</div>
+<pre><code>def saliency_map(model, x, sinif_idx=None):
+    """
+    Vanilla saliency map: çıkışın girişe göre |gradyan|
+    """
+    model.eval()
+    x = x.clone().requires_grad_(True)
+    
+    cikti = model(x)
+    if sinif_idx is None:
+        sinif_idx = cikti.argmax(dim=1).item()
+    
+    skor = cikti[0, sinif_idx]
+    skor.backward()
+    
+    # Pikseldeki gradyan büyüklüğü, kanallar arası max
+    saliency = x.grad.abs().squeeze().max(dim=0)[0]
+    
+    # Normalize et
+    saliency = (saliency - saliency.min()) / (saliency.max() - saliency.min() + 1e-8)
+    return saliency.cpu().numpy()
+</code></pre>
+
+        <div class="teaching">
+          <strong>Hangi yöntem ne zaman?</strong>
+          <ul>
+            <li><strong>Feature Maps:</strong> Modelin ne öğrendiğini katmanlar arasında izlemek için. Eğitim hata ayıklamasında.</li>
+            <li><strong>Grad-CAM:</strong> Sınıflandırma kararı için "neye baktın?" cevabı. Sunum ve raporlar için en etkili.</li>
+            <li><strong>Saliency:</strong> Piksel düzeyinde detay. Adversarial saldırı analizi ve ince hata ayıklama için.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 6 ─── -->
+      <section class="card fade" id="bolum6">
+        <h2 class="section-title">6. Tarihsel CNN Mimarileri: 1998'den Bugüne</h2>
+
+        <p class="lead serif">
+          CNN'lerin gelişimi, derin öğrenme tarihinin en somut anlatılarından biridir. Her yeni mimari,
+          öncekinin sınırını fark edip onu aşmak için bir fikir önerdi. Bu bölümde altı dönüm
+          noktasını —her birini "hangi sorunu çözdü?" ve "neden devrim niteliğinde?" sorularıyla—
+          inceliyoruz.
+        </p>
+
+        <div class="timeline">
+          <div class="timeline-item"><strong>1998 — LeNet-5:</strong> İlk başarılı CNN. Posta kodu okuma. Conv + Pool + FC kalıbını kurdu.</div>
+          <div class="timeline-item"><strong>2012 — AlexNet:</strong> ImageNet'te %15.3 hata oranı. Önceki yıl en iyi sonuç %25.7'di. GPU + ReLU + Dropout patlaması.</div>
+          <div class="timeline-item"><strong>2014 — VGG:</strong> Sadece 3×3 conv ve düzenli mimari. Derinliğin önemini gösterdi.</div>
+          <div class="timeline-item"><strong>2014 — GoogLeNet/Inception:</strong> Inception bloğu. Çok ölçekli özellik öğrenimi, parametre verimliliği.</div>
+          <div class="timeline-item"><strong>2015 — ResNet:</strong> Skip connection. 152 katmanlı ağı eğitilebilir kıldı. ImageNet'te insan seviyesini aştı.</div>
+          <div class="timeline-item"><strong>2016 sonrası — DenseNet, MobileNet, EfficientNet:</strong> Bağlantı yoğunluğu, mobil verimlilik, otomatik mimari arama.</div>
+          <div class="timeline-item"><strong>2020 — Vision Transformer:</strong> CNN'in görüntü işlemedeki tek hâkim olmadığını gösterdi. (Bir sonraki haftanın konusu.)</div>
+        </div>
+
+        <div id="bolum6-1"></div>
+        <h3>6.1. LeNet-5 (LeCun, 1998)</h3>
+
+        <div class="arch-card" style="border-color:#3b82f6;background:#eff6ff;">
+          <h4 style="color:#1d4ed8;">📜 LeNet-5 — İlk Başarılı CNN</h4>
+          <p><strong>Hangi problemi çözdü?</strong> El yazısı rakam tanıma (MNIST'in atası).
+          Bell Labs'da ABD posta kodlarını otomatik okumak için tasarlandı ve bankalarda çek
+          işleme için yıllarca üretimde kaldı.</p>
+          <p><strong>Mimarisi:</strong> 32×32 girdi → C1 (6 filtre, 5×5 conv) → S2 (avg pool) →
+          C3 (16 filtre) → S4 (avg pool) → C5 (120 filtre) → F6 (84 nöron) → 10 sınıf.</p>
+          <p><strong>Yenilik ve etki:</strong>
+            <span class="tag blue">Conv+Pool+FC kalıbı</span>
+            <span class="tag blue">End-to-end eğitim</span>
+            <span class="tag blue">Parametre paylaşımı</span>
+          </p>
+          <p><strong>Neden ilgi göremedi?</strong> 1990'larda yeterli veri ve hesaplama gücü yoktu.
+          SVM gibi klasik yöntemler benzer doğrulukta ve eğitimi daha kolaydı. CNN'in fırtınası
+          14 yıl sonra GPU'larla geldi.</p>
+        </div>
+
+        <div class="code-label">Python — LeNet-5 modern uyarlama</div>
+<pre><code>class LeNet5(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 6, kernel_size=5, padding=2),  # 32→32 (padding ile)
+            nn.Tanh(),                                   # Orijinalde Tanh
+            nn.AvgPool2d(kernel_size=2, stride=2),       # 32→16
+            
+            nn.Conv2d(6, 16, kernel_size=5),             # 16→12
+            nn.Tanh(),
+            nn.AvgPool2d(kernel_size=2, stride=2),       # 12→6
+            
+            nn.Conv2d(16, 120, kernel_size=5),           # 6→2 (eğer 32 girdi)
+            nn.Tanh()
+        )
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(120 * 2 * 2, 84),
+            nn.Tanh(),
+            nn.Linear(84, num_classes)
+        )
+    
+    def forward(self, x):
+        x = self.features(x)
+        return self.classifier(x)
+
+# Toplam parametre: ~60.000 (modern ölçekte küçük)
+</code></pre>
+
+        <div id="bolum6-2"></div>
+        <h3>6.2. AlexNet (Krizhevsky, Sutskever, Hinton — 2012)</h3>
+
+        <div class="arch-card" style="border-color:#7c3aed;background:#f5f3ff;">
+          <h4 style="color:#6d28d9;">🚀 AlexNet — Derin Öğrenme Devriminin Başlangıcı</h4>
+          <p><strong>Hangi problemi çözdü?</strong> ImageNet Large Scale Visual Recognition Challenge
+          (ILSVRC 2012). 1.2 milyon görüntü, 1000 sınıf. AlexNet %15.3 top-5 hata oranı ile yarışı
+          kazandı; ikinci %26.2'de kalmıştı. Bu boyutta bir sıçrama görülmemişti.</p>
+          <p><strong>Mimarisi:</strong> 5 conv katmanı (büyük 11×11 ve 5×5 ile başlayıp 3×3'e küçülen),
+          3 FC katmanı, ~60M parametre. İki GPU'ya bölünerek paralel eğitildi.</p>
+          <p><strong>Yenilikleri:</strong>
+            <span class="tag violet">ReLU aktivasyonu</span>
+            <span class="tag violet">Dropout</span>
+            <span class="tag violet">GPU eğitimi</span>
+            <span class="tag violet">Veri artırma</span>
+            <span class="tag violet">Local Response Normalization</span>
+          </p>
+          <p><strong>Neden devrim niteliğinde?</strong> AlexNet sadece bir mimari değildi; topluluğun
+          inancını değiştirdi. ImageNet'i kazandığı an sonrası: derin öğrenme akademik bir merak
+          olmaktan çıkıp endüstri standardı olma yolculuğuna girdi. Google, Facebook, Microsoft —
+          hepsi 2013'te AI laboratuvarlarına yatırımı katladı.</p>
+        </div>
+
+        <div class="historical">
+          <strong>Bir an, bir tarih:</strong> 30 Eylül 2012, Floransa. ECCV (Avrupa Bilgisayarla Görü
+          Konferansı) salonunda sonuçlar açıklanırken bilgisayarla görü topluluğu donakaldı. Hata
+          oranlarındaki iyileşme yıllardır yüzde noktası ölçeğindeydi; AlexNet 10 puan birden indirdi.
+          Yann LeCun'un, bu sonucu duyduğunda "1 dakika içinde bilgisayarla görünün ne yaptığı tamamen
+          değişti" dediği aktarılır. Modern derin öğrenme çağı bu salonda başladı.
+        </div>
+
+        <div id="bolum6-3"></div>
+        <h3>6.3. VGG (Simonyan & Zisserman — 2014)</h3>
+
+        <div class="arch-card" style="border-color:#0f766e;background:#f0fdf4;">
+          <h4 style="color:#0f766e;">🏛️ VGG-16/19 — Düzenliliğin Gücü</h4>
+          <p><strong>Ana fikir:</strong> AlexNet'in büyük (11×11, 5×5) çekirdeklerinin yerine
+          <strong>sadece 3×3 conv ve 2×2 max pool</strong> kullan. Daha fazla katmanla derinleş.
+          16 ve 19 katmanlı varyantları yayınlandı.</p>
+          <p><strong>Neden 3×3?</strong> İki adet 3×3 conv, bir adet 5×5 conv ile aynı receptive
+          field'ı verir ama daha az parametreyle ve aralara ekstra ReLU koyabilme avantajıyla
+          (daha fazla non-lineerlik). Üç adet 3×3, bir adet 7×7 ile aynı RF'i verir.</p>
+          <p><strong>Etkisi:</strong>
+            <span class="tag teal">Düzenli, kolay anlaşılır mimari</span>
+            <span class="tag teal">Transfer learning'in temel modeli</span>
+            <span class="tag teal">"Pretrained backbone" kavramının yaygınlaşması</span>
+          </p>
+          <p><strong>Sınırlılığı:</strong> 138M parametre — ResNet'le karşılaştırıldığında ağır.
+          Hâlâ yavaş ve büyük olduğundan üretimde yerini ResNet'lere bıraktı, ama eğitim
+          öğretimi için en açıklayıcı mimari olmaya devam ediyor.</p>
+        </div>
+
+        <div id="bolum6-4"></div>
+        <h3>6.4. GoogLeNet / Inception (Szegedy vd. — 2014)</h3>
+
+        <div class="arch-card" style="border-color:#92400e;background:#fffbeb;">
+          <h4 style="color:#92400e;">🧩 Inception — Çok Ölçekli Algı</h4>
+          <p><strong>Sorun:</strong> Görüntülerdeki nesneler farklı ölçeklerde olabilir. Sabit
+          3×3 filtreler her zaman optimal değildir. Bazı yerde 1×1, bazı yerde 5×5 daha mantıklı
+          olabilir.</p>
+          <p><strong>Çözüm — Inception bloğu:</strong> Aynı seviyede 1×1, 3×3, 5×5 conv ve max pool
+          paralel uygula, çıktıları birleştir. "Hangi filtre boyutu daha iyi?" sorusunu
+          modelin kendisi (ağırlıklarla) cevaplasın.</p>
+          <p><strong>1×1 conv'un kritik rolü:</strong> Bottleneck olarak kullanılır. Önce 1×1
+          ile kanal sayısını düşür, sonra pahalı 5×5 conv'u uygula. Hesaplama maliyeti dramatik düşer.</p>
+          <p><strong>Sonuç:</strong> 22 katmanlı GoogLeNet, AlexNet'ten 12 kat az parametreye
+          sahipken ImageNet 2014'ü kazandı. Inception mimarisi sonraki yıllarda Inception-v2, v3, v4
+          ile gelişti.</p>
+        </div>
+
+        <div id="bolum6-5"></div>
+        <h3>6.5. ResNet (He vd. — 2015)</h3>
+
+        <div class="arch-card" style="border-color:#be123c;background:#fff1f2;">
+          <h4 style="color:#be123c;">⚡ ResNet — Skip Connection ile 152 Katman</h4>
+          <p><strong>Sorun:</strong> Mantıken katman sayısını artırınca modelin kapasitesi artmalı,
+          dolayısıyla performans iyileşmeli. Ama deneyler tersini gösterdi: 30+ katmandan sonra
+          eğitim hatası bile artıyordu. <strong>Degradation problem</strong> denilen bu durum,
+          gradyan vanishing'inden farklıydı.</p>
+          <p><strong>Çözüm — Residual (Skip) Connection:</strong> Bir bloğun girdisini, blok
+          çıkışına doğrudan ekle. Bloğun öğrenmesi gereken şey artık <em>F(x)</em> değil,
+          <em>F(x) + x</em>. Yani blok "girdiyi nasıl geliştireceğini" öğreniyor; özdeşliği
+          öğrenmek bedava (sadece ağırlıkları sıfır yap).</p>
+          <div class="formula" style="text-align:center;">
+            y = F(x, W) + x &nbsp;&nbsp; (Residual blok)
+          </div>
+          <p><strong>Sonuçları:</strong>
+            <span class="tag rose">152 katman eğitilebilir oldu</span>
+            <span class="tag rose">ImageNet 2015 kazananı (%3.57 top-5 hata)</span>
+            <span class="tag rose">İnsan seviyesini aştı (~%5)</span>
+            <span class="tag rose">Modern mimarilerin temeli</span>
+          </p>
+          <p><strong>Genel etki:</strong> Skip connection kavramı sadece görüntü değil, NLP'de
+          (Transformer'da residual stream), zaman serilerinde, biyoinformatikte —her yerde standart
+          oldu. Bugün derin ağ derseniz, residual akış vardır.</p>
+        </div>
+
+        <div class="code-label">Python — Residual blok</div>
+<pre><code>class ResidualBlock(nn.Module):
+    """ResNet'in temel bloğu — skip connection ile."""
+    def __init__(self, in_channels, out_channels, stride=1):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, stride, padding=1, bias=False)
+        self.bn1   = nn.BatchNorm2d(out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1, bias=False)
+        self.bn2   = nn.BatchNorm2d(out_channels)
+        
+        # Skip connection: boyut uyuşmazsa 1×1 conv ile uyarla
+        self.shortcut = nn.Identity()
+        if stride != 1 or in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, 1, stride, bias=False),
+                nn.BatchNorm2d(out_channels)
+            )
+    
+    def forward(self, x):
+        identity = self.shortcut(x)
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out = out + identity      # ← Skip connection!
+        return F.relu(out)
+</code></pre>
+
+        <div id="bolum6-6"></div>
+        <h3>6.6. DenseNet, MobileNet, EfficientNet</h3>
+
+        <div class="grid3">
+          <div class="mini violet">
+            <h4>DenseNet (2016)</h4>
+            <p><strong>Fikir:</strong> Her katman, kendinden önceki <em>tüm</em> katmanların çıktılarını
+            girdi olarak alır. ResNet ekleme yapar; DenseNet birleştirme (concatenation) yapar.</p>
+            <p><strong>Avantaj:</strong> Özellik tekrar kullanımı çok yüksek. Daha az parametreyle benzer doğruluk.</p>
+            <p><strong>Dezavantaj:</strong> Bellek yoğun (tüm aktivasyonlar saklanır).</p>
+          </div>
+          <div class="mini teal">
+            <h4>MobileNet (2017)</h4>
+            <p><strong>Fikir:</strong> Mobil ve gömülü cihazlar için. Standart konvolüsyon yerine
+            <em>depthwise separable convolution</em>.</p>
+            <p><strong>Avantaj:</strong> Parametre ve FLOPS 8-9 kat az. Akıllı telefonda gerçek zamanlı görüntü işleme.</p>
+            <p><strong>Kullanım:</strong> Edge AI, IoT cihazları, mobil uygulamalar.</p>
+          </div>
+          <div class="mini amber">
+            <h4>EfficientNet (2019)</h4>
+            <p><strong>Fikir:</strong> Derinlik (D), genişlik (W), çözünürlüğü (R) tek tek değil,
+            birleşik (compound) ölçeklendir. Otomatik mimari arama (NAS) ile başlangıç bul.</p>
+            <p><strong>Avantaj:</strong> ResNet-50'den 8 kat az parametreyle daha yüksek ImageNet doğruluğu.</p>
+            <p><strong>EfficientNet-B0 → B7</strong> arasında ölçeklenebilir.</p>
+          </div>
+        </div>
+
+        <h3>6.7. Mimarilerin karşılaştırması</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Yıl</th>
+                <th>Katman</th>
+                <th>Parametre</th>
+                <th>ImageNet Top-5 Hata</th>
+                <th>Anahtar Yenilik</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>LeNet-5</td><td>1998</td><td>7</td><td>60K</td><td>—</td><td>İlk başarılı CNN</td></tr>
+              <tr><td>AlexNet</td><td>2012</td><td>8</td><td>60M</td><td>15.3%</td><td>ReLU, GPU, Dropout</td></tr>
+              <tr><td>VGG-16</td><td>2014</td><td>16</td><td>138M</td><td>7.3%</td><td>3×3 conv, derinlik</td></tr>
+              <tr><td>GoogLeNet</td><td>2014</td><td>22</td><td>7M</td><td>6.7%</td><td>Inception bloğu, 1×1 conv</td></tr>
+              <tr><td>ResNet-152</td><td>2015</td><td>152</td><td>60M</td><td>3.57%</td><td>Residual connections</td></tr>
+              <tr><td>DenseNet-201</td><td>2016</td><td>201</td><td>20M</td><td>5.6%</td><td>Yoğun bağlantılar</td></tr>
+              <tr><td>MobileNet-V2</td><td>2018</td><td>53</td><td>3.4M</td><td>9.0%</td><td>Depthwise sep. conv</td></tr>
+              <tr><td>EfficientNet-B7</td><td>2019</td><td>—</td><td>66M</td><td>2.9%</td><td>Compound scaling</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Yıl-doğruluk eğrisi: X ekseni 2012-2020, Y ekseni ImageNet Top-5 doğruluk. Her ana mimari bir nokta olarak işaretlenmiş. İnsan seviyesi (94.9%) yatay çizgi olarak gösterilmiş. 2015'ten itibaren modellerin insanı aştığı net görülmeli.</div>
+      </section>
+
+      <!-- ─── BÖLÜM 7 ─── -->
+      <section class="card fade" id="bolum7">
+        <h2 class="section-title">7. Transfer Learning: Pretrained Modellerin Gücü</h2>
+
+        <p class="lead serif">
+          Gerçek dünya projelerinde sıfırdan CNN eğitmek nadiren ilk tercih olur. Çoğu zaman
+          ImageNet veya benzeri büyük veri setlerinde önceden eğitilmiş bir modelin ağırlıklarını
+          başlangıç noktası olarak kullanmak çok daha verimli ve etkilidir. Bu yaklaşıma
+          <strong>transfer learning</strong> denir ve modern görüntü işlemenin temel pratiklerinden biridir.
+        </p>
+
+        <h3>7.1. Neden çalışır? — Özelliklerin transfer edilebilirliği</h3>
+
+        <p>
+          Hatırlayalım: bir CNN'in ilk katmanları kenarları, dokuları, basit örüntüleri öğrenir.
+          Bu özellikler <strong>sınıftan bağımsızdır</strong>. Bir köpek kenarı ile bir araba
+          kenarı, kenar olarak aynı görünür. ImageNet üzerinde eğitilmiş bir model 1000 sınıfı
+          ayırt etmek için iyi kenar/doku/parça dedektörleri öğrenmiştir; bu dedektörler
+          sizin tıbbi görüntü, yaprak hastalığı veya endüstriyel kalite kontrol probleminize
+          hemen uygulanabilir.
+        </p>
+
+        <p>
+          Yalnızca son birkaç katman göreve özeldir. Bu yüzden:
+        </p>
+
+        <div class="grid2">
+          <div class="mini blue">
+            <h4>🔵 Feature Extraction (Özellik Çıkarımı)</h4>
+            <p><strong>Pretrained ağırlıkları dondur</strong>, sadece son sınıflandırma katmanını
+            kendi sınıflarına göre yeniden eğit. Hızlıdır, az veriyle çalışır.</p>
+            <p><strong>Ne zaman?</strong> Veri setiniz küçükse (yüzlerce-binlerce örnek) ve hedef
+            görev ImageNet'e benzer doğadaysa.</p>
+          </div>
+          <div class="mini violet">
+            <h4>🟣 Fine-Tuning (İnce Ayar)</h4>
+            <p>Pretrained ağırlıkları başlangıç olarak al, <strong>tüm katmanları</strong> küçük bir
+            learning rate ile yeniden eğit. Daha esnek, daha güçlü.</p>
+            <p><strong>Ne zaman?</strong> Daha çok veri varsa (binlerce-milyonlarca) ve hedef alan
+            ImageNet'ten farklıysa (tıp, uydu, mikroskopi vb.).</p>
+          </div>
+        </div>
+
+        <h3>7.2. Hangi katmanlar dondurulur, hangileri eğitilir?</h3>
+
+        <p>
+          Genel kural: <strong>düşük seviye özellikler ortak, yüksek seviye özellikler göreve özgü</strong>.
+          Buna göre stratejiler:
+        </p>
+
+        <div class="kv-row">
+          <div class="kv-key">Strateji 1</div>
+          <div class="kv-val">Sadece son FC katmanını eğit, geri kalan her şeyi dondur. En agresif feature extraction.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">Strateji 2</div>
+          <div class="kv-val">Son birkaç conv bloğunu ve FC katmanını eğit. Orta seviye özellikleri kendi göreve uyarlar.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">Strateji 3</div>
+          <div class="kv-val">Tüm modeli eğit ama farklı katmanlara <em>farklı learning rate</em> uygula. Erken katmanlar 1e-5, geç katmanlar 1e-3 gibi. Discriminative learning rate denir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">Strateji 4</div>
+          <div class="kv-val">Önce sadece son katmanı eğit (ağ stabilize olsun), sonra tüm modeli unfreeze edip ince ayar yap. Two-stage fine-tuning.</div>
+        </div>
+
+        <div class="code-label">Python — Transfer Learning örneği (ResNet18)</div>
+<pre><code>import torch
+import torch.nn as nn
+from torchvision import models
+
+# 1️⃣ Pretrained modeli yükle (ImageNet'te eğitilmiş)
+model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+
+# 2️⃣ STRATEJI A — Feature Extraction
+# Tüm parametreleri dondur
+for param in model.parameters():
+    param.requires_grad = False
+
+# Sadece son sınıflandırma katmanını değiştir (ImageNet'te 1000 sınıf vardı)
+num_features = model.fc.in_features      # ResNet18'de 512
+model.fc = nn.Linear(num_features, 2)    # 2 sınıf: kedi vs köpek
+# Yeni FC katmanının ağırlıkları varsayılan olarak requires_grad=True
+
+# 3️⃣ STRATEJI B — Fine-Tuning (alternatif)
+# for param in model.parameters():
+#     param.requires_grad = True       # Tüm modeli aç
+# model.fc = nn.Linear(num_features, 2)
+#
+# # Discriminative LR — farklı katman gruplarına farklı LR
+# optimizer = torch.optim.Adam([
+#     {'params': model.conv1.parameters(),  'lr': 1e-5},
+#     {'params': model.layer1.parameters(), 'lr': 1e-5},
+#     {'params': model.layer2.parameters(), 'lr': 5e-5},
+#     {'params': model.layer3.parameters(), 'lr': 1e-4},
+#     {'params': model.layer4.parameters(), 'lr': 5e-4},
+#     {'params': model.fc.parameters(),     'lr': 1e-3},   # En yüksek LR
+# ])
+
+# Strateji A için optimizer
+optimizer = torch.optim.Adam(model.fc.parameters(), lr=1e-3)
+# Sadece fc katmanı parametreleri optimizer'a verildi — diğerleri zaten dondurulmuş
+</code></pre>
+
+        <div class="success">
+          <strong>Pratik tavsiyeler:</strong>
+          <ul>
+            <li>Pretrained input boyutuna saygı gösterin: ImageNet 224×224 üzerinden eğitilir, bu
+            yüzden girdilerinizi de bu boyuta resize edin.</li>
+            <li>Pretrained <strong>normalizasyon</strong> değerlerini kullanın:
+            <code>mean=[0.485, 0.456, 0.406]</code>, <code>std=[0.229, 0.224, 0.225]</code>.
+            Aksi halde model "yabancı" değerler görür.</li>
+            <li>Fine-tuning'de learning rate'i sıfırdan eğitime göre <strong>10-100 kat küçük</strong>
+            tutun. Aksi halde değerli pretrained ağırlıkları bozarsınız.</li>
+            <li>Tıbbi görüntü gibi farklı doğadaki problemlerde fine-tuning genelde feature
+            extraction'dan daha iyi çalışır.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 8 ─── -->
+      <section class="card fade" id="bolum8">
+        <h2 class="section-title">8. Data Augmentation: Veriden Daha Çok Veri Üretmek</h2>
+
+        <p class="lead serif">
+          Derin öğrenmenin her şeye ihtiyacı vardır: hesaplama gücü, doğru mimari ve <strong>çok
+          fazla veri</strong>. Veri toplamak pahalıdır; ama elimizdeki veriden daha çok veri üretmenin
+          yolu vardır: data augmentation. Görüntü işlemede augmentation, modelin gerçek dünya
+          değişkenliğine dayanıklılığını artıran en pratik araçtır.
+        </p>
+
+        <h3>8.1. Temel augmentation teknikleri</h3>
+
+        <div class="grid3">
+          <div class="mini blue">
+            <h4>📐 Geometrik dönüşümler</h4>
+            <ul>
+              <li>Yatay flip</li>
+              <li>Dikey flip</li>
+              <li>Rastgele döndürme</li>
+              <li>Rastgele kırpma (RandomCrop)</li>
+              <li>Rastgele yeniden boyutlandırma</li>
+              <li>Affine dönüşümler</li>
+              <li>Perspektif dönüşümü</li>
+            </ul>
+          </div>
+          <div class="mini violet">
+            <h4>🎨 Renk/parlaklık</h4>
+            <ul>
+              <li>Brightness (parlaklık)</li>
+              <li>Contrast (kontrast)</li>
+              <li>Saturation (doygunluk)</li>
+              <li>Hue (renk tonu)</li>
+              <li>Color Jitter</li>
+              <li>Grayscale dönüştürme</li>
+              <li>Gamma düzeltme</li>
+            </ul>
+          </div>
+          <div class="mini teal">
+            <h4>🔧 İleri teknikler</h4>
+            <ul>
+              <li>RandomErasing (Cutout)</li>
+              <li>Mixup — iki görüntüyü karıştır</li>
+              <li>CutMix — bir parçayı keserek yapıştır</li>
+              <li>AutoAugment — RL ile öğrenilen augmentation</li>
+              <li>RandAugment — basitleştirilmiş otomatik augmentation</li>
+              <li>Albumentations (kütüphane)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="code-label">Python — torchvision.transforms ile pratik kullanım</div>
+<pre><code>from torchvision import transforms
+
+# Eğitim için: agresif augmentation
+egitim_donusumu = transforms.Compose([
+    transforms.Resize(256),
+    transforms.RandomCrop(224),                    # Rastgele 224×224 al
+    transforms.RandomHorizontalFlip(p=0.5),        # %50 olasılıkla yatay flip
+    transforms.RandomRotation(degrees=15),         # ±15° döndür
+    transforms.ColorJitter(
+        brightness=0.2, contrast=0.2,
+        saturation=0.2, hue=0.1
+    ),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],     # ImageNet ortalaması
+        std=[0.229, 0.224, 0.225]       # ImageNet std
+    ),
+    transforms.RandomErasing(p=0.3),    # Tensora dönüştükten SONRA
+])
+
+# Validasyon/test için: deterministik (augmentation yok)
+val_donusumu = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),         # Merkezi 224×224 al
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    ),
+])
+</code></pre>
+
+        <h3>8.2. Modern teknikler: Mixup ve CutMix</h3>
+
+        <p>
+          Standart augmentation, tek bir görüntü üzerinde dönüşüm yapar. Modern teknikler iki
+          görüntüyü birleştirir:
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Mixup (Zhang vd. 2018)</h4>
+            <p>İki rastgele örnek alıp <em>doğrusal olarak karıştır</em>:</p>
+            <div class="formula" style="margin:8px 0;">
+              x̃ = λ x<sub>i</sub> + (1-λ) x<sub>j</sub><br>
+              ỹ = λ y<sub>i</sub> + (1-λ) y<sub>j</sub>
+            </div>
+            <p>Etiketler de karıştığı için model "kesin" sınıf öğrenmez, daha düzgün karar
+            sınırları kurar. Düzenlileştirme etkisi yüksek.</p>
+          </div>
+          <div class="mini">
+            <h4>CutMix (Yun vd. 2019)</h4>
+            <p>Bir görüntünün rastgele bir dikdörtgen bölgesini kesip, başka bir görüntünün
+            aynı yerine yapıştır. Etiketler alanlarla orantılı karıştırılır.</p>
+            <p>Mixup'ın aksine "gerçek görüntü" parçaları kullanır, modelin lokal özellik öğrenmesini
+            destekler. Object detection'ta da kullanılır.</p>
+          </div>
+        </div>
+
+        <div class="warning">
+          <strong>Augmentation'da yapılan yaygın hatalar:</strong>
+          <ul>
+            <li>Validation/test setine augmentation uygulamak. Yalnızca <strong>eğitim setine</strong>
+            uygulanır. Aksi halde sonuçlar yanıltıcı olur.</li>
+            <li>Anlamsız dönüşümler kullanmak: rakam tanıma için dikey flip yapmak ("6"→"9" karıştırır).</li>
+            <li>Tıbbi görüntülerde anatomik olarak imkânsız dönüşümler: göğüs röntgeninde dikey flip
+            kalbin tarafını değiştirir, klinik anlam değişir.</li>
+            <li>Çok agresif augmentation: dönüşümler nesneyi tanınmaz hâle getirirse model
+            gürültüyü öğrenmek zorunda kalır.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 9 ─── -->
+      <section class="card fade" id="bolum9">
+        <h2 class="section-title">9. Uygulama 1: CIFAR-10 — Sıfırdan Bir CNN'in Adım Adım Eğitimi</h2>
+
+        <p class="lead serif">
+          İlk gerçek hayat uygulamamızda klasik bilgisayarla görü benchmark'ı CIFAR-10 üzerinde
+          sıfırdan bir CNN eğiteceğiz. Bu örnek, derslerde anlatılan tüm bileşenlerin (Conv, Pool,
+          BN, Dropout, Augmentation, LR scheduling) gerçek bir problemde nasıl bir araya geldiğini
+          adım adım gösterir.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>CIFAR-10 Veri Seti</h4>
+            <ul>
+              <li><strong>Boyut:</strong> 32×32 piksel RGB</li>
+              <li><strong>Sınıf sayısı:</strong> 10</li>
+              <li><strong>Sınıflar:</strong> uçak, otomobil, kuş, kedi, geyik, köpek, kurbağa, at, gemi, kamyon</li>
+              <li><strong>Eğitim:</strong> 50.000 örnek</li>
+              <li><strong>Test:</strong> 10.000 örnek</li>
+              <li><strong>Erişim:</strong> <code>torchvision.datasets.CIFAR10</code> ile otomatik indirilir</li>
+            </ul>
+          </div>
+          <div class="mini">
+            <h4>Hedefimiz</h4>
+            <p>Sıfırdan tasarlanmış bir CNN ile CIFAR-10 üzerinde <strong>%85+ test doğruluğuna</strong>
+            ulaşmak. Bu, klasik makine öğrenmesi yöntemlerinin (SVM, RF) ulaşabildiği seviyenin
+            çok üstüdür ve modern bir CNN için makul bir hedeftir.</p>
+            <p>Eğitim, GPU varsa 15-25 dakika; CPU'da 1-2 saat sürer.</p>
+          </div>
+        </div>
+
+        <h3>Adım 1 — Veri yükleme ve augmentation</h3>
+
+        <div class="code-label">Python — Adım 1: data_loaders.py</div>
+<pre><code>import torch
+import torch.nn as nn
+import torchvision
+from torchvision import transforms
+from torch.utils.data import DataLoader
+
+# CIFAR-10 ortalama ve std (kanallar için ayrı)
+CIFAR_MEAN = (0.4914, 0.4822, 0.4465)
+CIFAR_STD  = (0.2470, 0.2435, 0.2616)
+
+# Eğitim augmentation: agresif ama anlamlı
+egitim_donusumu = transforms.Compose([
+    transforms.RandomCrop(32, padding=4),     # 4 piksel pad sonra rastgele kırp
+    transforms.RandomHorizontalFlip(),         # Yatay flip (%50)
+    transforms.ColorJitter(0.2, 0.2, 0.2),     # Hafif renk değişimi
+    transforms.ToTensor(),
+    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+    transforms.RandomErasing(p=0.25, scale=(0.02, 0.2)),  # Cutout
+])
+
+# Test: deterministik
+test_donusumu = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+])
+
+# Veri setlerini indir/yükle
+egitim_seti = torchvision.datasets.CIFAR10(
+    root='./data', train=True, download=True, transform=egitim_donusumu
+)
+test_seti = torchvision.datasets.CIFAR10(
+    root='./data', train=False, download=True, transform=test_donusumu
+)
+
+# DataLoader
+egitim_yukleyici = DataLoader(egitim_seti, batch_size=128, shuffle=True,
+                                num_workers=2, pin_memory=True)
+test_yukleyici   = DataLoader(test_seti,   batch_size=256, shuffle=False,
+                                num_workers=2, pin_memory=True)
+
+print(f"Eğitim örnekleri: {len(egitim_seti):,}")
+print(f"Test örnekleri:   {len(test_seti):,}")
+print(f"Eğitim batch sayısı: {len(egitim_yukleyici)}")
+
+siniflar = ('ucak','otomobil','kus','kedi','geyik',
+             'kopek','kurbaga','at','gemi','kamyon')
+</code></pre>
+
+        <h3>Adım 2 — CNN modelinin tasarımı</h3>
+
+        <p>
+          Modelimiz "VGG-stili" basit bir CNN olacak: 3 conv bloğu, her bloktan sonra pooling,
+          en sonunda Global Average Pooling ve sınıflandırma katmanı.
+        </p>
+
+        <div class="code-label">Python — Adım 2: cnn_model.py</div>
+<pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class ConvBlok(nn.Module):
+    """
+    Standart CNN bloğu: 2 × (Conv → BN → ReLU) → MaxPool
+    """
+    def __init__(self, in_ch, out_ch):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_ch,  out_ch, 3, padding=1, bias=False)
+        self.bn1   = nn.BatchNorm2d(out_ch)
+        self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding=1, bias=False)
+        self.bn2   = nn.BatchNorm2d(out_ch)
+        self.pool  = nn.MaxPool2d(2, 2)
+    
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        return self.pool(x)
+
+class CIFAR_CNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        # Konvolüsyon blokları — her blokta uzamsal yarıya iner, kanal ikiye katlanır
+        self.blok1 = ConvBlok(3,   64)    # 32×32 → 16×16, 64 ch
+        self.blok2 = ConvBlok(64,  128)   # 16×16 → 8×8,   128 ch
+        self.blok3 = ConvBlok(128, 256)   # 8×8   → 4×4,   256 ch
+        
+        # Global Average Pooling — flatten yerine
+        self.gap = nn.AdaptiveAvgPool2d((1, 1))   # 4×4 → 1×1
+        
+        # Sınıflandırma kafası
+        self.classifier = nn.Sequential(
+            nn.Flatten(),                     # (N, 256, 1, 1) → (N, 256)
+            nn.Dropout(0.3),
+            nn.Linear(256, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.2),
+            nn.Linear(128, num_classes)
+        )
+    
+    def forward(self, x):
+        x = self.blok1(x)     # (N, 64, 16, 16)
+        x = self.blok2(x)     # (N, 128, 8, 8)
+        x = self.blok3(x)     # (N, 256, 4, 4)
+        x = self.gap(x)       # (N, 256, 1, 1)
+        return self.classifier(x)
+
+# Model oluştur ve özet bilgi
+model = CIFAR_CNN(num_classes=10)
+toplam_param = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(f"Toplam parametre: {toplam_param:,}")        # → ~1.07M
+print(f"Model boyutu:     {toplam_param * 4 / 1e6:.2f} MB")  # float32
+
+# Test girdisiyle çıkış kontrolü
+test_girdi = torch.randn(2, 3, 32, 32)
+test_cikti = model(test_girdi)
+print(f"Çıktı şekli: {test_cikti.shape}")    # → torch.Size([2, 10])
+</code></pre>
+
+        <h3>Adım 3 — Eğitim döngüsü</h3>
+
+        <div class="code-label">Python — Adım 3: train.py</div>
+<pre><code>import time
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Cihaz: {device}")
+
+model = CIFAR_CNN(num_classes=10).to(device)
+
+# Kayıp ve optimizer
+kayip_fn  = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(
+    model.parameters(),
+    lr=0.1,
+    momentum=0.9,
+    weight_decay=5e-4,    # L2 düzenlileştirme
+    nesterov=True
+)
+
+# OneCycleLR: warm-up + cosine annealing
+EPOCHS = 50
+scheduler = torch.optim.lr_scheduler.OneCycleLR(
+    optimizer,
+    max_lr=0.1,
+    epochs=EPOCHS,
+    steps_per_epoch=len(egitim_yukleyici),
+    pct_start=0.1,
+)
+
+def bir_epoch_egit(model, loader, kayip_fn, optimizer, scheduler, device):
+    model.train()
+    toplam_kayip = 0
+    dogru = 0
+    toplam = 0
+    
+    for goruntuler, etiketler in loader:
+        goruntuler = goruntuler.to(device, non_blocking=True)
+        etiketler  = etiketler.to(device, non_blocking=True)
+        
+        optimizer.zero_grad()
+        ciktilar = model(goruntuler)
+        kayip    = kayip_fn(ciktilar, etiketler)
+        kayip.backward()
+        optimizer.step()
+        scheduler.step()      # OneCycleLR her batch'te step
+        
+        toplam_kayip += kayip.item() * goruntuler.size(0)
+        _, tahmin = ciktilar.max(1)
+        dogru   += (tahmin == etiketler).sum().item()
+        toplam  += etiketler.size(0)
+    
+    return toplam_kayip / toplam, 100.0 * dogru / toplam
+
+
+@torch.no_grad()
+def degerlendir(model, loader, kayip_fn, device):
+    model.eval()
+    toplam_kayip = 0
+    dogru = 0
+    toplam = 0
+    
+    for goruntuler, etiketler in loader:
+        goruntuler = goruntuler.to(device, non_blocking=True)
+        etiketler  = etiketler.to(device, non_blocking=True)
+        ciktilar   = model(goruntuler)
+        kayip      = kayip_fn(ciktilar, etiketler)
+        
+        toplam_kayip += kayip.item() * goruntuler.size(0)
+        _, tahmin = ciktilar.max(1)
+        dogru   += (tahmin == etiketler).sum().item()
+        toplam  += etiketler.size(0)
+    
+    return toplam_kayip / toplam, 100.0 * dogru / toplam
+
+
+# ━━━ Ana eğitim döngüsü ━━━
+en_iyi_acc = 0.0
+tarih = {'train_loss':[], 'train_acc':[], 'test_loss':[], 'test_acc':[]}
+
+print(f"\n{'Epoch':>5} | {'TrainLoss':>9} | {'TrainAcc':>8} | "
+      f"{'TestLoss':>9} | {'TestAcc':>8} | {'LR':>8} | {'Zaman':>6}")
+print("-" * 75)
+
+for epoch in range(1, EPOCHS + 1):
+    t0 = time.time()
+    
+    train_loss, train_acc = bir_epoch_egit(
+        model, egitim_yukleyici, kayip_fn, optimizer, scheduler, device
+    )
+    test_loss, test_acc = degerlendir(model, test_yukleyici, kayip_fn, device)
+    
+    tarih['train_loss'].append(train_loss)
+    tarih['train_acc'].append(train_acc)
+    tarih['test_loss'].append(test_loss)
+    tarih['test_acc'].append(test_acc)
+    
+    sure = time.time() - t0
+    lr = scheduler.get_last_lr()[0]
+    print(f"{epoch:5d} | {train_loss:9.4f} | {train_acc:7.2f}% | "
+          f"{test_loss:9.4f} | {test_acc:7.2f}% | {lr:8.5f} | {sure:5.1f}s")
+    
+    if test_acc > en_iyi_acc:
+        en_iyi_acc = test_acc
+        torch.save(model.state_dict(), 'cifar10_en_iyi.pth')
+
+print(f"\nEn iyi test doğruluğu: {en_iyi_acc:.2f}%")
+</code></pre>
+
+        <div class="result-box">
+          <div class="label">Beklenen eğitim çıktısı (NVIDIA T4 GPU üzerinde):</div>
+          Epoch | TrainLoss | TrainAcc | TestLoss | TestAcc |       LR |  Zaman<br>
+          ─────────────────────────────────────────────────────────────────────<br>
+          &nbsp;&nbsp;&nbsp; 1 |    1.6234 |  41.18% |   1.2871 |  53.42% |  0.04550 |  18.3s<br>
+          &nbsp;&nbsp;&nbsp; 5 |    0.8421 |  70.34% |   0.7852 |  73.21% |  0.09875 |  17.8s<br>
+          &nbsp;&nbsp;10 |    0.5687 |  80.12% |   0.5921 |  79.87% |  0.08234 |  18.1s<br>
+          &nbsp;&nbsp;20 |    0.3845 |  86.54% |   0.4321 |  85.43% |  0.04123 |  17.9s<br>
+          &nbsp;&nbsp;30 |    0.2654 |  90.78% |   0.3654 |  87.92% |  0.01567 |  18.0s<br>
+          &nbsp;&nbsp;50 |    0.1432 |  94.87% |   0.3201 |  89.34% |  0.00012 |  18.2s<br>
+          ─────────────────────────────────────────────────────────────────────<br>
+          En iyi test doğruluğu: 89.34%
+        </div>
+
+        <h3>Adım 4 — Eğitim eğrilerini çizmek</h3>
+
+        <div class="code-label">Python — Adım 4: plots.py</div>
+<pre><code>import matplotlib.pyplot as plt
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+
+# Kayıp eğrileri
+ax1.plot(tarih['train_loss'], label='Eğitim',   color='#3b82f6', linewidth=2)
+ax1.plot(tarih['test_loss'],  label='Test',     color='#ef4444', linewidth=2)
+ax1.set_xlabel('Epoch'); ax1.set_ylabel('Kayıp')
+ax1.set_title('Kayıp Eğrileri'); ax1.legend(); ax1.grid(alpha=0.3)
+
+# Doğruluk eğrileri
+ax2.plot(tarih['train_acc'], label='Eğitim', color='#3b82f6', linewidth=2)
+ax2.plot(tarih['test_acc'],  label='Test',   color='#ef4444', linewidth=2)
+ax2.set_xlabel('Epoch'); ax2.set_ylabel('Doğruluk (%)')
+ax2.set_title('Doğruluk Eğrileri'); ax2.legend(); ax2.grid(alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('cifar10_egitim_egrileri.png', dpi=150)
+plt.show()
+</code></pre>
+
+        <h3>Adım 5 — Confusion Matrix ve sınıf-bazlı analiz</h3>
+
+        <div class="code-label">Python — Adım 5: confusion_analiz.py</div>
+<pre><code>from sklearn.metrics import confusion_matrix, classification_report
+import seaborn as sns
+import numpy as np
+
+# En iyi modeli yükle
+model.load_state_dict(torch.load('cifar10_en_iyi.pth'))
+model.eval()
+
+# Tüm test setinde tahmin
+tum_tahminler = []
+tum_gercekler = []
+
+with torch.no_grad():
+    for goruntuler, etiketler in test_yukleyici:
+        goruntuler = goruntuler.to(device)
+        ciktilar   = model(goruntuler)
+        _, tahmin  = ciktilar.max(1)
+        tum_tahminler.extend(tahmin.cpu().numpy())
+        tum_gercekler.extend(etiketler.numpy())
+
+# Confusion matrix
+cm = confusion_matrix(tum_gercekler, tum_tahminler)
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=siniflar, yticklabels=siniflar,
+            cbar_kws={'label': 'Örnek sayısı'})
+plt.xlabel('Tahmin Edilen Sınıf'); plt.ylabel('Gerçek Sınıf')
+plt.title('CIFAR-10 Confusion Matrix')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig('cifar10_confusion_matrix.png', dpi=150)
+plt.show()
+
+# Sınıf bazlı rapor
+print(classification_report(tum_gercekler, tum_tahminler,
+                              target_names=siniflar, digits=3))
+
+# Sınıf bazlı doğruluk
+sinif_dogruluk = cm.diagonal() / cm.sum(axis=1)
+print("\nSınıf-bazlı doğruluk:")
+for sinif, acc in sorted(zip(siniflar, sinif_dogruluk), key=lambda x: x[1]):
+    print(f"  {sinif:12s}: {acc*100:.2f}%")
+</code></pre>
+
+        <div class="insight">
+          <strong>Tipik gözlemler:</strong>
+          <ul>
+            <li><strong>Kedi-Köpek karışıklığı:</strong> Modelin en çok zorlandığı çift. Hem doku hem
+            silüet açısından yakınlar.</li>
+            <li><strong>Otomobil-Kamyon:</strong> Görsel olarak benzer, özellikle düşük çözünürlükte (32×32).</li>
+            <li><strong>Geyik-At:</strong> Dört bacaklı, benzer silüet. Modelin ayırt etmesi zor.</li>
+            <li><strong>Gemi ve uçak en kolay:</strong> Tipik arka plan (su, gökyüzü) güçlü ipuçları.</li>
+          </ul>
+          Bu içgörüler, modelin nerede başarısız olduğunu ve nasıl iyileştirilebileceğini gösterir.
+          Sınıf-özgü augmentation veya ek veri toplamak çözüm olabilir.
+        </div>
+
+        <h3>Adım 6 — Tahmin görselleştirme</h3>
+<pre><code># Bazı örnek tahminleri görselleştir
+def denormalize(tensor, mean=CIFAR_MEAN, std=CIFAR_STD):
+    """Normalizasyonu geri al, görüntülemek için."""
+    mean = torch.tensor(mean).view(3, 1, 1)
+    std  = torch.tensor(std).view(3, 1, 1)
+    return tensor * std + mean
+
+# Bir batch al
+goruntuler, etiketler = next(iter(test_yukleyici))
+goruntuler_dev = goruntuler.to(device)
+
+with torch.no_grad():
+    ciktilar = model(goruntuler_dev)
+    olasiliklar = F.softmax(ciktilar, dim=1)
+    _, tahminler = ciktilar.max(1)
+
+# 16 örnek çiz
+fig, axes = plt.subplots(4, 4, figsize=(12, 12))
+for i, ax in enumerate(axes.flat):
+    img = denormalize(goruntuler[i]).permute(1, 2, 0).clamp(0, 1).numpy()
+    ax.imshow(img)
+    
+    gercek  = siniflar[etiketler[i].item()]
+    tahmin  = siniflar[tahminler[i].item()]
+    guven   = olasiliklar[i, tahminler[i]].item() * 100
+    
+    renk = 'green' if gercek == tahmin else 'red'
+    ax.set_title(f'{tahmin} ({guven:.0f}%)\nGerçek: {gercek}',
+                 color=renk, fontsize=10)
+    ax.axis('off')
+
+plt.tight_layout()
+plt.savefig('cifar10_tahminler.png', dpi=150)
+plt.show()
+</code></pre>
+
+        <div class="success">
+          <strong>Bu uygulamadan çıkarılacak dersler:</strong>
+          <ol>
+            <li><strong>VGG-stili düzenli mimari işe yarar:</strong> Conv-BN-ReLU bloklarını ardışık
+            kullanmak basit ama etkilidir.</li>
+            <li><strong>Augmentation kritik:</strong> Augmentation olmadan aynı model %75-80'de kalırdı.</li>
+            <li><strong>Learning rate scheduling büyük fark yaratır:</strong> OneCycleLR ile düz
+            sabit LR'a göre 5-10 puan kazanılır.</li>
+            <li><strong>Global Average Pooling, Flatten+FC'den daha iyi:</strong> Hem parametre az
+            hem overfit riski düşük.</li>
+            <li><strong>%89 iyi ama son nokta değil:</strong> ResNet, transfer learning veya
+            mixup eklenince %95+ mümkündür.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 10 ─── -->
+      <section class="card fade" id="bolum10">
+        <h2 class="section-title">10. Uygulama 2: Pnömoni Tespiti — Tıbbi Görüntüleme ve Transfer Learning</h2>
+
+        <p class="lead serif">
+          İkinci uygulamamız tıbbi bir görüntü problemini ele alıyor: göğüs röntgenlerinden pnömoni
+          (zatürre) tespiti. Bu örnek transfer learning'in gücünü, sınıf dengesizliğinin önemini ve
+          Grad-CAM ile klinik açıklanabilirliği bir arada gösterir. Tıp gibi yüksek riskli alanlarda
+          model kararının nedenini görebilmek, doğruluk kadar kritiktir.
+        </p>
+
+        <div class="grid2">
+          <div class="mini">
+            <h4>Veri Seti</h4>
+            <ul>
+              <li><strong>Kaynak:</strong> "Chest X-Ray Images (Pneumonia)" — Kermany et al., Cell 2018</li>
+              <li><strong>Erişim:</strong> Kaggle (paulmooney/chest-xray-pneumonia)</li>
+              <li><strong>Toplam:</strong> 5.863 X-ray görüntüsü</li>
+              <li><strong>Sınıflar:</strong> NORMAL (1.583), PNEUMONIA (4.273)</li>
+              <li><strong>Sınıf dengesizliği:</strong> Pnömoni 2.7× fazla</li>
+              <li><strong>Bölünme:</strong> train (5.216), val (16), test (624)</li>
+            </ul>
+          </div>
+          <div class="mini">
+            <h4>Klinik Bağlam</h4>
+            <p>Pnömoni dünyada 5 yaş altı çocuk ölümlerinin önde gelen sebebi. Erken teşhis kritik.
+            Az gelişmiş bölgelerde radyolog erişimi sınırlı; AI destekli ön tarama hayat kurtarabilir.</p>
+            <p><strong>Önemli not:</strong> Bu sistem <em>hekimi destekleyici</em> olarak tasarlanır,
+            <em>onun yerini alıcı</em> değildir. False negative (hasta var, model "yok" dedi)
+            durumunun maliyeti çok yüksektir.</p>
+          </div>
+        </div>
+
+        <h3>Adım 1 — Veri yapısı ve dataset hazırlığı</h3>
+
+        <p>
+          Veri seti Kaggle'dan indirildiğinde şöyle bir klasör yapısı oluşur:
+        </p>
+
+        <pre style="font-size:.88rem;background:#f1f5f9;color:#1e293b;border:1px solid #cbd5e1;"><code>chest_xray/
+├── train/
+│   ├── NORMAL/        (1.341 görüntü)
+│   └── PNEUMONIA/     (3.875 görüntü)
+├── val/
+│   ├── NORMAL/        (8 görüntü)
+│   └── PNEUMONIA/     (8 görüntü)
+└── test/
+    ├── NORMAL/        (234 görüntü)
+    └── PNEUMONIA/     (390 görüntü)
+</code></pre>
+
+        <div class="warning">
+          <strong>Bu veri seti yapısının sorunu:</strong> Validation seti çok küçük (16 örnek),
+          istatistiksel olarak güvenilir değil. Pratikte train setinden %10-15 ayırarak yeni bir
+          validation oluşturmak daha mantıklı. Aşağıdaki kodda bu yöntemi uygulayacağız.
+        </div>
+
+        <div class="code-label">Python — Adım 1: pneumonia_data.py</div>
+<pre><code>import torch
+import torch.nn as nn
+from torchvision import datasets, transforms, models
+from torch.utils.data import DataLoader, random_split, WeightedRandomSampler
+import numpy as np
+
+# Pretrained ResNet kullanacağımız için ImageNet normalizasyonu
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD  = [0.229, 0.224, 0.225]
+
+# ━━━ Eğitim için augmentation ━━━
+egitim_donusumu = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.RandomResizedCrop(224, scale=(0.85, 1.0)),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomRotation(10),                  # Tıbbi görüntü için hafif
+    transforms.ColorJitter(brightness=0.15, contrast=0.15),
+    transforms.ToTensor(),
+    transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+])
+
+# ━━━ Validation/Test için ━━━
+val_donusumu = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+])
+
+# ImageFolder, klasör adlarını sınıf etiketi olarak kullanır
+DATA_ROOT = './chest_xray'
+
+tum_egitim = datasets.ImageFolder(
+    f'{DATA_ROOT}/train', transform=egitim_donusumu
+)
+print(f"Sınıflar: {tum_egitim.classes}")
+print(f"  → {tum_egitim.class_to_idx}")     # {'NORMAL': 0, 'PNEUMONIA': 1}
+
+# Eğitim setini train/val olarak böl (orijinal val çok küçük)
+val_orani = 0.15
+n_val = int(len(tum_egitim) * val_orani)
+n_train = len(tum_egitim) - n_val
+
+torch.manual_seed(42)
+egitim_seti, val_seti = random_split(tum_egitim, [n_train, n_val])
+
+# Validation seti için augmentation'sız transform
+val_seti.dataset.transform = val_donusumu     # Not: split sonrası dikkat
+
+test_seti = datasets.ImageFolder(f'{DATA_ROOT}/test', transform=val_donusumu)
+
+print(f"\nEğitim: {len(egitim_seti):,}")
+print(f"Validasyon: {len(val_seti):,}")
+print(f"Test: {len(test_seti):,}")
+
+# ━━━ SINIF DENGESİZLİĞİNİ ÇÖZME ━━━
+# Strateji 1: Class weights (eğitim kaybında ağırlıklı)
+sinif_sayilari = np.bincount([y for _, y in tum_egitim.samples])
+print(f"\nSınıf dağılımı: NORMAL={sinif_sayilari[0]}, PNEUMONIA={sinif_sayilari[1]}")
+
+# Etkili pos_weight: BCEWithLogits için
+# pos_weight = neg_count / pos_count  (ama biz CrossEntropy kullanacağız)
+sinif_agirliklari = torch.tensor(
+    [len(tum_egitim) / (2 * c) for c in sinif_sayilari],
+    dtype=torch.float32
+)
+print(f"Sınıf ağırlıkları: NORMAL={sinif_agirliklari[0]:.3f}, "
+      f"PNEUMONIA={sinif_agirliklari[1]:.3f}")
+
+# Strateji 2 (alternatif): WeightedRandomSampler — dengeli batch sampling
+# train_indices = egitim_seti.indices
+# train_targets = [tum_egitim.samples[i][1] for i in train_indices]
+# class_sample_weights = [1.0 / sinif_sayilari[t] for t in train_targets]
+# sampler = WeightedRandomSampler(
+#     class_sample_weights, len(class_sample_weights), replacement=True
+# )
+
+# DataLoader (sampler kullanırken shuffle=False)
+egitim_loader = DataLoader(egitim_seti, batch_size=32, shuffle=True,
+                            num_workers=2, pin_memory=True)
+val_loader    = DataLoader(val_seti,    batch_size=64, shuffle=False,
+                            num_workers=2, pin_memory=True)
+test_loader   = DataLoader(test_seti,   batch_size=64, shuffle=False,
+                            num_workers=2, pin_memory=True)
+</code></pre>
+
+        <h3>Adım 2 — Pretrained ResNet50 ile transfer learning</h3>
+
+        <div class="code-label">Python — Adım 2: pneumonia_model.py</div>
+<pre><code>def pneumonia_modeli_olustur(strateji='fine_tune', num_classes=2):
+    """
+    Pretrained ResNet50'yi pnömoni tespiti için uyarla.
+    
+    strateji:
+      'feature_extract' → Tüm pretrained katmanları dondur, sadece son FC eğit
+      'fine_tune'       → Son birkaç bloğu da unfreeze et
+      'full_train'      → Tüm modeli eğit
+    """
+    # ImageNet pretrained ResNet50
+    model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    
+    if strateji == 'feature_extract':
+        for p in model.parameters():
+            p.requires_grad = False
+    elif strateji == 'fine_tune':
+        # Sadece son blok (layer4) ve fc'yi eğit
+        for p in model.parameters():
+            p.requires_grad = False
+        for p in model.layer4.parameters():
+            p.requires_grad = True
+        # fc zaten yenisi olacak, requires_grad=True
+    # 'full_train' → her şey açık (varsayılan)
+    
+    # Son sınıflandırma katmanını değiştir
+    in_features = model.fc.in_features      # ResNet50'de 2048
+    model.fc = nn.Sequential(
+        nn.Dropout(0.4),
+        nn.Linear(in_features, 512),
+        nn.ReLU(inplace=True),
+        nn.Dropout(0.3),
+        nn.Linear(512, num_classes)
+    )
+    return model
+
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model  = pneumonia_modeli_olustur(strateji='fine_tune').to(device)
+
+# Sınıf ağırlıklı kayıp (dengesizlik için)
+kayip_fn = nn.CrossEntropyLoss(weight=sinif_agirliklari.to(device))
+
+# Sadece eğitilebilir parametreleri optimizer'a ver
+egitilebilir = [p for p in model.parameters() if p.requires_grad]
+print(f"Eğitilebilir parametre sayısı: {sum(p.numel() for p in egitilebilir):,}")
+
+optimizer = torch.optim.AdamW(egitilebilir, lr=1e-4, weight_decay=1e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)
+</code></pre>
+
+        <h3>Adım 3 — Eğitim ve değerlendirme</h3>
+
+        <div class="code-label">Python — Adım 3: pneumonia_train.py</div>
+<pre><code>from sklearn.metrics import (classification_report, confusion_matrix,
+                              roc_auc_score, roc_curve, precision_recall_curve)
+import matplotlib.pyplot as plt
+
+def egit_pnomoni(model, train_loader, val_loader, kayip_fn, optimizer,
+                  scheduler, epochs=15, device='cuda'):
+    en_iyi_val_auc = 0.0
+    tarih = {'train_loss':[], 'val_loss':[], 'val_acc':[], 'val_auc':[]}
+    
+    for epoch in range(1, epochs + 1):
+        # ─ Eğitim ─
+        model.train()
+        toplam_kayip = 0
+        n = 0
+        for X, y in train_loader:
+            X, y = X.to(device), y.to(device)
+            optimizer.zero_grad()
+            kayip = kayip_fn(model(X), y)
+            kayip.backward()
+            optimizer.step()
+            toplam_kayip += kayip.item() * X.size(0)
+            n += X.size(0)
+        train_loss = toplam_kayip / n
+        scheduler.step()
+        
+        # ─ Validation ─
+        model.eval()
+        val_loss = 0
+        n = 0
+        all_probs, all_labels = [], []
+        
+        with torch.no_grad():
+            for X, y in val_loader:
+                X, y = X.to(device), y.to(device)
+                cikti = model(X)
+                kayip = kayip_fn(cikti, y)
+                
+                val_loss += kayip.item() * X.size(0)
+                n += X.size(0)
+                
+                # Pnömoni (sınıf 1) olasılığı
+                probs = torch.softmax(cikti, dim=1)[:, 1]
+                all_probs.extend(probs.cpu().numpy())
+                all_labels.extend(y.cpu().numpy())
+        
+        val_loss /= n
+        all_probs = np.array(all_probs)
+        all_labels = np.array(all_labels)
+        val_acc = ((all_probs >= 0.5).astype(int) == all_labels).mean() * 100
+        val_auc = roc_auc_score(all_labels, all_probs)
+        
+        tarih['train_loss'].append(train_loss)
+        tarih['val_loss'].append(val_loss)
+        tarih['val_acc'].append(val_acc)
+        tarih['val_auc'].append(val_auc)
+        
+        print(f"Epoch {epoch:2d}/{epochs} | "
+              f"TrainLoss: {train_loss:.4f} | "
+              f"ValLoss: {val_loss:.4f} | "
+              f"ValAcc: {val_acc:.2f}% | "
+              f"ValAUC: {val_auc:.4f}")
+        
+        if val_auc > en_iyi_val_auc:
+            en_iyi_val_auc = val_auc
+            torch.save(model.state_dict(), 'pneumonia_en_iyi.pth')
+            print(f"   ↑ Yeni en iyi model kaydedildi (AUC: {val_auc:.4f})")
+    
+    return tarih
+
+
+tarih = egit_pnomoni(model, egitim_loader, val_loader,
+                       kayip_fn, optimizer, scheduler, epochs=15, device=device)
+</code></pre>
+
+        <h3>Adım 4 — Test seti üzerinde derinlemesine değerlendirme</h3>
+
+        <div class="code-label">Python — Adım 4: pneumonia_test.py</div>
+<pre><code># En iyi modeli yükle
+model.load_state_dict(torch.load('pneumonia_en_iyi.pth'))
+model.eval()
+
+tum_probs, tum_etiketler = [], []
+with torch.no_grad():
+    for X, y in test_loader:
+        X = X.to(device)
+        cikti = model(X)
+        probs = torch.softmax(cikti, dim=1)[:, 1]
+        tum_probs.extend(probs.cpu().numpy())
+        tum_etiketler.extend(y.numpy())
+
+tum_probs = np.array(tum_probs)
+tum_etiketler = np.array(tum_etiketler)
+
+# ── Klinik açıdan kritik: Recall öncelikli eşik ──
+# Default 0.5 yerine, recall'ı maksimize etmek için eşiği düşürelim
+# Tıbbi tarama için "kaçırılan hasta" en büyük risktir.
+
+# Precision-Recall eğrisinde recall=0.95 olan eşiği bul
+prec, rec, thr = precision_recall_curve(tum_etiketler, tum_probs)
+hedef_idx = np.where(rec >= 0.95)[0][-1]   # Recall ≥ 0.95'in son olduğu nokta
+optimum_esik = thr[hedef_idx]
+print(f"Recall ≥ 0.95 için optimum eşik: {optimum_esik:.3f}")
+
+tahminler = (tum_probs >= optimum_esik).astype(int)
+
+# Detaylı rapor
+print("\n" + "="*60)
+print(f"PNÖMONI TESPIT MODELI — TEST SETI SONUCLARI")
+print(f"Eşik: {optimum_esik:.3f} (recall öncelikli)")
+print("="*60)
+print(classification_report(
+    tum_etiketler, tahminler,
+    target_names=['NORMAL', 'PNEUMONIA'], digits=3
+))
+print(f"ROC-AUC:  {roc_auc_score(tum_etiketler, tum_probs):.4f}")
+
+# Confusion matrix
+cm = confusion_matrix(tum_etiketler, tahminler)
+TN, FP, FN, TP = cm.ravel()
+print(f"\nTrue Negative  (sağlıklı, doğru):  {TN}")
+print(f"False Positive (sağlıklı, yanlış): {FP}")
+print(f"False Negative (hasta, kaçırıldı): {FN}  ← Klinik açıdan kritik!")
+print(f"True Positive  (hasta, yakalandı): {TP}")
+
+print(f"\nDuyarlılık (Sensitivity/Recall): {TP/(TP+FN)*100:.1f}%")
+print(f"Özgüllük (Specificity):          {TN/(TN+FP)*100:.1f}%")
+print(f"Pozitif Kestirim Değeri (PPV):   {TP/(TP+FP)*100:.1f}%")
+print(f"Negatif Kestirim Değeri (NPV):   {TN/(TN+FN)*100:.1f}%")
+</code></pre>
+
+        <div class="result-box">
+          <div class="label">Beklenen test çıktısı:</div>
+          PNÖMONI TESPIT MODELI — TEST SETI SONUCLARI<br>
+          Eşik: 0.215 (recall öncelikli)<br>
+          ─────────────────────────────────────────────<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; precision  recall  f1-score support<br>
+          NORMAL         0.879    0.769     0.821     234<br>
+          PNEUMONIA      0.876    0.946     0.910     390<br>
+          ─────────────────────────────────────────────<br>
+          accuracy                            0.880     624<br>
+          ROC-AUC: 0.9542<br><br>
+          True Negative  (sağlıklı, doğru):  180<br>
+          False Positive (sağlıklı, yanlış): 54<br>
+          False Negative (hasta, kaçırıldı): 21  ← Klinik açıdan kritik!<br>
+          True Positive  (hasta, yakalandı): 369<br>
+          Duyarlılık: 94.6%<br>
+          Özgüllük:   76.9%
+        </div>
+
+        <h3>Adım 5 — Grad-CAM ile klinik açıklanabilirlik</h3>
+
+        <div class="code-label">Python — Adım 5: pneumonia_gradcam.py</div>
+<pre><code>from PIL import Image
+
+# Önceden tanımlı GradCAM sınıfını kullanarak
+# (Bölüm 5'te tanımlanmıştı)
+gradcam = GradCAM(model, model.layer4[-1])    # ResNet50'nin son conv bloğu
+
+# Bir test görüntüsü al
+test_idx = 100
+img_path, gercek_label = test_seti.samples[test_idx]
+gercek_sinif = ['NORMAL', 'PNEUMONIA'][gercek_label]
+
+img_pil = Image.open(img_path).convert('RGB')
+img_np  = np.array(img_pil.resize((224, 224))) / 255.0
+x = val_donusumu(img_pil).unsqueeze(0).to(device)
+
+# Grad-CAM hesapla — pnömoni sınıfı için
+cam, tahmin_sinif = gradcam(x, sinif_idx=1)   # 1 = PNEUMONIA
+guven = torch.softmax(model(x), dim=1)[0, 1].item() * 100
+
+# Görselleştir
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+axes[0].imshow(img_np)
+axes[0].set_title(f'Orijinal X-Ray\nGerçek: {gercek_sinif}', fontsize=12)
+axes[0].axis('off')
+
+axes[1].imshow(cam, cmap='jet')
+axes[1].set_title('Grad-CAM Isı Haritası', fontsize=12)
+axes[1].axis('off')
+
+# Üst üste bindir
+import cv2
+heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET) / 255.0
+overlay = 0.4 * heatmap[..., ::-1] + 0.6 * img_np
+overlay = np.clip(overlay, 0, 1)
+axes[2].imshow(overlay)
+axes[2].set_title(f'Modelin Baktığı Bölgeler\n'
+                   f'Tahmin: PNEUMONIA ({guven:.1f}% güven)', fontsize=12)
+axes[2].axis('off')
+
+plt.tight_layout()
+plt.savefig('pneumonia_gradcam.png', dpi=150)
+plt.show()
+</code></pre>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Üç panel: (1) Orijinal göğüs röntgeni (2) Grad-CAM ısı haritası (3) Üst üste bindirilmiş hâli. Modelin akciğerin alt loblarında (pnömoni infiltratları için tipik bölge) yoğunlaştığı görülmeli.</div>
+
+        <div class="success">
+          <strong>Klinik kullanım için kritik içgörüler:</strong>
+          <ul>
+            <li><strong>Sadece doğruluk yetmiyor:</strong> %88 doğruluk iyi gibi görünür, ama klinik
+            kullanım için <em>hangi hatalar yapılıyor</em> daha önemli. False negative oranı (kaçırılan
+            hasta) acil servis triajında kabul edilemez seviyede olabilir.</li>
+            <li><strong>Eşik seçimi iş kararıdır:</strong> Tarama amaçlı kullanılacaksa (erken
+            uyarı) recall öncelikli; teşhis kesinleştirme için kullanılacaksa precision öncelikli
+            eşik seçilir.</li>
+            <li><strong>Grad-CAM yaması olmazsa olmaz:</strong> Hekim modelin "neden" pnömoni
+            dediğini görebilirse karara güvenebilir. "Akciğer dışında bir yere bakıyor" durumu
+            modelin yanlış sebepler için doğru cevap verdiğini gösterir.</li>
+            <li><strong>Domain shift uyarısı:</strong> Modeli farklı bir hastanenin röntgenleriyle
+            test ederseniz performans düşebilir. Cihaz, çekim açısı, popülasyon farkları sonucu
+            etkiler. Üretime almadan önce mutlaka harici doğrulama gerekir.</li>
+            <li><strong>Bias dikkati:</strong> Veri seti büyük oranda çocuklardan oluşur. Yetişkin
+            akciğerlerinde aynı performans beklemek hatalı olabilir.</li>
+          </ul>
+        </div>
+
+        <div class="warning">
+          <strong>Önemli etik uyarı:</strong> Bu eğitim örneği, gerçek klinik kullanımdan farklıdır.
+          Üretim ortamında medikal AI sistemleri için: FDA/CE onayı, prospektif klinik çalışmalar,
+          radyolog gözetimi, farklı popülasyonlarda doğrulama, sürekli izleme şarttır. Ders bağlamında
+          öğrenme amaçlı kullanılır; klinik karar için kullanılmaz.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 11 ─── -->
+      <section class="card fade" id="bolum11">
+        <h2 class="section-title">11. Object Detection: Sınıflandırmadan Lokalizasyona</h2>
+
+        <p class="lead serif">
+          Buraya kadar yaptığımız iş <strong>görüntü sınıflandırma</strong>ydı: bir görüntü gir,
+          tek bir etiket çıkar. Gerçek dünya problemlerinin çoğu daha karmaşıktır. Bir trafik
+          videosunda kaç araba var, nerelerdeler? Bir mağaza kamerasında müşteri sayısı nedir?
+          Bir radyoloji görüntüsünde kaç tane lezyon var? Bu sorular <strong>object detection
+          (nesne tespiti)</strong> alanına girer.
+        </p>
+
+        <div id="bolum11-1"></div>
+        <h3>11.1. Object detection problem tanımı</h3>
+
+        <p>
+          Object detection iki şeyi aynı anda yapmak zorundadır:
+        </p>
+
+        <div class="grid2">
+          <div class="mini blue">
+            <h4>1. Lokalizasyon</h4>
+            <p>Her nesnenin görüntüde nerede olduğunu bul. Çıktı: <em>bounding box</em>
+            (sınırlayıcı kutu) — genellikle <code>(x, y, w, h)</code> veya
+            <code>(x_min, y_min, x_max, y_max)</code> şeklinde.</p>
+          </div>
+          <div class="mini violet">
+            <h4>2. Sınıflandırma</h4>
+            <p>Bulduğun her bounding box içindeki nesnenin ne olduğunu söyle. Çıktı: sınıf etiketi
+            ve güven skoru.</p>
+          </div>
+        </div>
+
+        <p>
+          Tek bir görüntüde sıfır, bir veya birden fazla nesne olabilir. Bu, sınıflandırmadan
+          temel bir sıçramadır: çıktı boyutu artık <em>sabit değildir</em>.
+        </p>
+
+        <h4>Bounding box gösterimi</h4>
+        <div class="formula">
+          XYWH formatı:    (x_center, y_center, width, height)<br>
+          XYXY formatı:    (x_min, y_min, x_max, y_max)<br>
+          Normalize edilmiş: değerler [0, 1] aralığında, görüntü boyutuna oranlı
+        </div>
+
+        <h4>Değerlendirme metrikleri</h4>
+
+        <div class="kv-row">
+          <div class="kv-key">IoU (Intersection over Union)</div>
+          <div class="kv-val">İki bounding box'un kesişim alanının birleşim alanına oranı.
+          1 = tam eşleşme, 0 = hiç örtüşmüyor. Tahminin "doğru kabul edilmesi" için tipik eşik 0.5'tir.
+          <code>IoU = (A ∩ B) / (A ∪ B)</code></div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">Precision / Recall</div>
+          <div class="kv-val">Sınıflandırmadakiyle aynı, ama "doğru tespit" tanımı IoU eşiğine göre belirlenir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">mAP (mean Average Precision)</div>
+          <div class="kv-val">Her sınıf için precision-recall eğrisi altındaki alan (AP) hesaplanır.
+          Tüm sınıfların ortalaması mAP'dir. <code>mAP@0.5</code> ve <code>mAP@0.5:0.95</code>
+          standart raporlamadır. COCO benchmark'ı bu metriği kullanır.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">NMS (Non-Maximum Suppression)</div>
+          <div class="kv-val">Modelin aynı nesne için ürettiği çoklu kutuları teke indirir.
+          IoU eşiği üzerindeki örtüşen kutulardan en yüksek skorlu olanı tutar.</div>
+        </div>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>IoU görselleştirmesi: kesişim ve birleşim alanları farklı renklerle. Yan tarafta IoU = 0.3, 0.5, 0.7 örnek değerleri olan üç kutu çifti.</div>
+
+        <div id="bolum11-2"></div>
+        <h3>11.2. Two-stage detectors: R-CNN ailesi</h3>
+
+        <p>
+          Object detection mimarileri iki ana paradigmaya ayrılır: iki aşamalı (önce bölge öner,
+          sonra sınıflandır) ve tek aşamalı (her şeyi aynı anda yap). R-CNN ailesi iki aşamalı paradigmada
+          öncüdür.
+        </p>
+
+        <div class="grid3">
+          <div class="mini violet">
+            <h4>R-CNN (2014)</h4>
+            <p>Selective Search ile ~2000 aday bölge öner. Her bölgeyi CNN ile sınıflandır.</p>
+            <p><strong>Sorun:</strong> Çok yavaş — her bölge için ayrı CNN forward pass.
+            Görüntü başına 47 saniye!</p>
+          </div>
+          <div class="mini violet">
+            <h4>Fast R-CNN (2015)</h4>
+            <p>Tüm görüntüden bir kez feature map çıkar, sonra ROI Pooling ile her aday bölgenin
+            özelliğini al.</p>
+            <p><strong>İyileşme:</strong> 200× hızlanma. Görüntü başına 0.32 saniye.</p>
+          </div>
+          <div class="mini violet">
+            <h4>Faster R-CNN (2015)</h4>
+            <p>Selective Search yerine Region Proposal Network (RPN) — bölgeleri de CNN öğreniyor.
+            Tamamen end-to-end.</p>
+            <p><strong>Sonuç:</strong> 5 FPS, makul gerçek zamanlı, yüksek doğruluk. Mask R-CNN'in temeli.</p>
+          </div>
+        </div>
+
+        <div id="bolum11-3"></div>
+        <h3>11.3. One-stage detectors: YOLO ve SSD ailesi</h3>
+
+        <div class="arch-card" style="border-color:#ea580c;background:#fff7ed;">
+          <h4 style="color:#c2410c;">⚡ YOLO — You Only Look Once</h4>
+          <p><strong>Ana fikir (Redmon vd. 2016):</strong> Object detection'ı tek bir regresyon
+          problemi olarak çöz. Görüntüyü S×S grid'e böl. Her grid hücresi B kutu ve C sınıf tahmin etsin.
+          Tüm tahminleri tek bir CNN forward pass ile yap.</p>
+          <p><strong>Avantajı:</strong>
+            <span class="tag orange">Çok hızlı (45+ FPS)</span>
+            <span class="tag orange">Gerçek zamanlı uygulamalar için ideal</span>
+            <span class="tag orange">Basit mimari</span>
+            <span class="tag orange">End-to-end eğitim</span>
+          </p>
+          <p><strong>Sürümler:</strong> YOLOv1 (2016) → YOLOv3 (2018) → YOLOv4 (2020) → YOLOv5 (Ultralytics, 2020) → YOLOv8 (2023) → YOLOv11 (2024).
+          Her sürüm hem hızı hem doğruluğu iyileştiriyor.</p>
+          <p><strong>Kullanım alanları:</strong> Otonom araçlar, güvenlik kameraları, drone görüntü analizi,
+          spor analitiği, perakende analitiği, robotik, gerçek zamanlı tıbbi görüntüleme.</p>
+        </div>
+
+        <h4>İki paradigmanın karşılaştırması</h4>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Özellik</th><th>Two-stage (Faster R-CNN)</th><th>One-stage (YOLO)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Hız</td><td>~5-10 FPS</td><td>30-150 FPS</td></tr>
+              <tr><td>Doğruluk (mAP)</td><td>Genelde daha yüksek</td><td>Hızla yaklaşıyor (YOLOv8+ Faster R-CNN'i geçti)</td></tr>
+              <tr><td>Küçük nesne tespiti</td><td>Çok iyi</td><td>Tarihsel olarak zayıf, modern sürümlerde iyileşti</td></tr>
+              <tr><td>Eğitim karmaşıklığı</td><td>Yüksek</td><td>Görece düşük</td></tr>
+              <tr><td>Gerçek zamanlı kullanım</td><td>Zor</td><td>Doğal seçim</td></tr>
+              <tr><td>Bellek tüketimi</td><td>Yüksek</td><td>Düşük</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="bolum11-4"></div>
+        <h3>11.4. PyTorch ile Pretrained Object Detection</h3>
+
+        <p>
+          Object detection modellerini sıfırdan eğitmek karmaşık ve veri-yoğundur (COCO veri seti
+          120K görüntü içerir). Pratikte pretrained modeller kullanılır.
+        </p>
+
+        <h4>Yöntem A — torchvision.models.detection</h4>
+
+        <div class="code-label">Python — Faster R-CNN ile pretrained tespit</div>
+<pre><code>import torch
+from torchvision.models.detection import (
+    fasterrcnn_resnet50_fpn,
+    FasterRCNN_ResNet50_FPN_Weights
+)
+from torchvision.transforms.functional import to_tensor
+from PIL import Image
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+# COCO üzerinde pretrained model
+weights = FasterRCNN_ResNet50_FPN_Weights.DEFAULT
+model = fasterrcnn_resnet50_fpn(weights=weights)
+model.eval()
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
+
+# COCO sınıf isimleri
+COCO_SINIFLARI = weights.meta['categories']
+# ['__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', ...]
+
+# Görüntüyü hazırla
+img_pil = Image.open('sokak_sahnesi.jpg').convert('RGB')
+img_tensor = to_tensor(img_pil).to(device)   # Normalizasyon model içinde
+
+# Çıkarım
+with torch.no_grad():
+    tahminler = model([img_tensor])    # Liste — birden fazla görüntü desteklenir
+
+# tahminler[0] içeriği: dict(boxes, labels, scores)
+tahmin = tahminler[0]
+boxes  = tahmin['boxes'].cpu().numpy()     # (N, 4) — xyxy formatı
+labels = tahmin['labels'].cpu().numpy()    # (N,)
+scores = tahmin['scores'].cpu().numpy()    # (N,)
+
+# Güven eşiği
+GUVEN_ESIK = 0.7
+mask = scores >= GUVEN_ESIK
+boxes, labels, scores = boxes[mask], labels[mask], scores[mask]
+
+print(f"Tespit edilen nesne sayısı: {len(boxes)}")
+for box, label, score in zip(boxes, labels, scores):
+    print(f"  {COCO_SINIFLARI[label]:20s} ({score:.3f}) - "
+          f"konum: ({box[0]:.0f}, {box[1]:.0f}) → ({box[2]:.0f}, {box[3]:.0f})")
+
+# ━━━ Görselleştir ━━━
+fig, ax = plt.subplots(1, 1, figsize=(12, 9))
+ax.imshow(img_pil)
+
+renkler = plt.cm.tab10.colors
+for box, label, score in zip(boxes, labels, scores):
+    x1, y1, x2, y2 = box
+    w, h = x2 - x1, y2 - y1
+    
+    renk = renkler[label % 10]
+    rect = patches.Rectangle(
+        (x1, y1), w, h,
+        linewidth=2.5, edgecolor=renk, facecolor='none'
+    )
+    ax.add_patch(rect)
+    ax.text(
+        x1, y1 - 8,
+        f'{COCO_SINIFLARI[label]} {score:.2f}',
+        bbox=dict(facecolor=renk, alpha=0.85, edgecolor='none'),
+        fontsize=10, color='white', fontweight='bold'
+    )
+
+ax.axis('off')
+ax.set_title(f'Object Detection — {len(boxes)} nesne tespit edildi',
+              fontsize=14)
+plt.tight_layout()
+plt.savefig('detection_sonuc.png', dpi=150, bbox_inches='tight')
+plt.show()
+</code></pre>
+
+        <h4>Yöntem B — Ultralytics YOLOv8</h4>
+
+        <p>
+          YOLOv8, Ultralytics tarafından geliştirilen modern ve kullanımı çok kolay bir kütüphanedir.
+          Tek satırda detection, segmentation, classification, pose estimation yapabilir.
+        </p>
+
+        <div class="code-label">Python — YOLOv8 ile detection (sadece birkaç satır!)</div>
+<pre><code># Kurulum: pip install ultralytics
+from ultralytics import YOLO
+
+# Pretrained model yükle (COCO üzerinde eğitilmiş)
+# 'n' nano (en hızlı), 's' small, 'm' medium, 'l' large, 'x' extra large
+model = YOLO('yolov8n.pt')      # ~3.2MB, çok hızlı
+
+# Tek bir görüntü
+sonuclar = model('sokak_sahnesi.jpg')
+
+for sonuc in sonuclar:
+    boxes = sonuc.boxes
+    print(f"Tespit edilen nesne: {len(boxes)}")
+    
+    for box in boxes:
+        sinif_id = int(box.cls[0])
+        sinif_adi = model.names[sinif_id]
+        guven = float(box.conf[0])
+        x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+        print(f"  {sinif_adi:15s} ({guven:.2f}): "
+              f"({x1:.0f}, {y1:.0f}) → ({x2:.0f}, {y2:.0f})")
+    
+    # Doğrudan çiz ve kaydet
+    annoted = sonuc.plot()
+    cv2.imwrite('yolo_sonuc.jpg', annoted)
+
+# Video üzerinde gerçek zamanlı tespit
+# model.predict(source='video.mp4', save=True)
+# Webcam: model.predict(source=0, show=True)
+
+# Kendi veri setinizde fine-tune
+# model.train(data='custom_dataset.yaml', epochs=50, imgsz=640)
+</code></pre>
+
+        <div class="success">
+          <strong>Object detection için pratik kılavuz:</strong>
+          <ul>
+            <li><strong>Sıfırdan eğitmeyin (özel veri seti şart değilse):</strong> COCO pretrained
+            modeller pek çok pratik problem için yeterli.</li>
+            <li><strong>Kendi sınıflarınızla fine-tune:</strong> Eğer COCO'da olmayan nesneler
+            tespit edeceksiniz (örn. tıbbi anomali, endüstriyel kusur), pretrained backbone
+            ile başlayın, kendi etiketli verinizle fine-tune edin.</li>
+            <li><strong>Etiketleme araçları:</strong> Roboflow, CVAT, LabelImg — bounding box
+            etiketlemesi için.</li>
+            <li><strong>Hız vs doğruluk:</strong> Gerçek zamanlı uygulamalarda YOLO ailesi,
+            yüksek hassasiyet gerektiren ofline analizde Faster R-CNN veya DETR.</li>
+            <li><strong>YOLOv8 + Ultralytics:</strong> Hızlı prototip, kolay deployment, iyi dokümantasyon.
+            Çoğu projede mantıklı başlangıç.</li>
+          </ul>
+        </div>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Sokak sahnesi: birden fazla insan, araba, bisiklet bounding box'ları ile etiketlenmiş. Her kutunun üstünde sınıf adı ve güven skoru. Farklı sınıflar farklı renklerle.</div>
+      </section>
+
+      <!-- ─── BÖLÜM 12 ─── -->
+      <section class="card fade" id="bolum12">
+        <h2 class="section-title">12. Pratik Notlar ve Yaygın Hatalar</h2>
+
+        <p class="lead serif">
+          CNN eğitimi, teorik bilgi kadar pratik tecrübe gerektirir. Bu bölüm, üretim ve araştırma
+          ortamlarında en sık karşılaşılan hataları ve bunların çözümlerini derliyor. Bu liste,
+          öğrencilerin saatlerce hata ayıklamasına engel olabilecek kontrol listesi niteliğindedir.
+        </p>
+
+        <h3>12.1. Veri pipeline'ında yaygın hatalar</h3>
+
+        <div class="kv-row">
+          <div class="kv-key">❌ Normalizasyon unutmak</div>
+          <div class="kv-val">Pretrained model kullanırken ImageNet normalizasyon değerlerini
+          uygulamamak. Model çok kötü performans gösterir ama "neden" hemen anlaşılmaz.
+          <br><strong>Çözüm:</strong> Her zaman <code>transforms.Normalize(mean, std)</code> ekle.
+          Pretrained kullanıyorsan modelin beklediği değerleri kullan.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Validation'a augmentation</div>
+          <div class="kv-val">Eğitim ve doğrulama için aynı transform'u kullanmak. Validation
+          augmentation yapılırsa sonuç gürültülü ve yanıltıcı olur.
+          <br><strong>Çözüm:</strong> Eğitim ve val için ayrı transform tanımla. Val'da sadece
+          Resize, CenterCrop, ToTensor, Normalize.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Veri sızıntısı (data leakage)</div>
+          <div class="kv-val">Train/val bölünmesini augmentation veya scaling işlemlerinden
+          <em>sonra</em> yapmak. Test seti istatistikleri eğitime sızar.
+          <br><strong>Çözüm:</strong> Önce böl, sonra her bölme için ayrı transform/scaler kur.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Sınıf dengesizliğini görmezden gelmek</div>
+          <div class="kv-val">90% normal, 10% hasta olan veride %90 doğruluk hiçbir şey ifade etmez.
+          <br><strong>Çözüm:</strong> Class weights, oversampling (SMOTE), undersampling, focal
+          loss veya WeightedRandomSampler kullan. Confusion matrix mutlaka raporla.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Yanlış channel sırası</div>
+          <div class="kv-val">PyTorch tensorlarda kanal dizilimi (C, H, W) — yani channel-first.
+          Bazı kütüphaneler ve OpenCV (H, W, C) — channel-last. Karıştırırsan model gürültü görür.
+          <br><strong>Çözüm:</strong> <code>torchvision.transforms.ToTensor()</code> otomatik
+          dönüştürür. OpenCV'den okurken <code>img.transpose(2,0,1)</code> gerekir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ BGR vs RGB karışıklığı</div>
+          <div class="kv-val">OpenCV BGR okur, PIL RGB okur. Pretrained modellerin çoğu RGB bekler.
+          <br><strong>Çözüm:</strong> <code>cv2.cvtColor(img, cv2.COLOR_BGR2RGB)</code> veya
+          PIL kullan.</div>
+        </div>
+
+        <h3>12.2. Eğitim sürecinde yaygın hatalar</h3>
+
+        <div class="kv-row">
+          <div class="kv-key">❌ Çok yüksek learning rate</div>
+          <div class="kv-val">Loss NaN'a gider veya hiç azalmaz. Patlayan gradyanlar.
+          <br><strong>Çözüm:</strong> LR'ı 10x küçült. Adam için 1e-3, SGD için 1e-2 başlangıç değeridir.
+          Pretrained fine-tuning'de 1e-4 veya 1e-5.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Çok düşük learning rate</div>
+          <div class="kv-val">Loss son derece yavaş azalır, eğitim başarısız görünür.
+          <br><strong>Çözüm:</strong> LR'ı 10x büyüt. PyTorch <code>lr_finder</code> kullanılabilir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ <code>model.eval()</code> unutmak</div>
+          <div class="kv-val">Validation ve inference sırasında BatchNorm batch istatistikleri
+          kullanır (yanlış!), Dropout aktif kalır. Sonuçlar gürültülü olur.
+          <br><strong>Çözüm:</strong> Validation/test başında <code>model.eval()</code>, eğitim
+          başında <code>model.train()</code>.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ <code>optimizer.zero_grad()</code> unutmak</div>
+          <div class="kv-val">Gradyanlar her batch'te birikir, modelin davranışı bozulur.
+          <br><strong>Çözüm:</strong> Her batch'in başında zorunlu olarak çağır.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ <code>torch.no_grad()</code> kullanmamak</div>
+          <div class="kv-val">Validation sırasında gereksiz yere gradyan hesaplanır. Bellek artar,
+          işlem yavaşlar.
+          <br><strong>Çözüm:</strong> Inference için <code>with torch.no_grad():</code> bloğu kullan.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Validasyon yokluğu</div>
+          <div class="kv-val">Sadece eğitim doğruluğunu izlemek. Overfit'e gidişin farkına varılmaz.
+          <br><strong>Çözüm:</strong> Her epoch sonunda validation setinde de değerlendir, eğrileri çiz.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Batch size'ı GPU sınırına dayamak</div>
+          <div class="kv-val">CUDA out-of-memory hatası alıp eğitim çöker.
+          <br><strong>Çözüm:</strong> Batch size'ı yarıya indir. Ya da
+          <code>torch.cuda.amp</code> ile mixed precision (FP16) kullan.</div>
+        </div>
+
+        <h3>12.3. Model tasarımında hatalar</h3>
+
+        <div class="kv-row">
+          <div class="kv-key">❌ BN'den önce/sonra bias</div>
+          <div class="kv-val">Conv → BN sırasında Conv'da bias gereksizdir; BN onu nötrler ama
+          parametre israfı.
+          <br><strong>Çözüm:</strong> <code>nn.Conv2d(..., bias=False)</code> + BatchNorm.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Padding hesaplaması</div>
+          <div class="kv-val">3×3 conv için padding=1 = "same". 5×5 için padding=2.
+          Yanlış padding görüntüyü her katmanda küçültür ve final FC katmanı yanlış hesaplanır.
+          <br><strong>Çözüm:</strong> Genel formül P = (K-1)/2. Tensor şekillerini bir test girdisi ile doğrula.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ FC katmanı önünde flatten unutmak</div>
+          <div class="kv-val">Conv çıktısı 4D (N, C, H, W), FC 2D (N, F) bekler.
+          <br><strong>Çözüm:</strong> <code>nn.Flatten()</code> veya <code>x.view(x.size(0), -1)</code>.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ CrossEntropyLoss + Softmax çift uygulaması</div>
+          <div class="kv-val">PyTorch <code>nn.CrossEntropyLoss</code> kendi içinde softmax+log
+          uygular. Modelin son katmanına softmax koyarsan çifte uygulanır, gradyan bozulur.
+          <br><strong>Çözüm:</strong> Model son katmanı raw logits versin (aktivasyonsuz), kayıp fonksiyonu
+          softmax'ı dahili uygulasın. Inference sırasında softmax dış sarmaya gerek var.</div>
+        </div>
+
+        <h3>12.4. Hızlı debug kontrol listesi</h3>
+
+        <div class="exercise">
+          Eğitiminiz yolunda gitmiyorsa, şu sırayla kontrol edin:
+          <ol>
+            <li><strong>Tek bir batch'i overfit edebiliyor musunuz?</strong> Çok küçük bir alt küme
+            (4-8 örnek) alın ve modelin %100 doğruluğa ulaşmasını bekleyin. Olmuyorsa model veya
+            kayıp fonksiyonunda hata vardır.</li>
+            <li><strong>Loss başlangıçta makul mü?</strong> N sınıflı sınıflandırmada ilk loss
+            ≈ ln(N) olmalı (10 sınıf → ~2.3). Çok farklıysa initialization veya forward'da hata.</li>
+            <li><strong>Train loss düşüyor mu?</strong> Düşmüyorsa: LR yanlış, model çok küçük,
+            veri yanlış yüklendi.</li>
+            <li><strong>Train düşüyor, val artıyor:</strong> Overfit. Augmentation, dropout, weight
+            decay, daha fazla veri ekle.</li>
+            <li><strong>İkisi de düşük plateau:</strong> Underfit. Daha büyük model, daha fazla epoch,
+            farklı LR scheduling dene.</li>
+            <li><strong>Validation gürültülü:</strong> Val seti çok küçük olabilir. K-fold CV veya
+            daha büyük val seti.</li>
+            <li><strong>Tahminler tek sınıf:</strong> Sınıf dengesizliği. Class weights ekleyin.</li>
+          </ol>
+        </div>
+
+        <div class="warning">
+          <strong>Pro ipucu — "İlk önce küçük çalıştır":</strong> Yeni bir CNN projesi başlatırken
+          önce çok küçük bir alt küme (50-100 örnek) ile birkaç epoch koş. Tüm pipeline'ın
+          (veri yükleme → model → kayıp → optimizer → değerlendirme) çalıştığını doğrula. Sonra
+          tam veri ile başla. Bu yaklaşım saatlerce hata ayıklamayı engeller.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 13 ─── -->
+      <section class="card fade" id="bolum13">
+        <h2 class="section-title">13. Öğretim Notları ve Bu Haftanın Özeti</h2>
+
+        <div class="teaching">
+          <strong>Kavramsal sıralama önerisi:</strong>
+          <p>CNN'leri anlatırken işe yarayan sıralama:</p>
+          <ol>
+            <li>Önce <em>"MLP neden yetersiz?"</em> sorusunu somutlaştır — 224×224 RGB için
+            parametre hesabını canlı yap.</li>
+            <li><em>Sobel/Gaussian'ı hatırlat</em> — öğrenciler zaten konvolüsyonu biliyor, ama
+            farkında değiller. Bu köprüyü kuran an, "aha" anıdır.</li>
+            <li>Konvolüsyonu adım adım, küçük bir matris üzerinde elle hesaplat.</li>
+            <li>Padding/stride'ı boyut formülüyle tabloya dök, 4-5 farklı senaryo göster.</li>
+            <li>Hiyerarşik öğrenmeyi gerçek filtre görselleştirmesi (AlexNet'in ilk katmanı)
+            ile destekle.</li>
+            <li>İlk uygulamayı (CIFAR-10) hep birlikte adım adım yaz; her satırın ne yaptığını sor.</li>
+            <li>Transfer learning'i "ekonomik akıl" olarak sun: pretrained ağırlıklar bedava bilgi.</li>
+            <li>Grad-CAM'i tıbbi örnekle göster — "kara kutu" eleştirisini doğrudan çürüten görsel.</li>
+            <li>Object detection'ı sınıflandırmadan farkıyla tanıt; YOLOv8'i 5 satır kodda göster — "vay" anı.</li>
+          </ol>
+        </div>
+
+        <h3>13.1. Bu haftanın anahtar mesajları</h3>
+
+        <div class="grid2">
+          <div class="mini green">
+            <h4>✅ MLP'den CNN'e</h4>
+            <p>CNN, MLP'nin görüntüde başarısız olduğu üç noktayı (uzamsal yapı kaybı, translasyon
+            duyarlılığı, parametre patlaması) yerel bağlantı ve parametre paylaşımıyla aynı anda çözer.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Klasik filtreler artık öğreniliyor</h4>
+            <p>Sobel, Gaussian, Laplacian gibi elle tasarlanmış filtreler kayıp olmadı.
+            CNN bu kavramı genişletti: filtre değerleri artık veriden öğrenilebilir parametrelerdir.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Hiyerarşik özellik öğrenimi</h4>
+            <p>Kenar → doku → parça → nesne. Bu hiyerarşi modele dayatılmaz; mimarinin yan etkisi olarak ortaya çıkar.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Transfer learning standarttır</h4>
+            <p>Üretim projelerinin %80+'ı pretrained backbone üzerine kuruludur. Sıfırdan
+            eğitmek genellikle israftır.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Tıp gibi alanlarda açıklanabilirlik şart</h4>
+            <p>Grad-CAM, modelin kararını görsel olarak doğrular. Yüksek doğruluk yetmez;
+            "neden" bilgisi de gerekir.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Object detection ayrı bir paradigmadır</h4>
+            <p>Sınıflandırma + lokalizasyon birleşimi. R-CNN ailesi (yüksek doğruluk),
+            YOLO ailesi (yüksek hız). Pretrained modeller pratiktir.</p>
+          </div>
+        </div>
+
+        <h3>13.2. İleri haftalara köprü</h3>
+
+        <div class="highlight">
+          <p>Bu hafta öğrendikleriniz şu konulara doğrudan zemin hazırlar:</p>
+          <ul>
+            <li><strong>Vision Transformer (haftaya):</strong> CNN'in alternatifi. Convolution yerine
+            self-attention kullanır. Uzun menzilli bağımlılıkları daha iyi öğrenir.</li>
+            <li><strong>Semantic Segmentation:</strong> Object detection bounding box, segmentasyon piksel
+            seviyesinde sınıflandırır. U-Net mimarisi tıbbi görüntüde standarttır.</li>
+            <li><strong>Generative modeller:</strong> GAN, VAE, Diffusion. CNN'i tersine çalıştırarak
+            görüntü üretir.</li>
+            <li><strong>Self-supervised learning:</strong> Etiketsiz veriden özellik öğrenimi.
+            SimCLR, MAE, DINO gibi yöntemler.</li>
+            <li><strong>Multi-modal modeller:</strong> CLIP, BLIP. Görüntü ve metni ortak gömme uzayında
+            işler.</li>
+          </ul>
+        </div>
+
+        <h3>13.3. Ödevler ve Alıştırmalar</h3>
+
+        <div class="exercise">
+          <strong>Temel Seviye:</strong>
+          <ol>
+            <li>CIFAR-10 modelini augmentation olmadan eğitin. Test doğruluğunu raporlayın.
+            Augmentation eklenmiş haliyle karşılaştırın. Eğitim ve val eğrilerinin nasıl değiştiğini
+            grafik üzerinde tartışın.</li>
+            <li>VGG-stili CIFAR-10 modeline 1 conv bloğu daha ekleyin (4 blok). Parametre sayısı
+            ve doğruluk nasıl değişti? Receptive field hesabını yapın.</li>
+            <li>Bir görüntüye Sobel X, Sobel Y ve Laplacian filtrelerini PyTorch <code>F.conv2d</code>
+            ile elle uygulayın. Çıktıları yan yana görselleştirin.</li>
+          </ol>
+
+          <strong>Orta Seviye:</strong>
+          <ol start="4">
+            <li>CIFAR-10 üzerinde aşağıdaki üç mimariyi karşılaştırın: (a) Kendi VGG-stili, (b)
+            ResNet18 sıfırdan, (c) Pretrained ResNet18 fine-tune. Eğitim süresi, parametre sayısı
+            ve test doğruluğu tablosu hazırlayın.</li>
+            <li>Pnömoni modelinde sınıf eşiğini 0.1, 0.3, 0.5, 0.7, 0.9 olarak değiştirin. Her
+            eşik için confusion matrix, recall, precision değerlerini raporlayın.
+            Hangi eşik tarama amacıyla en uygundur?</li>
+            <li>Pnömoni modeli için 5 farklı doğru ve 5 farklı yanlış tahmini Grad-CAM ile görselleştirin.
+            Modelin yanlış tahmin yaptığı durumlarda nereye baktığını analiz edin.</li>
+          </ol>
+
+          <strong>İleri Seviye:</strong>
+          <ol start="7">
+            <li>Cifar-10 üzerinde Mixup ve CutMix uygulayın. Standart augmentation ile karşılaştırın.
+            Modelin "tutuk" mu yoksa daha iyi mi olduğu üzerine yazılı bir analiz yapın.</li>
+            <li>Kendi seçtiğiniz bir kategori (ör. yaprak hastalıkları, üzüm türleri, kuş türleri)
+            için 200-500 görüntülük bir veri seti toplayın. Pretrained ResNet50 ile fine-tune yapın.
+            Sonuçları raporlayın.</li>
+            <li>YOLOv8'i kendi etiketlediğiniz custom dataset üzerinde fine-tune edin. Roboflow ile
+            etiketleyebilirsiniz. mAP@0.5 değerini raporlayın ve bir video üzerinde test edin.</li>
+            <li>Bir CNN modelinin t-SNE veya UMAP ile son katman aktivasyonlarını 2D'ye projekte
+            edin. Sınıfların kümelenip kümelenmediğini görsel olarak inceleyin.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ─── ATIFLAR ─── -->
+      <section class="card fade" id="atiflar">
+        <h2 class="section-title">Atıflar ve Temel Kaynaklar</h2>
+        <ol class="footnotes">
+          <li>Hubel, D. H., & Wiesel, T. N. (1962). Receptive fields, binocular interaction
+          and functional architecture in the cat's visual cortex. <em>The Journal of Physiology</em>, 160(1), 106-154.</li>
+          <li>Fukushima, K. (1980). Neocognitron: A self-organizing neural network model for a
+          mechanism of pattern recognition unaffected by shift in position.
+          <em>Biological Cybernetics</em>, 36(4), 193-202.</li>
+          <li>LeCun, Y., Bottou, L., Bengio, Y., & Haffner, P. (1998). Gradient-based learning
+          applied to document recognition. <em>Proceedings of the IEEE</em>, 86(11), 2278-2324.</li>
+          <li>Krizhevsky, A., Sutskever, I., & Hinton, G. E. (2012). ImageNet classification with
+          deep convolutional neural networks. <em>NeurIPS 2012</em>.</li>
+          <li>Simonyan, K., & Zisserman, A. (2014). Very deep convolutional networks for large-scale
+          image recognition. <em>arXiv:1409.1556</em>.</li>
+          <li>Szegedy, C., Liu, W., Jia, Y., et al. (2015). Going deeper with convolutions.
+          <em>CVPR 2015</em> (GoogLeNet/Inception).</li>
+          <li>He, K., Zhang, X., Ren, S., & Sun, J. (2016). Deep residual learning for image
+          recognition. <em>CVPR 2016</em>.</li>
+          <li>Huang, G., Liu, Z., Van Der Maaten, L., & Weinberger, K. Q. (2017). Densely connected
+          convolutional networks. <em>CVPR 2017</em>.</li>
+          <li>Howard, A. G., et al. (2017). MobileNets: Efficient convolutional neural networks
+          for mobile vision applications. <em>arXiv:1704.04861</em>.</li>
+          <li>Tan, M., & Le, Q. (2019). EfficientNet: Rethinking model scaling for convolutional
+          neural networks. <em>ICML 2019</em>.</li>
+          <li>Girshick, R., Donahue, J., Darrell, T., & Malik, J. (2014). Rich feature hierarchies
+          for accurate object detection and semantic segmentation. <em>CVPR 2014</em> (R-CNN).</li>
+          <li>Ren, S., He, K., Girshick, R., & Sun, J. (2015). Faster R-CNN: Towards real-time
+          object detection with region proposal networks. <em>NeurIPS 2015</em>.</li>
+          <li>Redmon, J., Divvala, S., Girshick, R., & Farhadi, A. (2016). You only look once:
+          Unified, real-time object detection. <em>CVPR 2016</em> (YOLO).</li>
+          <li>Selvaraju, R. R., et al. (2017). Grad-CAM: Visual explanations from deep networks
+          via gradient-based localization. <em>ICCV 2017</em>.</li>
+          <li>Zeiler, M. D., & Fergus, R. (2014). Visualizing and understanding convolutional
+          networks. <em>ECCV 2014</em>.</li>
+          <li>Zhang, H., Cisse, M., Dauphin, Y. N., & Lopez-Paz, D. (2018). mixup: Beyond
+          empirical risk minimization. <em>ICLR 2018</em>.</li>
+          <li>Yun, S., et al. (2019). CutMix: Regularization strategy to train strong classifiers
+          with localizable features. <em>ICCV 2019</em>.</li>
+          <li>Kermany, D. S., et al. (2018). Identifying medical diagnoses and treatable diseases
+          by image-based deep learning. <em>Cell</em>, 172(5), 1122-1131. (Pneumonia Dataset)</li>
+        </ol>
+      </section>
+
+      <!-- ─── KAYNAKLAR ─── -->
+      <section class="card fade" id="kaynaklar">
+        <h2 class="section-title">Daha Ayrıntılı Kaynaklar</h2>
+
+        <h3>📚 Temel Kitaplar</h3>
+        <ul class="resources">
+          <li><a href="https://www.deeplearningbook.org/" target="_blank">Goodfellow, Bengio & Courville — Deep Learning</a> — 9. bölüm CNN'lere ayrılmıştır.</li>
+          <li><a href="https://d2l.ai/" target="_blank">Zhang vd. — Dive into Deep Learning</a> — CNN bölümleri PyTorch kodlarıyla.</li>
+          <li>Szeliski, R. (2022). <em>Computer Vision: Algorithms and Applications</em>, 2nd ed. Springer. — Klasik görüntü işleme ile derin öğrenmeyi köprüleyen referans.</li>
+          <li>Howard, J., & Gugger, S. (2020). <em>Deep Learning for Coders with fastai and PyTorch</em>. O'Reilly. — Pratik odaklı.</li>
+        </ul>
+
+        <h3>🎓 Online Kurslar</h3>
+        <ul class="resources">
+          <li><a href="https://cs231n.github.io/" target="_blank">Stanford CS231n — Convolutional Neural Networks for Visual Recognition</a> — CNN'in altın standart kursu. Notlar açık erişimde.</li>
+          <li><a href="https://www.coursera.org/learn/convolutional-neural-networks" target="_blank">Andrew Ng — Convolutional Neural Networks (Coursera)</a> — Deep Learning Specialization'ın 4. kursu.</li>
+          <li><a href="https://course.fast.ai/" target="_blank">fast.ai — Practical Deep Learning</a> — Top-down öğretim, hızla pratik uygulamaya geçiş.</li>
+          <li><a href="https://www.youtube.com/c/YannicKilcher" target="_blank">Yannic Kilcher YouTube</a> — CNN paper review'ları için harika kaynak.</li>
+        </ul>
+
+        <h3>🛠️ PyTorch ve Kütüphaneler</h3>
+        <ul class="resources">
+          <li><a href="https://pytorch.org/vision/stable/index.html" target="_blank">torchvision dokümantasyonu</a> — Models, transforms, datasets.</li>
+          <li><a href="https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html" target="_blank">PyTorch CIFAR-10 Tutorial</a></li>
+          <li><a href="https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html" target="_blank">Transfer Learning Tutorial</a></li>
+          <li><a href="https://github.com/jacobgil/pytorch-grad-cam" target="_blank">pytorch-grad-cam</a> — Hazır Grad-CAM kütüphanesi.</li>
+          <li><a href="https://albumentations.ai/" target="_blank">Albumentations</a> — Hızlı ve güçlü augmentation kütüphanesi.</li>
+          <li><a href="https://docs.ultralytics.com/" target="_blank">Ultralytics YOLOv8 dokümantasyonu</a></li>
+          <li><a href="https://github.com/rwightman/pytorch-image-models" target="_blank">timm (PyTorch Image Models)</a> — 700+ pretrained model.</li>
+        </ul>
+
+        <h3>📊 Veri Setleri</h3>
+        <ul class="resources">
+          <li><a href="https://www.cs.toronto.edu/~kriz/cifar.html" target="_blank">CIFAR-10/100</a> — Klasik 32×32 sınıflandırma benchmark'ı.</li>
+          <li><a href="https://image-net.org/" target="_blank">ImageNet</a> — 1000 sınıf, 1.2M görüntü.</li>
+          <li><a href="https://cocodataset.org/" target="_blank">COCO</a> — Object detection ve segmentation için standart.</li>
+          <li><a href="https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia" target="_blank">Chest X-Ray Pneumonia (Kaggle)</a></li>
+          <li><a href="https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000" target="_blank">HAM10000 (Skin Lesions)</a> — 10K dermatoskopik görüntü.</li>
+          <li><a href="https://www.kaggle.com/datasets/tongpython/cat-and-dog" target="_blank">Cats vs Dogs</a> — Klasik transfer learning örneği.</li>
+          <li><a href="https://www.kaggle.com/datasets/vipoooool/new-plant-diseases-dataset" target="_blank">Plant Diseases</a> — 38 sınıf bitki hastalığı.</li>
+        </ul>
+
+        <h3>📄 Makalelere Doğrudan Erişim</h3>
+        <ul class="resources">
+          <li>AlexNet: <a href="https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html" target="_blank">papers.nips.cc</a></li>
+          <li>VGG: <a href="https://arxiv.org/abs/1409.1556" target="_blank">arxiv.org/abs/1409.1556</a></li>
+          <li>ResNet: <a href="https://arxiv.org/abs/1512.03385" target="_blank">arxiv.org/abs/1512.03385</a></li>
+          <li>YOLO v1: <a href="https://arxiv.org/abs/1506.02640" target="_blank">arxiv.org/abs/1506.02640</a></li>
+          <li>Grad-CAM: <a href="https://arxiv.org/abs/1610.02391" target="_blank">arxiv.org/abs/1610.02391</a></li>
+          <li>Faster R-CNN: <a href="https://arxiv.org/abs/1506.01497" target="_blank">arxiv.org/abs/1506.01497</a></li>
+          <li>EfficientNet: <a href="https://arxiv.org/abs/1905.11946" target="_blank">arxiv.org/abs/1905.11946</a></li>
+        </ul>
+
+        <h3>🎨 Görsel ve İnteraktif Kaynaklar</h3>
+        <ul class="resources">
+          <li><a href="https://poloclub.github.io/cnn-explainer/" target="_blank">CNN Explainer</a> — Tarayıcıda interaktif CNN görselleştirmesi. Eğitimde mutlaka göstermeniz gereken bir araç.</li>
+          <li><a href="https://distill.pub/2017/feature-visualization/" target="_blank">Distill — Feature Visualization</a> — Filtre görselleştirmesi makalesi.</li>
+          <li><a href="https://yosinski.com/deepvis" target="_blank">Deep Visualization Toolbox</a></li>
+          <li><a href="https://playground.tensorflow.org/" target="_blank">TensorFlow Playground</a> — Sinir ağı eğitimi sezgisi için (CNN olmasa da).</li>
+        </ul>
+      </section>
+
+    </main><!-- /content -->
+  </div><!-- /layout -->
+
+  <footer class="footer">
+    <p>Derin Öğrenme ile Görüntü İşleme &nbsp;·&nbsp; 10. Hafta Ders Notu</p>
+    <p>Yapay Sinir Ağlarından Konvolüsyonel Sinir Ağlarına — Görüntü İçin Tasarlanmış Mimari</p>
+    <a href="#top" class="backtop">↑ Sayfanın başına dön</a>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    }),
+    { threshold: 0.06 }
+  );
+  document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

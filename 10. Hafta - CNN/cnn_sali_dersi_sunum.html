@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CNN - 3 Saatlik Ders Sunumu</title>
+<style>
+:root{
+  --bg:#07111f; --ink:#0f172a; --muted:#526174;
+  --blue:#1d4ed8; --green:#0f766e; --purple:#6d28d9;
+  --orange:#c2410c; --rose:#be123c; --amber:#b45309;
+  --line:#d8e2ee;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  background:radial-gradient(circle at 20% 0%,#123b70 0,transparent 34%),
+             radial-gradient(circle at 95% 20%,#43246f 0,transparent 32%),var(--bg);
+  font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink);
+}
+.deck{height:100vh;display:grid;place-items:center;padding:26px}
+.slide{
+  display:none;width:min(96vw,1400px);height:min(92vh,790px);
+  background:linear-gradient(180deg,#fff,#f8fbff);
+  border-radius:28px;box-shadow:0 28px 85px rgba(0,0,0,.35);
+  padding:44px 54px;position:relative;overflow:hidden;
+}
+.slide.active{display:flex;flex-direction:column}
+.slide:after{
+  content:attr(data-sec);position:absolute;right:34px;top:24px;
+  color:#94a3b8;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+}
+h1{font-size:58px;line-height:1.05;letter-spacing:-.04em;margin:0 0 16px;color:#0b1b33}
+h2{font-size:42px;line-height:1.12;letter-spacing:-.03em;margin:0 0 20px;color:#0b1b33}
+h3{font-size:26px;margin:0 0 12px;color:var(--blue)}
+p,li{font-size:23px;line-height:1.42}
+li{margin:8px 0}
+.lead{font-size:28px;line-height:1.36;color:#26364b}
+.center{flex:1;display:grid;place-items:center;text-align:center}
+.kicker{display:inline-flex;padding:8px 14px;border-radius:999px;background:#dbeafe;color:#17458f;font-weight:900;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{
+  border:1px solid var(--line);border-radius:22px;background:#fff;
+  padding:21px 23px;box-shadow:0 12px 30px rgba(15,23,42,.06)
+}
+.card p,.card li{font-size:20px}
+.blue{background:linear-gradient(180deg,#eff6ff,#fff);border-color:#bfdbfe}
+.green{background:linear-gradient(180deg,#ecfdf5,#fff);border-color:#99f6e4}
+.purple{background:linear-gradient(180deg,#f5f3ff,#fff);border-color:#c4b5fd}
+.orange{background:linear-gradient(180deg,#fff7ed,#fff);border-color:#fed7aa}
+.rose{background:linear-gradient(180deg,#fff1f2,#fff);border-color:#fecdd3}
+.amber{background:linear-gradient(180deg,#fffbeb,#fff);border-color:#fde68a}
+.formula{
+  font-family:Georgia,serif;background:#f8fafc;border:1px dashed #9fb4cd;
+  border-radius:18px;padding:18px 22px;font-size:27px;line-height:1.5;margin:12px 0
+}
+.callout{
+  border-left:7px solid var(--blue);background:#eff6ff;padding:18px 22px;
+  border-radius:18px;margin-top:18px;font-size:22px
+}
+pre{
+  background:#0f172a;color:#dbeafe;border-radius:18px;padding:18px 20px;
+  font-family:Consolas,monospace;font-size:18px;line-height:1.48;
+  white-space:pre-wrap;overflow:auto;max-height:430px
+}
+.flow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px 0}
+.flow div{
+  padding:14px 17px;border-radius:16px;border:1px solid #bfdbfe;
+  background:#eff6ff;font-weight:900;color:#17458f;text-align:center
+}
+.flow b{font-size:34px;color:#38bdf8}
+.matrix{
+  display:grid;grid-template-columns:repeat(3,74px);gap:6px;
+  justify-content:center;margin:10px 0
+}
+.matrix span{
+  background:#1e293b;color:white;border-radius:10px;text-align:center;
+  padding:13px 6px;font-size:24px;font-family:Consolas,monospace
+}
+.matrix .hi{background:#2563eb}
+.big{font-size:78px;font-weight:900;color:#1d4ed8;line-height:1}
+.agenda{display:grid;grid-template-columns:1fr;gap:10px}
+.agenda div{
+  display:grid;grid-template-columns:120px 1fr;gap:14px;
+  border-bottom:1px solid var(--line);padding:0 0 12px
+}
+.agenda b{color:#1d4ed8;font-size:22px}
+.agenda span{font-size:22px}
+.quiz{border:2px solid #f59e0b;background:#fffbeb;border-radius:24px;padding:24px}
+.timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.timeitem{padding:16px;border-radius:18px;border:1px solid var(--line);background:#fff}
+.timeitem b{display:block;font-size:24px;color:#0b1b33;margin-bottom:8px}
+.timeitem p{font-size:18px;line-height:1.35}
+.note{
+  display:none;position:absolute;left:54px;right:54px;bottom:58px;
+  background:#0f172a;color:#e2e8f0;border-radius:18px;padding:16px 20px;
+  font-size:18px;line-height:1.45;box-shadow:0 20px 50px rgba(0,0,0,.28);
+  max-height:210px;overflow:auto;z-index:3
+}
+.show-notes .note{display:block}
+.footer{
+  position:absolute;left:54px;right:54px;bottom:22px;
+  display:flex;justify-content:space-between;color:#64748b;font-size:14px
+}
+.progress{
+  position:fixed;left:0;bottom:0;height:6px;width:0;
+  background:linear-gradient(90deg,#38bdf8,#22c55e,#f59e0b);z-index:99
+}
+.controls{position:fixed;right:22px;bottom:18px;display:flex;gap:8px;z-index:100}
+button{
+  border:0;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.9);
+  font-weight:900;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18)
+}
+.overview{
+  overflow:auto;display:grid!important;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px;padding:24px
+}
+.overview .slide{
+  display:flex;width:auto;height:180px;padding:18px;border-radius:16px;cursor:pointer;overflow:hidden
+}
+.overview h1{font-size:24px}.overview h2{font-size:20px}.overview p,.overview li{font-size:11px}
+.overview .footer,.overview .note,.overview .slide:after{display:none}
+@media(max-width:900px){
+  .slide{padding:30px 26px;overflow:auto}
+  .grid2,.grid3,.grid4,.timeline{grid-template-columns:1fr}
+  h1{font-size:38px} h2{font-size:31px} p,li{font-size:19px}
+  .footer{left:26px;right:26px}.agenda div{grid-template-columns:1fr}
+}
+@media print{
+  html,body{overflow:visible;background:white}
+  .deck{display:block;height:auto;padding:0}
+  .slide{display:flex!important;width:100vw;height:100vh;page-break-after:always;box-shadow:none;border-radius:0}
+  .controls,.progress{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<section class="slide active" data-sec="Başlangıç">
+<div class="center"><div>
+<div class="kicker">Derin Öğrenme ile Görüntü İşleme • 3 Saatlik Ders</div>
+<h1>Konvolüsyonel Sinir Ağları<br>(CNN)</h1>
+<p class="lead">Klasik görüntü filtrelerinden öğrenilebilir filtrelere; kenardan dokuya, parçaya ve nesneye giden hiyerarşik görsel öğrenme.</p>
+<div class="flow"><div>Kenar</div><b>→</b><div>Doku</div><b>→</b><div>Parça</div><b>→</b><div>Nesne</div></div>
+</div></div>
+<div class="note"><b>Açılış:</b> CNN, bildiğiniz Sobel/Gaussian gibi filtrelerin veriden öğrenilebilir hale gelmesidir.</div>
+<div class="footer"><span>CNN Dersi</span><span>1 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Plan">
+<h2>3 saatlik akış</h2>
+<div class="agenda">
+<div><b>0–20 dk</b><span>Motivasyon: MLP neden görüntüde zorlanır?</span></div>
+<div><b>20–55 dk</b><span>Konvolüsyon: kernel, padding, stride, çıktı boyutu</span></div>
+<div><b>55–85 dk</b><span>CNN bileşenleri: Conv, ReLU, Pooling, BatchNorm, Receptive Field</span></div>
+<div><b>85–100 dk</b><span>Ara + mini hesap soruları</span></div>
+<div><b>100–135 dk</b><span>Tarihsel bağlam: Hubel-Wiesel, Neocognitron, LeNet, AlexNet, ResNet</span></div>
+<div><b>135–165 dk</b><span>PyTorch uygulaması: basit CNN, eğitim döngüsü, transfer learning</span></div>
+<div><b>165–180 dk</b><span>Grad-CAM, object detection, YOLO ve kapanış</span></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>2 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Hedefler">
+<h2>Dersin öğrenme hedefleri</h2>
+<div class="grid2">
+<div class="card blue"><h3>Kavramsal</h3><ul><li>CNN’in MLP’ye göre neden görüntüye uygun olduğunu açıklar.</li><li>Klasik filtreler ile öğrenilebilir CNN filtreleri arasındaki bağı kurar.</li><li>Hiyerarşik özellik öğrenimini yorumlar.</li></ul></div>
+<div class="card green"><h3>Teknik</h3><ul><li>Conv2d, MaxPool2d, BatchNorm2d katmanlarını okur.</li><li>Kernel, padding, stride ile çıktı boyutu hesaplar.</li><li>Basit PyTorch CNN yazabilir.</li></ul></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>3 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Motivasyon">
+<h2>Neden MLP görüntüler için doğal değildir?</h2>
+<div class="grid3">
+<div class="card rose"><h3>Uzamsal yapı kaybı</h3><p>Görüntü Flatten ile vektöre çevrilince piksel komşulukları kaybolur.</p></div>
+<div class="card rose"><h3>Konuma duyarlılık</h3><p>Nesne biraz kayarsa farklı piksel konumları aktif olur.</p></div>
+<div class="card rose"><h3>Parametre patlaması</h3><p>Yüksek çözünürlüklü görüntüde tam bağlı katman çok fazla ağırlık ister.</p></div>
+</div>
+<div class="callout"><b>Ana mesaj:</b> MLP görüntüyü sayı listesi gibi görür; CNN görüntünün 2B yapısını kullanır.</div>
+<div class="footer"><span>CNN Dersi</span><span>4 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Parametre">
+<h2>Parametre patlaması</h2>
+<p class="lead">224×224 RGB görüntü → 224×224×3 = 150.528 giriş değeri.</p>
+<div class="formula">150.528 × 1000 + 1000 = <b>150.529.000 parametre</b></div>
+<div class="grid2">
+<div class="card amber"><h3>MLP sonucu</h3><p>Tek katmanda yaklaşık 150 milyon parametre.</p></div>
+<div class="card green"><h3>CNN sonucu</h3><p>3×3 RGB kernel ve 32 filtre: <b>896</b> parametre.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>5 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="İki fikir">
+<h2>CNN’in iki kurucu fikri</h2>
+<div class="grid2">
+<div class="card blue"><h3>Yerel bağlantı</h3><p>Bir nöron görüntünün tamamına değil, küçük bir komşuluğa bakar.</p><div class="formula">3×3 komşuluk → 9 piksel</div></div>
+<div class="card purple"><h3>Parametre paylaşımı</h3><p>Aynı filtre görüntünün her konumunda kullanılır.</p><div class="formula">Aynı kernel → tüm görüntü</div></div>
+</div>
+<div class="callout">Az parametre + uzamsal yapıyı koruma + konuma daha dayanıklı temsil.</div>
+<div class="footer"><span>CNN Dersi</span><span>6 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Klasik Filtre">
+<h2>Klasik görüntü işleme ile köprü</h2>
+<p class="lead">Sobel, Gaussian, Laplacian ve Prewitt: hepsi küçük bir kernel’in görüntü üzerinde kaydırılmasıdır.</p>
+<div class="grid2">
+<div class="card orange"><h3>Sobel X</h3><div class="matrix"><span>-1</span><span>0</span><span class="hi">1</span><span>-2</span><span>0</span><span class="hi">2</span><span>-1</span><span>0</span><span class="hi">1</span></div><p>Dik kenarları vurgular.</p></div>
+<div class="card green"><h3>Gaussian</h3><div class="matrix"><span>1</span><span>2</span><span>1</span><span>2</span><span class="hi">4</span><span>2</span><span>1</span><span>2</span><span>1</span></div><p>Görüntüyü yumuşatır.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>7 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Geçiş">
+<h2>Elle tasarlanan filtre → öğrenilen filtre</h2>
+<div class="grid2">
+<div class="card amber"><h3>Klasik görüntü işleme</h3><p>Filtre değerlerini insan belirler.</p></div>
+<div class="card green"><h3>CNN</h3><p>Filtre değerleri eğitim verisinden öğrenilir.</p></div>
+</div>
+<div class="formula">Klasik: sabit kernel<br>CNN: öğrenilebilir kernel = model parametresi</div>
+<div class="footer"><span>CNN Dersi</span><span>8 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Konvolüsyon">
+<h2>2B konvolüsyonun matematiği</h2>
+<p>Kernel görüntü üzerinde kaydırılır. Her konumda örtüşen değerler çarpılır ve toplanır.</p>
+<div class="formula">(I * K)(i,j) = Σ<sub>m</sub> Σ<sub>n</sub> I(i+m,j+n) · K(m,n)</div>
+<div class="callout">Kernel bir örüntü arayıcıdır. Aradığı örüntü varsa çıktı büyür.</div>
+<div class="footer"><span>CNN Dersi</span><span>9 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Elle Hesap">
+<h2>Sobel dikey kenarı nasıl bulur?</h2>
+<div class="grid2">
+<div class="card"><h3>Görüntü bölgesi</h3><div class="matrix"><span>10</span><span>10</span><span class="hi">80</span><span>10</span><span>10</span><span class="hi">80</span><span>10</span><span>10</span><span class="hi">80</span></div></div>
+<div class="card"><h3>Sobel X</h3><div class="matrix"><span>-1</span><span>0</span><span class="hi">1</span><span>-2</span><span>0</span><span class="hi">2</span><span>-1</span><span>0</span><span class="hi">1</span></div></div>
+</div>
+<div class="formula">(-10+0+80)+(-20+0+160)+(-10+0+80)=<b>280</b></div>
+<p class="lead">Büyük değer → güçlü kenar vardır.</p>
+<div class="footer"><span>CNN Dersi</span><span>10 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Boyut">
+<h2>Çıktı boyutu formülü</h2>
+<div class="formula">H<sub>out</sub> = ⌊(H<sub>in</sub> − K + 2P) / S⌋ + 1<br>W<sub>out</sub> = ⌊(W<sub>in</sub> − K + 2P) / S⌋ + 1</div>
+<div class="grid3">
+<div class="card blue"><h3>K</h3><p>Kernel boyutu</p></div>
+<div class="card green"><h3>P</h3><p>Padding</p></div>
+<div class="card purple"><h3>S</h3><p>Stride</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>11 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Mini Hesap">
+<div class="quiz">
+<h3>Mini hesap sorusu</h3>
+<p class="lead">Girdi 64×64, kernel 5×5, padding 2, stride 2 ise çıktı boyutu kaçtır?</p>
+<div class="formula">⌊(64−5+2×2)/2⌋+1 = 32</div>
+<p><b>Cevap:</b> 32×32</p>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>12 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Padding">
+<h2>Padding, stride, dilation</h2>
+<div class="grid3">
+<div class="card blue"><h3>Padding</h3><p>Kenar dolgu. Boyutu korur.</p></div>
+<div class="card green"><h3>Stride</h3><p>Kernel’in kaç piksel atlayacağını belirler.</p></div>
+<div class="card purple"><h3>Dilation</h3><p>Parametre artmadan görüş alanını büyütür.</p></div>
+</div>
+<div class="formula">K<sub>etkin</sub> = K + (K−1)(d−1)</div>
+<div class="footer"><span>CNN Dersi</span><span>13 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Kanallar">
+<h2>Çoklu kanal mantığı</h2>
+<p class="lead">RGB girişte kernel de çok kanallıdır: 3×3×3.</p>
+<div class="flow"><div>RGB giriş<br>3×224×224</div><b>→</b><div>32 filtre<br>3×3×3</div><b>→</b><div>32 feature map<br>32×224×224</div></div>
+<div class="formula">Parametre = K<sub>h</sub>×K<sub>w</sub>×C<sub>in</sub>×C<sub>out</sub> + C<sub>out</sub></div>
+<div class="footer"><span>CNN Dersi</span><span>14 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Conv2d">
+<h2>PyTorch’ta Conv2d</h2>
+<pre><code>conv = nn.Conv2d(
+    in_channels=3,
+    out_channels=32,
+    kernel_size=3,
+    stride=1,
+    padding=1
+)</code></pre>
+<div class="grid2">
+<div class="card blue"><h3>Girdi</h3><p>[batch, channel, height, width]</p></div>
+<div class="card green"><h3>Çıktı</h3><p>[4, 3, 224, 224] → [4, 32, 224, 224]</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>15 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Blok">
+<h2>Tipik CNN bloğu</h2>
+<div class="flow"><div>Conv2D</div><b>→</b><div>BatchNorm</div><b>→</b><div>ReLU</div><b>→</b><div>Pooling / Stride</div></div>
+<div class="grid4">
+<div class="card blue"><h3>Conv</h3><p>Özellik çıkarır.</p></div>
+<div class="card green"><h3>BN</h3><p>Eğitimi dengeler.</p></div>
+<div class="card purple"><h3>ReLU</h3><p>Non-lineerlik ekler.</p></div>
+<div class="card orange"><h3>Pooling</h3><p>Boyutu azaltır.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>16 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Pooling">
+<h2>Pooling</h2>
+<div class="grid2">
+<div class="card blue"><h3>Max Pooling</h3><p>Her bölgede en büyük değeri seçer.</p><div class="formula">[1,3;4,7] → 7</div></div>
+<div class="card green"><h3>Average Pooling</h3><p>Her bölgenin ortalamasını alır.</p></div>
+</div>
+<div class="callout">Pooling küçük konum kaymalarına karşı daha dayanıklı temsil üretir.</div>
+<div class="footer"><span>CNN Dersi</span><span>17 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="BatchNorm">
+<h2>BatchNorm ve Dropout</h2>
+<div class="grid2">
+<div class="card green"><h3>Batch Normalization</h3><p>Aktivasyonları normalize eder.</p><div class="formula">x̂=(x−μ)/√(σ²+ε)<br>y=γx̂+β</div></div>
+<div class="card purple"><h3>Dropout</h3><p>Overfitting’i azaltmak için bazı aktivasyonları sıfırlar.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>18 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Receptive">
+<h2>Receptive field</h2>
+<div class="grid3">
+<div class="card blue"><h3>1 katman</h3><div class="big">3×3</div></div>
+<div class="card green"><h3>2 katman</h3><div class="big">5×5</div></div>
+<div class="card purple"><h3>3 katman</h3><div class="big">7×7</div></div>
+</div>
+<div class="callout">Derinleştikçe model küçük özelliklerden daha geniş nesne parçalarına ilerler.</div>
+<div class="footer"><span>CNN Dersi</span><span>19 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Hiyerarşi">
+<h2>CNN nasıl görmeyi öğrenir?</h2>
+<div class="flow"><div>Kenar / renk geçişi</div><b>→</b><div>Doku / köşe</div><b>→</b><div>Nesne parçası</div><b>→</b><div>Sınıf</div></div>
+<div class="callout">CNN önce basit görsel yapı taşlarını, sonra bunların birleşimlerini öğrenir.</div>
+<div class="footer"><span>CNN Dersi</span><span>20 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Tarih">
+<h2>Görsel korteksten CNN’lere</h2>
+<div class="timeline">
+<div class="timeitem blue"><b>1959–62</b><p>Hubel & Wiesel: yön seçici hücreler.</p></div>
+<div class="timeitem green"><b>1980</b><p>Neocognitron: S/C katmanları.</p></div>
+<div class="timeitem purple"><b>1989/98</b><p>LeNet: pratik CNN.</p></div>
+<div class="timeitem orange"><b>2012</b><p>AlexNet: ImageNet başarısı.</p></div>
+<div class="timeitem rose"><b>2015</b><p>ResNet: skip connection.</p></div>
+</div>
+<div class="callout">CNN, görsel korteksin matematiksel karikatürü olarak düşünülebilir.</div>
+<div class="footer"><span>CNN Dersi</span><span>21 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="LeNet">
+<h2>LeNet-5</h2>
+<div class="flow"><div>Girdi</div><b>→</b><div>Conv</div><b>→</b><div>Pool</div><b>→</b><div>Conv</div><b>→</b><div>FC</div><b>→</b><div>Rakam</div></div>
+<div class="callout">LeNet, CNN kalıbının erken ve anlaşılır bir örneğidir.</div>
+<div class="footer"><span>CNN Dersi</span><span>22 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="AlexNet">
+<h2>AlexNet</h2>
+<div class="grid3">
+<div class="card orange"><h3>GPU</h3><p>Büyük ölçekli eğitim pratik hale geldi.</p></div>
+<div class="card orange"><h3>ReLU</h3><p>Daha hızlı eğitim sağladı.</p></div>
+<div class="card orange"><h3>Dropout</h3><p>Overfitting’i azalttı.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>23 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="VGG">
+<h2>VGG</h2>
+<div class="grid2">
+<div class="card blue"><h3>Tasarım</h3><p>Hemen her yerde 3×3 konvolüsyon.</p></div>
+<div class="card green"><h3>Önemi</h3><p>Derinliğin performansa katkısını gösterdi.</p></div>
+</div>
+<div class="formula">2 adet 3×3 conv ≈ 5×5 receptive field</div>
+<div class="footer"><span>CNN Dersi</span><span>24 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="ResNet">
+<h2>ResNet</h2>
+<p class="lead">Skip connection ile çok derin ağlar eğitilebilir hale gelir.</p>
+<div class="formula">Çıkış = F(x) + x</div>
+<div class="grid2">
+<div class="card purple"><h3>Skip connection</h3><p>Bilgi ve gradyan daha kolay akar.</p></div>
+<div class="card green"><h3>Etki</h3><p>50, 101, 152 katmanlı ağlar eğitilebilir.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>25 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Modern">
+<h2>Modern CNN aileleri</h2>
+<div class="grid3">
+<div class="card green"><h3>DenseNet</h3><p>Özellik yeniden kullanımını güçlendirir.</p></div>
+<div class="card blue"><h3>MobileNet</h3><p>Mobil cihazlar için verimlidir.</p></div>
+<div class="card purple"><h3>EfficientNet</h3><p>Derinlik, genişlik ve çözünürlüğü dengeli ölçekler.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>26 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Feature">
+<h2>Feature map</h2>
+<div class="grid2">
+<div class="card blue"><h3>Ne gösterir?</h3><p>Bir filtrenin nerelerde güçlü aktivasyon verdiğini gösterir.</p></div>
+<div class="card green"><h3>Yorum</h3><p>İlk katmanlar kenar, orta katmanlar doku, derin katmanlar nesne parçası öğrenir.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>27 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Grad-CAM">
+<h2>Grad-CAM</h2>
+<div class="grid2">
+<div class="card orange"><h3>Fikir</h3><p>Modelin karar verirken önemli gördüğü bölgeler ısı haritası olarak çıkarılır.</p></div>
+<div class="card green"><h3>Önemi</h3><p>Tıbbi görüntüleme gibi alanlarda yorumlanabilirlik sağlar.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>28 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Transfer">
+<h2>Transfer learning</h2>
+<div class="flow"><div>ImageNet modeli</div><b>→</b><div>Son katmanı değiştir</div><b>→</b><div>Kendi verinle eğit</div></div>
+<div class="grid2">
+<div class="card blue"><h3>Feature extractor</h3><p>Backbone dondurulur.</p></div>
+<div class="card green"><h3>Fine-tuning</h3><p>Son bloklar düşük learning rate ile eğitilir.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>29 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Augmentation">
+<h2>Data augmentation</h2>
+<div class="grid3">
+<div class="card blue"><h3>Geometrik</h3><p>Flip, rotation, crop.</p></div>
+<div class="card green"><h3>Fotometrik</h3><p>Brightness, contrast.</p></div>
+<div class="card purple"><h3>Güçlü</h3><p>MixUp, CutMix.</p></div>
+</div>
+<div class="callout">Augmentation problem mantığını bozmamalıdır.</div>
+<div class="footer"><span>CNN Dersi</span><span>30 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Kod">
+<h2>Basit PyTorch CNN</h2>
+<pre><code>class SimpleCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.AdaptiveAvgPool2d((1, 1))
+        )
+        self.classifier = nn.Linear(64, num_classes)
+
+    def forward(self, x):
+        x = self.features(x)
+        x = torch.flatten(x, 1)
+        return self.classifier(x)</code></pre>
+<div class="footer"><span>CNN Dersi</span><span>31 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Detection">
+<h2>Sınıflandırmadan nesne tespitine</h2>
+<div class="grid2">
+<div class="card blue"><h3>Classification</h3><p>Görüntüde ne var?</p><div class="formula">Etiket: kedi</div></div>
+<div class="card green"><h3>Object Detection</h3><p>Ne var ve nerede?</p><div class="formula">Etiket + bounding box</div></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>32 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Etkinlik">
+<h2>Ders içi çıktı boyutu etkinliği</h2>
+<pre><code>Input: 3×64×64
+
+Conv2d(3, 16, kernel_size=3, padding=1)
+MaxPool2d(2)
+Conv2d(16, 32, kernel_size=3, padding=1)
+MaxPool2d(2)
+AdaptiveAvgPool2d((1,1))
+Linear(32, 5)</code></pre>
+<div class="callout"><b>Cevap:</b> 3×64×64 → 16×64×64 → 16×32×32 → 32×32×32 → 32×16×16 → 32×1×1 → 5</div>
+<div class="footer"><span>CNN Dersi</span><span>33 / 34</span></div>
+</section>
+
+<section class="slide" data-sec="Özet">
+<h2>Bugünün büyük resmi</h2>
+<div class="grid2">
+<div class="card blue"><h3>CNN ne yapar?</h3><p>Yerel örüntüleri öğrenilebilir filtrelerle yakalar.</p></div>
+<div class="card green"><h3>Neden güçlü?</h3><p>Az parametre ve uzamsal yapı korunumu sağlar.</p></div>
+<div class="card purple"><h3>Nasıl çalışır?</h3><p>Conv → aktivasyon → pooling → feature map → sınıflandırıcı.</p></div>
+<div class="card orange"><h3>Nerede kullanılır?</h3><p>Sınıflandırma, tespit, segmentasyon, tıbbi görüntüleme.</p></div>
+</div>
+<div class="footer"><span>CNN Dersi</span><span>34 / 34</span></div>
+</section>
+
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="controls">
+<button onclick="prevSlide()">←</button>
+<button onclick="nextSlide()">→</button>
+<button onclick="toggleNotes()">Not</button>
+<button onclick="toggleOverview()">Genel</button>
+</div>
+
+<script>
+const deck=document.getElementById('deck');
+const slides=[...document.querySelectorAll('.slide')];
+let i=0, overview=false;
+
+function update(){
+  slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+  document.getElementById('progress').style.width=((i+1)/slides.length*100)+'%';
+}
+function nextSlide(){if(overview)return;i=Math.min(slides.length-1,i+1);update();}
+function prevSlide(){if(overview)return;i=Math.max(0,i-1);update();}
+function toggleNotes(){slides[i].classList.toggle('show-notes');}
+function toggleOverview(){
+  overview=!overview;
+  if(overview){
+    deck.classList.add('overview');
+    slides.forEach((s,idx)=>{
+      s.classList.add('active');
+      s.onclick=()=>{
+        i=idx; overview=false; deck.classList.remove('overview');
+        slides.forEach(x=>x.onclick=null); update();
+      };
+    });
+  }else{
+    deck.classList.remove('overview');
+    slides.forEach(s=>s.onclick=null);
+    update();
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')nextSlide();
+  if(e.key==='ArrowLeft')prevSlide();
+  if(e.key.toLowerCase()==='n')toggleNotes();
+  if(e.key.toLowerCase()==='o')toggleOverview();
+  if(e.key.toLowerCase()==='f')document.documentElement.requestFullscreen?.();
+});
+update();
+</script>
+</body>
+</html>
