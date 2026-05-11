@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>11. Hafta | Vision Transformer (ViT)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f5f6fb;
+      --paper:#ffffff;
+      --ink:#1f2937;
+      --muted:#5b6577;
+      --line:#d9e2ec;
+      --indigo:#4338ca;
+      --indigo-2:#6366f1;
+      --indigo-soft:#e0e7ff;
+      --fuchsia:#a21caf;
+      --fuchsia-soft:#fae8ff;
+      --blue:#1d4ed8;
+      --blue-soft:#dbeafe;
+      --violet:#7c3aed;
+      --violet-soft:#ede9fe;
+      --teal:#0f766e;
+      --teal-soft:#ccfbf1;
+      --amber:#92400e;
+      --amber-soft:#fef3c7;
+      --rose:#be123c;
+      --rose-soft:#ffe4e6;
+      --green:#166534;
+      --green-soft:#dcfce7;
+      --orange:#c2410c;
+      --orange-soft:#ffedd5;
+      --code:#0f172a;
+      --code-ink:#e2e8f0;
+      --shadow:0 14px 38px rgba(15,23,42,.08);
+      --radius:22px;
+      --radius-sm:16px;
+      --maxw:1240px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(67,56,202,.10), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(162,28,175,.10), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(99,102,241,.06), transparent 24%),
+        var(--bg);
+      line-height:1.85;
+    }
+
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:28px}
+    .hero{
+      position:relative;
+      overflow:hidden;
+      padding:56px 44px;
+      border-radius:28px;
+      background:linear-gradient(135deg, #2e1065 0%, #4338ca 35%, #7c3aed 70%, #a21caf 100%);
+      color:#fff;
+      box-shadow:var(--shadow);
+    }
+    .hero:before,.hero:after{
+      content:"";
+      position:absolute;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      filter:blur(.4px);
+    }
+    .hero:before{width:320px;height:320px;right:-80px;top:-60px}
+    .hero:after{width:260px;height:260px;left:-50px;bottom:-60px}
+    .hero .kicker{
+      display:inline-block;
+      margin-bottom:14px;
+      padding:8px 14px;
+      border:1px solid rgba(255,255,255,.24);
+      background:rgba(255,255,255,.10);
+      border-radius:999px;
+      font-size:.92rem;
+      letter-spacing:.01em;
+    }
+    .hero h1{
+      margin:0 0 10px;
+      font-size:clamp(2.1rem,4.2vw,3.9rem);
+      line-height:1.08;
+      letter-spacing:-.03em;
+      font-weight:800;
+    }
+    .hero h2{
+      margin:0;
+      max-width:960px;
+      font-weight:500;
+      font-size:clamp(1.05rem,1.8vw,1.32rem);
+      color:#ede9fe;
+    }
+    .hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;}
+    .pill{
+      padding:9px 13px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:.9rem;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:320px minmax(0,1fr);
+      gap:26px;
+      margin-top:26px;
+      align-items:start;
+    }
+
+    .toc{
+      position:sticky;
+      top:18px;
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
+      max-height:calc(100vh - 36px);
+      overflow-y:auto;
+    }
+    .toc h3{margin:0 0 14px;color:var(--indigo);font-size:1.08rem;}
+    .toc ol{margin:0;padding-left:18px}
+    .toc li{margin:7px 0;font-size:.95rem}
+    .toc a{color:var(--ink);text-decoration:none;}
+    .toc a:hover{color:var(--indigo);text-decoration:underline}
+    .toc .toc-sub{padding-left:14px;margin:4px 0 4px 0;list-style:none;}
+    .toc .toc-sub li{font-size:.88rem;color:var(--muted)}
+    .toc .toc-sub a{color:var(--muted)}
+    .toc .toc-sub a:hover{color:var(--indigo)}
+
+    .content{display:flex;flex-direction:column;gap:26px;}
+
+    .card{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:36px 36px 32px;
+    }
+
+    h2.section-title{
+      margin:0 0 18px;
+      font-family:"Source Serif 4", Georgia, serif;
+      font-size:clamp(1.75rem,2.6vw,2.3rem);
+      line-height:1.18;
+      letter-spacing:-.02em;
+      color:#2e1065;
+    }
+
+    h3{margin:28px 0 10px;font-size:1.2rem;line-height:1.3;color:var(--fuchsia);}
+    h4{margin:18px 0 8px;color:#3730a3;font-size:1.02rem;}
+    h5{margin:14px 0 6px;color:var(--teal);font-size:.98rem;font-weight:700;}
+
+    p{margin:0 0 14px;font-size:1.04rem;}
+    .lead{font-size:1.14rem;color:#354153;}
+    .serif{font-family:"Source Serif 4", Georgia, serif;font-size:1.08rem;}
+
+    .highlight,.insight,.warning,.historical,.exercise,.teaching,.success,.huggingface{
+      border-radius:18px;
+      padding:16px 20px;
+      margin:18px 0;
+      border:1px solid transparent;
+    }
+    .highlight{background:linear-gradient(90deg,var(--indigo-soft),#f0f3ff);border-color:#c7d2fe;}
+    .insight{background:linear-gradient(90deg,var(--teal-soft),#effefb);border-color:#99f6e4;}
+    .warning{background:linear-gradient(90deg,var(--amber-soft),#fff8df);border-color:#fcd34d;}
+    .historical{background:linear-gradient(90deg,var(--fuchsia-soft),#fdf4ff);border-color:#e9d5ff;}
+    .exercise{background:linear-gradient(90deg,var(--rose-soft),#fff1f3);border-color:#fda4af;}
+    .teaching{background:#f8fafc;border-color:#cbd5e1;}
+    .success{background:linear-gradient(90deg,var(--green-soft),#f0fdf4);border-color:#86efac;}
+    .huggingface{background:linear-gradient(90deg,#fffbeb,#fef3c7);border-color:#fcd34d;border-left:4px solid #f59e0b;}
+
+    .formula{
+      margin:14px 0;
+      padding:16px 20px;
+      border-radius:16px;
+      background:#fbfdff;
+      border:1px dashed #c7d2fe;
+      font-family:"Source Serif 4", Georgia, serif;
+      overflow:auto;
+      font-size:1.08rem;
+    }
+
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:18px 0;}
+    .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin:18px 0;}
+    .mini{
+      background:#fbfdff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+    }
+    .mini h4{margin-top:0}
+    .mini.indigo{background:var(--indigo-soft);border-color:#a5b4fc;}
+    .mini.fuchsia{background:var(--fuchsia-soft);border-color:#e9d5ff;}
+    .mini.blue{background:var(--blue-soft);border-color:#93c5fd;}
+    .mini.violet{background:var(--violet-soft);border-color:#c4b5fd;}
+    .mini.teal{background:var(--teal-soft);border-color:#5eead4;}
+    .mini.amber{background:var(--amber-soft);border-color:#fcd34d;}
+    .mini.green{background:var(--green-soft);border-color:#86efac;}
+    .mini.rose{background:var(--rose-soft);border-color:#fda4af;}
+    .mini.orange{background:var(--orange-soft);border-color:#fdba74;}
+
+    .placeholder{
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;color:#334155;font-weight:700;
+      padding:18px;border-radius:20px;
+      border:2px dashed #94a3b8;
+      background:linear-gradient(135deg,rgba(224,231,255,.6),rgba(250,232,255,.55));
+      min-height:180px;margin:20px 0 10px;
+    }
+    .placeholder.tall{min-height:320px}
+    .placeholder.medium{min-height:240px}
+    .caption{color:var(--muted);font-size:.95rem;font-style:italic;margin-bottom:10px;}
+
+    .timeline{
+      position:relative;margin:18px 0 6px;
+      padding-left:18px;border-left:4px solid var(--indigo);
+    }
+    .timeline-item{margin:0 0 20px}
+    .timeline-item strong{color:var(--indigo)}
+
+    ul,ol{margin-top:0}
+    li{margin-bottom:8px}
+
+    blockquote{
+      margin:18px 0;padding:16px 20px;
+      border-left:4px solid var(--fuchsia);
+      background:#fdf4ff;border-radius:14px;
+      color:#4c1d6b;font-style:italic;
+    }
+
+    pre{
+      background:var(--code);color:var(--code-ink);
+      padding:22px;border-radius:18px;overflow:auto;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+      line-height:1.62;font-size:.93rem;margin:14px 0 18px;
+    }
+    code{font-family:Consolas,"Courier New",monospace}
+    p code, li code, td code{
+      background:#f1f5f9;color:#3730a3;
+      padding:2px 6px;border-radius:6px;font-size:.92em;
+    }
+
+    .code-label{
+      display:inline-block;
+      background:#1e293b;color:#94a3b8;
+      font-size:.8rem;padding:4px 12px;
+      border-radius:8px 8px 0 0;
+      margin-bottom:-2px;font-family:Consolas,monospace;
+      letter-spacing:.04em;
+    }
+
+    .result-box{
+      background:#0d2137;color:#a5b4fc;
+      padding:16px 22px;border-radius:14px;
+      font-family:Consolas,monospace;font-size:.9rem;
+      margin:0 0 16px;border:1px solid #1e3a5f;
+    }
+    .result-box .label{color:#64748b;font-size:.8rem;margin-bottom:6px;}
+
+    .table-wrap{overflow-x:auto;margin:16px 0;}
+    table{width:100%;border-collapse:collapse;font-size:.97rem;}
+    th{background:#4338ca;color:#fff;padding:10px 14px;text-align:left;font-weight:600;}
+    td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+    tr:nth-child(even) td{background:#f8faff;}
+    tr:hover td{background:#f0f4ff;}
+
+    .tag{
+      display:inline-block;
+      padding:3px 10px;border-radius:999px;
+      font-size:.82rem;font-weight:600;
+      margin:2px 3px 2px 0;
+    }
+    .tag.indigo{background:var(--indigo-soft);color:var(--indigo);}
+    .tag.fuchsia{background:var(--fuchsia-soft);color:var(--fuchsia);}
+    .tag.blue{background:var(--blue-soft);color:#1d4ed8;}
+    .tag.violet{background:var(--violet-soft);color:#6d28d9;}
+    .tag.teal{background:var(--teal-soft);color:#0f766e;}
+    .tag.amber{background:var(--amber-soft);color:#92400e;}
+    .tag.rose{background:var(--rose-soft);color:#be123c;}
+    .tag.green{background:var(--green-soft);color:#166534;}
+    .tag.orange{background:var(--orange-soft);color:#c2410c;}
+
+    .step-flow{
+      display:flex;align-items:center;gap:0;
+      flex-wrap:wrap;margin:20px 0;
+    }
+    .step-box{
+      background:var(--indigo-soft);
+      border:1px solid #a5b4fc;
+      border-radius:14px;padding:12px 18px;
+      font-size:.95rem;font-weight:600;color:var(--indigo);
+      white-space:nowrap;
+    }
+    .step-arrow{font-size:1.4rem;color:#a5b4fc;padding:0 8px;}
+
+    .kv-row{
+      display:flex;gap:12px;
+      padding:10px 0;border-bottom:1px solid var(--line);
+      align-items:flex-start;
+    }
+    .kv-key{
+      min-width:200px;font-weight:700;
+      color:#3730a3;font-size:.97rem;
+    }
+    .kv-val{font-size:.97rem;color:var(--ink);flex:1;}
+
+    .arch-card{
+      border-radius:18px;padding:22px;
+      border:2px solid;margin-bottom:0;
+    }
+    .arch-card h4{margin:0 0 8px;}
+    .arch-card p{margin:0 0 8px;font-size:.95rem;}
+    .arch-card p:last-child{margin:0;}
+
+    /* Matris gösterimi */
+    .matrix{
+      display:inline-grid;
+      gap:4px;
+      padding:12px;
+      border-radius:12px;
+      background:#1e293b;
+      font-family:Consolas,monospace;
+      margin:8px 0;
+    }
+    .matrix .cell{
+      background:#334155;color:#e2e8f0;
+      padding:8px 12px;
+      border-radius:6px;
+      text-align:center;
+      min-width:36px;
+    }
+    .matrix .cell.hi{background:#6366f1;color:#fff;font-weight:700;}
+    .matrix .cell.lo{background:#4338ca;color:#e0e7ff;}
+    .matrix .cell.zero{background:#475569;color:#94a3b8;}
+    .matrix.m3 {grid-template-columns:repeat(3, 1fr);}
+    .matrix.m4 {grid-template-columns:repeat(4, 1fr);}
+    .matrix.m5 {grid-template-columns:repeat(5, 1fr);}
+    .matrix-wrap{
+      display:flex;align-items:center;justify-content:center;
+      gap:18px;flex-wrap:wrap;margin:18px 0;
+    }
+    .matrix-wrap .label{
+      text-align:center;font-size:.92rem;color:var(--muted);
+      font-weight:600;
+    }
+    .matrix-wrap .op{font-size:1.5rem;color:var(--indigo);font-weight:700;}
+
+    /* Patch görseli */
+    .patch-grid{
+      display:inline-grid;
+      grid-template-columns:repeat(4, 36px);
+      gap:3px;
+      padding:8px;
+      background:#1e293b;
+      border-radius:10px;
+      margin:8px 0;
+    }
+    .patch-grid .patch{
+      width:36px;height:36px;
+      background:linear-gradient(135deg, #4338ca, #a21caf);
+      border-radius:4px;
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-size:.75rem;font-weight:700;
+    }
+
+    .footnotes li,.resources li{margin-bottom:12px}
+    .footnotes a,.resources a{color:var(--indigo);text-decoration:none;word-break:break-word}
+    .footnotes a:hover,.resources a:hover{text-decoration:underline}
+
+    .fade{
+      opacity:0;transform:translateY(18px);
+      transition:opacity .55s ease,transform .55s ease;
+    }
+    .fade.visible{opacity:1;transform:translateY(0);}
+
+    .footer{
+      text-align:center;padding:30px 12px 44px;
+      color:var(--muted);font-size:.96rem;
+    }
+    .backtop{
+      display:inline-block;margin-top:10px;
+      color:var(--indigo);text-decoration:none;font-weight:700;
+    }
+
+    @media(max-width:1020px){
+      .layout{grid-template-columns:1fr}
+      .toc{position:relative;top:auto;max-height:none;}
+      .grid2,.grid3,.grid4{grid-template-columns:1fr}
+      .hero{padding:42px 28px}
+      .card{padding:28px 24px 24px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap" id="top">
+
+  <!-- ═══ HERO ═══ -->
+  <header class="hero fade">
+    <div class="kicker">Derin Öğrenme ile Görüntü İşleme • 11. Hafta Bölümü</div>
+    <h1>Vision Transformer: Görüntü için Attention</h1>
+    <h2>
+      CNN'in yerel bağlantı sezgisinden Transformer'ın global attention paradigmasına;
+      self-attention'ın matematiğinden patch embedding'e, ViT mimarisinden Hugging Face ile
+      transfer learning'e ve foundation models'a uzanan kapsamlı bir ders bölümü.
+    </h2>
+    <div class="hero-meta">
+      <span class="pill">CNN'den ViT'e paradigma değişimi</span>
+      <span class="pill">Self-Attention adım adım</span>
+      <span class="pill">Patch embedding sezgisi</span>
+      <span class="pill">CNN vs ViT karşılaştırması</span>
+      <span class="pill">Hugging Face uygulaması</span>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ═══ TOC ═══ -->
+    <aside class="toc fade">
+      <h3>📚 İçindekiler</h3>
+      <ol>
+        <li><a href="#bolum1">CNN'in sınırları ve attention</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum1-1">Yerel bağlantının sınırı</a></li>
+            <li><a href="#bolum1-2">Uzun menzilli bağımlılık</a></li>
+            <li><a href="#bolum1-3">Attention'ın tarihsel doğuşu</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum2">Self-Attention mekanizması</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum2-1">Sezgisel kurulum</a></li>
+            <li><a href="#bolum2-2">Query, Key, Value</a></li>
+            <li><a href="#bolum2-3">Scaled dot-product attention</a></li>
+            <li><a href="#bolum2-4">Adım adım örnek</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum3">Multi-Head Attention</a></li>
+        <li><a href="#bolum4">Transformer Encoder bloğu</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum4-1">Block yapısı</a></li>
+            <li><a href="#bolum4-2">LayerNorm</a></li>
+            <li><a href="#bolum4-3">Feed-Forward Network</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum5">Positional Encoding</a></li>
+        <li><a href="#bolum6">Vision Transformer mimarisi</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum6-1">Patch embedding</a></li>
+            <li><a href="#bolum6-2">CLS token</a></li>
+            <li><a href="#bolum6-3">Tam akış</a></li>
+            <li><a href="#bolum6-4">Sıfırdan implementasyon</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum7">CNN vs ViT karşılaştırma</a></li>
+        <li><a href="#bolum8">Modern türevler</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum8-1">DeiT</a></li>
+            <li><a href="#bolum8-2">Swin Transformer</a></li>
+            <li><a href="#bolum8-3">ConvNeXt, MAE, DINO</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum9">Uygulama: Pretrained ViT</a>
+          <ul class="toc-sub">
+            <li><a href="#bolum9-1">Hugging Face giriş</a></li>
+            <li><a href="#bolum9-2">Flowers 102 fine-tune</a></li>
+            <li><a href="#bolum9-3">Attention rollout</a></li>
+            <li><a href="#bolum9-4">Pnömoni karşılaştırma</a></li>
+          </ul>
+        </li>
+        <li><a href="#bolum10">Foundation Models'a köprü</a></li>
+        <li><a href="#bolum11">Pratik notlar ve hatalar</a></li>
+        <li><a href="#bolum12">Öğretim notları ve ödevler</a></li>
+        <li><a href="#atiflar">Atıflar</a></li>
+        <li><a href="#kaynaklar">Kaynaklar</a></li>
+      </ol>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="content">
+
+      <!-- ─── BÖLÜM 1 ─── -->
+      <section class="card fade" id="bolum1">
+        <h2 class="section-title">1. CNN'in Sınırları ve Attention'ın Doğuşu</h2>
+
+        <p class="lead serif">
+          Geçen hafta Konvolüsyonel Sinir Ağlarını ayrıntılı işledik. ResNet'in 152 katmanlı
+          mimarisiyle ImageNet'te insan seviyesini aştığını gördük. Doğal soru: "Bu işin daha
+          ötesi var mı? CNN her şeyi çözmedi mi?" Bu bölümde CNN'in yapısal sınırlarını ve
+          bu sınırları aşmak için 2017'de NLP topluluğunda doğan, 2020'de görüntüye taşınan
+          paradigmayı tanıtacağız.
+        </p>
+
+        <p>
+          CNN bir devrim oldu. Klasik görüntü işlemenin elle tasarlanmış filtrelerini öğrenilebilir
+          parametreler haline getirdi. Yerel bağlantı ve parametre paylaşımıyla MLP'nin görüntüdeki
+          üç temel zaafını çözdü. Ama her büyük başarı, beraberinde yeni soruları getirir.
+          CNN'in iki kurucu fikrinden biri olan yerel bağlantı, aynı zamanda onun en temel sınırını
+          oluşturuyor.
+        </p>
+
+        <div id="bolum1-1"></div>
+        <h3>1.1. Yerel bağlantı: bir lütuf ve bir kısıt</h3>
+
+        <p>
+          CNN'in bir nöronu, önceki katmanın yalnızca küçük bir komşuluğuna (örn. 3×3) bakar.
+          Bu fikrin avantajları açıktı: parametre azaltma, translasyon dayanıklılığı, hiyerarşik
+          öğrenme. Ama bir bedeli var: <strong>uzak uzaklıklı bilgiyi bir araya getirmek için
+          derinlik gerek.</strong>
+        </p>
+
+        <p>
+          Hatırlayalım, geçen hafta receptive field hesaplamasını yapmıştık. 3×3 conv katmanlarını
+          üst üste yığarak receptive field'ı büyütüyorduk. Bir CNN nöronunun girdideki büyük bir
+          alana bakabilmesi için modelin derinleşmesi gerekir. Pooling katmanları bu süreci hızlandırır
+          ama yine de bilgi, katman katman yerelden globale doğru ilerler.
+        </p>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>İki panel karşılaştırma: solda CNN'in receptive field genişlemesi (her katmanda biraz daha büyüyen alan); sağda ViT'in ilk katmanından itibaren tüm görüntüye erişimi gösteren attention bağlantıları. Vurgu: "CNN sırayla bilgi taşıyor, ViT doğrudan bağlanıyor."</div>
+
+        <div id="bolum1-2"></div>
+        <h3>1.2. Uzun menzilli bağımlılık problemi</h3>
+
+        <p>
+          Şu sahneyi düşünün: bir görüntüde sol üst köşede bir <em>yüzücü</em> var, sağ alt köşede
+          bir <em>havuz kenarı</em> var. Bu iki bilginin birleşimi "bu bir yüzme havuzu sahnesi"
+          sonucuna götürür. CNN bu iki bilgiyi nasıl birleştirir? Sol üstteki bilgi bir filtreden
+          geçer, pooling ile aşağı seviyeye iner. Sağ alttaki bilgi de aynı şekilde. Bu iki bilginin
+          aynı nöronda <em>buluşabilmesi</em> için modelin yeterince derin olması ve receptive
+          field'ın görüntünün tamamını kapsaması gerekir.
+        </p>
+
+        <p>
+          Bu, doğası gereği <strong>dolaylı</strong> bir süreçtir. Bilgi katman katman yayılır.
+          Üstelik katmanlar arası yayılım sırasında bilginin bir kısmı kaybolur — özellikle uzak
+          komşulukların ilişkileri zayıflar. CNN'in genel başarısına rağmen, görüntüde "global
+          bağlam" gerektiren görevlerde (örn. ince taneli sınıflandırma, sahne anlama, görüntü
+          altyazılama) bu sınır kendini gösterir.
+        </p>
+
+        <div class="warning">
+          <strong>Sezgisel soru:</strong> Bir görüntüdeki herhangi iki konum arasındaki ilişkiyi
+          modele <em>doğrudan</em> verebilseydik nasıl olurdu? Her pikselin (veya patch'in)
+          her diğer pikselle <em>tek adımda</em> ilişkilenmesine izin verseydik? İşte attention
+          mekanizması tam olarak bunu önerir.
+        </div>
+
+        <div id="bolum1-3"></div>
+        <h3>1.3. Attention mekanizmasının tarihsel doğuşu</h3>
+
+        <p>
+          Attention kavramı NLP topluluğunda doğdu. 2014'te Bahdanau ve arkadaşları, makine
+          çevirisinde RNN tabanlı encoder-decoder modellerinin uzun cümlelerde başarısız olduğunu
+          fark etti. Decoder bir kelimeyi üretirken, kaynak cümlenin <em>tamamına</em> aynı önemde
+          bakmak zorunda kalıyordu. Bahdanau, "decoder, kaynak cümlenin farklı kısımlarına farklı
+          önem verebilmeli" fikrini önerdi. Buna <em>attention</em> dediler.
+        </p>
+
+        <div class="historical">
+          <strong>Tarihsel dönüm noktası — "Attention is All You Need" (2017):</strong>
+          Vaswani ve Google Brain ekibi, 2017'de Transformer mimarisini yayınladı. Devrimsel
+          öneri: RNN tamamen kaldırılabilir, sadece attention mekanizması yeterli. Modelin adı
+          bu cesur iddiayı yansıtıyordu. Sonuç: makine çevirisinde tüm önceki modelleri geçti,
+          paralel eğitilebilir hale geldi (RNN sıralı çalışıyordu, GPU'lar tam kullanılamıyordu).
+          Bu makale, NLP'yi tamamen Transformer'a çevirdi.
+        </div>
+
+        <p>
+          2018-2020 arasında NLP, Transformer ile yeniden yazıldı. BERT, GPT, T5 — hepsi
+          Transformer tabanlı. Bu süreçte bilgisayarla görü topluluğu temkinli izledi.
+          "Acaba görüntü için de işe yarar mı?" sorusu havadaydı.
+        </p>
+
+        <div class="timeline">
+          <div class="timeline-item"><strong>2014 — Bahdanau Attention:</strong> NMT için ilk attention. RNN encoder-decoder modellerine yardımcı.</div>
+          <div class="timeline-item"><strong>2017 — Transformer (Vaswani):</strong> "Attention is all you need". RNN'siz, sadece attention. NLP devrimi başlangıcı.</div>
+          <div class="timeline-item"><strong>2018 — BERT, GPT:</strong> Pretrained Transformer modelleri. Transfer learning paradigması NLP'ye gelir.</div>
+          <div class="timeline-item"><strong>2020 — Vision Transformer (Dosovitskiy):</strong> Google Brain'in görüntü için ViT'i. CNN'in tek hâkim olmadığını gösterdi.</div>
+          <div class="timeline-item"><strong>2021 — Swin Transformer:</strong> Yerel pencerelerle hiyerarşik ViT. Hibrit yaklaşımlar.</div>
+          <div class="timeline-item"><strong>2022 — ConvNeXt:</strong> CNN'in cevabı. Transformer fikirleriyle güncellenmiş CNN.</div>
+          <div class="timeline-item"><strong>2023 — SAM, CLIP yaygınlaşması:</strong> Foundation models. Multi-modal vision.</div>
+        </div>
+
+        <h3>1.4. Görüntü için neden attention?</h3>
+
+        <p>
+          NLP'de cümleyi <em>token dizisi</em> olarak ele alıyorduk. Her kelime bir token. Attention,
+          her token'ın diğer her token'a bakabilmesini sağlıyordu. Görüntüye uyarlamak için temel
+          soru şu: "Görüntünün <em>token</em>'leri nedir?"
+        </p>
+
+        <p>
+          Üç olası cevap var:
+        </p>
+
+        <div class="grid3">
+          <div class="mini rose">
+            <h4>❌ Her piksel bir token</h4>
+            <p>224×224 görüntüde 50.176 piksel. Attention'ın hesaplama maliyeti O(N²). Yani
+            2.5 milyar işlem her katmanda. Pratik değil. <em>Erken denemeler bu yolu denedi ve
+            tıkandı.</em></p>
+          </div>
+          <div class="mini amber">
+            <h4>⚠️ CNN özellik haritası + attention</h4>
+            <p>Önce CNN ile feature map çıkar, sonra attention uygula. Bu hibrit yaklaşım çalışır
+            (DETR gibi modeller bunu yapar) ama "saf transformer" değil. ViT'ten önceki ana yaklaşımdı.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Patch'ler — ViT'in çözümü</h4>
+            <p>Görüntüyü 16×16'lık patch'lere böl. Her patch bir "token" olsun. 224×224 görüntüde
+            14×14 = 196 token. Attention bu 196 token üzerinde çalışır. Hesaplama makul,
+            sezgi kuvvetli.</p>
+          </div>
+        </div>
+
+        <div class="success">
+          <strong>ViT'in temel sezgisi:</strong> "Görüntü, küçük patch'lerden oluşan bir dizi gibi
+          düşünülebilir." NLP'de cümle kelimelerden, görüntüde 'cümle' patch'lerden oluşur.
+          Her patch bir kelime gibi, her diğer patch'le ilişki kurabilir. Yerel komşuluk gerek yok;
+          ilk katmandan itibaren <em>global</em> erişim var.
+        </div>
+
+        <h3>1.5. CNN ve ViT'in induktif bias karşılaştırması</h3>
+
+        <p>
+          <strong>İnduktif bias</strong> (tümevarımsal yanlılık), bir modelin yapısı gereği veriden
+          öğrenmeye götürülmüş varsayımlardır. CNN'in induktif bias'ı güçlüdür:
+        </p>
+
+        <ul>
+          <li><strong>Yerellik:</strong> Komşu pikseller ilgili bilgi taşır.</li>
+          <li><strong>Translasyon dayanıklılığı:</strong> Aynı örüntü, görüntünün her yerinde aynı anlam taşır.</li>
+          <li><strong>2D yapı:</strong> Görüntünün uzamsal yapısı önemli.</li>
+        </ul>
+
+        <p>
+          Bu bias'lar CNN'in az veriyle bile başarılı olmasını sağlar. Çünkü model "neyi öğrenmesi
+          gerektiğini" bilmeye başlar.
+        </p>
+
+        <p>
+          ViT'in induktif bias'ı çok daha zayıftır. ViT, sadece şunu varsayar: "Her patch, diğer
+          patch'lerle ilişki kurabilir." Yerellik yok, 2D yapı bilgisi sadece positional encoding'le
+          ekleniyor. Bu zayıf bias'ın iki yüzü var:
+        </p>
+
+        <div class="grid2">
+          <div class="mini rose">
+            <h4>❌ Veri açlığı</h4>
+            <p>Modele az şey verdiğinizde, model her şeyi sıfırdan öğrenmek zorunda. Bu çok
+            veri ister. ViT'in orijinal makalesinde JFT-300M (300 milyon görüntü) üzerinde
+            eğitildi. ImageNet (1.3M görüntü) tek başına yetmiyor.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Esneklik ve ölçek</h4>
+            <p>Az bias = modelin verinin gerçek yapısını keşfetme özgürlüğü. Yeterli veri
+            verildiğinde ViT, CNN'i geçer. Hatta görüntü türüne uyarlanabilir bir esneklik
+            sağlar. Bu, foundation models çağında çok önemli bir avantaj.</p>
+          </div>
+        </div>
+
+        <blockquote>
+          "CNN, görüntü hakkında çok şey varsayar ve az veriyle iyi çalışır. ViT, görüntü hakkında
+          az şey varsayar ve çok veriyle harika çalışır. Hangisinin daha iyi olduğu sorusu,
+          'ne kadar veriniz var?' sorusuna indirgenir."
+        </blockquote>
+
+        <div class="success">
+          <strong>Bu hafta sonunda kavramanız gereken büyük resim:</strong> ViT, CNN'i değiştirmek
+          için değil, <em>tamamlamak</em> için doğdu. Az veriyle CNN, çok veriyle ViT daha
+          başarılı. Modern paradigma giderek ViT ve türevleri etrafında şekilleniyor — özellikle
+          foundation models çağında. Önümüzdeki bölümlerde bu mimariyi adım adım kuracağız.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 2 ─── -->
+      <section class="card fade" id="bolum2">
+        <h2 class="section-title">2. Self-Attention: Mekanizmanın Kalbi</h2>
+
+        <p class="lead serif">
+          Bu bölüm Vision Transformer'ın matematiksel temelini kuruyor. Self-attention'ı görüntü
+          perspektifinden, patch'ler arası ilişkiler üzerinden inşa edeceğiz. Bölüm sonunda
+          küçük bir örnek üzerinden self-attention'ı elle hesaplayabilmeniz hedefleniyor;
+          bu hesabı yapamadığınız sürece üst katmanlardaki sezgi gelmez.
+        </p>
+
+        <div id="bolum2-1"></div>
+        <h3>2.1. Sezgisel kurulum: patch'ler birbirine ne kadar bakmalı?</h3>
+
+        <p>
+          224×224 boyutunda bir görüntüyü 16×16'lık patch'lere böldüğümüzü hayal edin.
+          Bu, 14×14 = <strong>196 patch</strong> demektir. Her patch küçük bir görüntü parçası
+          olarak düşünülebilir. Şimdi soru şu: bu 196 patch arasında bilgi nasıl akacak?
+        </p>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>224×224 görüntünün 14×14 grid halinde patch'lere bölünmüş hâli. Bir patch işaretli (örn. yüz bölgesi) ve diğer patch'lere doğru farklı kalınlıkta oklar uzanıyor. Yakındaki patch'lere kalın, uzaktakine ince oklar. Yazı: "Hangi patch'e ne kadar bakmalı?"</div>
+
+        <p>
+          CNN'de bir patch sadece komşularına bakardı. ViT'in fikri: <strong>her patch, diğer
+          her patch'e bakabilmeli</strong>. Ama hepsine aynı önemde bakmasın — bazı patch'lere
+          daha fazla "dikkat" versin. İşte attention bu "her birine ne kadar bakacağım?"
+          sorusunun cevabıdır.
+        </p>
+
+        <p>
+          Mesela bir kuş görüntüsünde göz patch'i, kuyruk patch'ine bakmalı (kuş türünü ayırt etmek
+          için), gökyüzü patch'ine pek bakmamalı. Bu "bakma derecesi" öğrenilebilir bir ağırlıktır,
+          eğitim sırasında geri yayılımla belirlenir.
+        </p>
+
+        <div class="insight">
+          <strong>Bir cümleyle:</strong> Self-attention, her token'ın diğer her token'a bir
+          ağırlıkla bakmasını sağlayan mekanizmadır. "Self" diyoruz çünkü token'lar kendi kendilerine
+          ilişki kuruyor (NLP'de cross-attention da var, ama biz görüntü için self-attention'a
+          odaklanıyoruz).
+        </div>
+
+        <div id="bolum2-2"></div>
+        <h3>2.2. Query, Key, Value — üç vektör arkadaşı</h3>
+
+        <p>
+          Şimdi bu sezgiyi matematiğe dökelim. Self-attention üç farklı vektör tipi kullanır.
+          Bu üç kavram, ilk başta soyut görünür ama somut analojiyle hemen oturur.
+        </p>
+
+        <p>
+          Bir kütüphanede kitap arıyorsunuz. Üç şey var:
+        </p>
+
+        <div class="grid3">
+          <div class="mini indigo">
+            <h4>🔍 Query (Sorgu)</h4>
+            <p>Aradığınız şey. Aklınızdaki ihtiyaç. "Derin öğrenme üzerine Türkçe bir kitap
+            arıyorum." Sizin sorgunuz bu.</p>
+          </div>
+          <div class="mini fuchsia">
+            <h4>🏷️ Key (Anahtar)</h4>
+            <p>Her kitabın etiketi. Kitabın ne hakkında olduğunu özetleyen bilgi. "Bu kitap
+            Python programlama hakkındadır." Kitabın "key"i bu.</p>
+          </div>
+          <div class="mini teal">
+            <h4>📖 Value (Değer)</h4>
+            <p>Kitabın asıl içeriği. Sayfaları, bilgisi. Sorgunuza uyan kitabı bulduğunuzda
+            okuyacağınız şey budur.</p>
+          </div>
+        </div>
+
+        <p>
+          Self-attention sürecinde:
+        </p>
+        <ol>
+          <li>Sorgunuzu (Query) her kitabın etiketi (Key) ile karşılaştırırsınız.</li>
+          <li>Hangi kitabın etiketi sorgunuza ne kadar uyuyor diye bir <strong>uyum skoru</strong> hesaplarsınız.</li>
+          <li>Bu skorları softmax ile olasılıklara dönüştürürsünüz.</li>
+          <li>Her kitabın <em>içeriğini</em> (Value) bu olasılıklarla ağırlıklı olarak toplarsınız.</li>
+          <li>Sonuç: sorgunuza en uyan kitapların içeriğinden harmanlanmış bir özet.</li>
+        </ol>
+
+        <p>
+          ViT'te bu süreç patch'ler için tekrarlanır. Her patch:
+        </p>
+        <ul>
+          <li>Kendi bir <strong>Query</strong> üretir: "Ben ne arıyorum?"</li>
+          <li>Kendi bir <strong>Key</strong> üretir: "Ben neyim?"</li>
+          <li>Kendi bir <strong>Value</strong> üretir: "Ben hangi bilgiyi taşıyorum?"</li>
+        </ul>
+
+        <p>
+          Sonra her patch'in Q'su, tüm patch'lerin K'larıyla karşılaştırılır. Skorlar softmax'tan
+          geçirilir. Her patch'in V'sinin ağırlıklı toplamı yeni temsil olur.
+        </p>
+
+        <h4>Q, K, V nereden geliyor?</h4>
+
+        <p>
+          Her patch bir <em>embedding vektörü</em> (örn. 768 boyutlu) olarak temsil edilir.
+          Bu embedding'den üç farklı doğrusal projeksiyonla Q, K, V elde edilir:
+        </p>
+
+        <div class="formula">
+          Q = X · W<sub>Q</sub><br>
+          K = X · W<sub>K</sub><br>
+          V = X · W<sub>V</sub>
+        </div>
+
+        <p>
+          Burada <em>X</em> patch embedding'leri (N × d_model matrisi), <em>W<sub>Q</sub></em>,
+          <em>W<sub>K</sub></em>, <em>W<sub>V</sub></em> öğrenilebilir projeksiyon matrisleridir
+          (d_model × d_k boyutunda). N = patch sayısı, d_model = embedding boyutu (ViT-Base'de 768).
+        </p>
+
+        <div id="bolum2-3"></div>
+        <h3>2.3. Scaled Dot-Product Attention formülü</h3>
+
+        <p>
+          Şimdi tam formülü yazalım. Bu formül "Attention is all you need" makalesinin kalbinde
+          yer alır ve ezberlemeniz gereken tek formül budur:
+        </p>
+
+        <div class="formula" style="font-size:1.25rem;text-align:center;padding:24px;">
+          <strong>Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>) · V</strong>
+        </div>
+
+        <p>Bu formülü adım adım açalım:</p>
+
+        <div class="kv-row">
+          <div class="kv-key">QK<sup>T</sup></div>
+          <div class="kv-val">Q (sorgular) ile K<sup>T</sup> (anahtarların transpozu)'nun matris çarpımı.
+          Sonuç N × N boyutunda bir matristir. Her hücre (i, j), i'nci patch'in sorgusunun
+          j'nci patch'in anahtarıyla ne kadar uyduğunu gösterir. Bu "uyum skoru" (similarity score)'dur.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">/ √d<sub>k</sub></div>
+          <div class="kv-val">Skorları ölçeklemek için d<sub>k</sub>'nın kareköküne bölünür.
+          Neden? Embedding boyutu büyük olduğunda dot product'lar çok büyük değerlere ulaşır.
+          Softmax böyle büyük değerlerde "tek noktaya odaklanır" (gradient kaybolur). Ölçekleme
+          gradyanın akmasını sağlar. Bu nedenle "scaled" dot-product attention denir.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">softmax(...)</div>
+          <div class="kv-val">Her satıra softmax uygulanır. Sonuç: her satır 0-1 arası değerlerden
+          oluşur, toplamı 1'dir. Bu artık "attention weights" denilen olasılık dağılımı.
+          i'nci patch için: "ben hangi patch'e ne kadar dikkat etmeliyim?"</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">· V</div>
+          <div class="kv-val">Attention weights ile V (değerler) matrisi çarpılır. Her patch için,
+          tüm patch'lerin Value vektörlerinin ağırlıklı toplamı alınır. Bu, o patch'in yeni
+          temsilidir — diğer patch'lerden topladığı bilgiyle güncellenmiş hâli.</div>
+        </div>
+
+        <h4>Boyutları takip edelim</h4>
+
+        <div class="formula">
+          Girdi:   X        ∈ ℝ<sup>N × d_model</sup><br>
+          Q       = X · W<sub>Q</sub>  ∈ ℝ<sup>N × d_k</sup><br>
+          K       = X · W<sub>K</sub>  ∈ ℝ<sup>N × d_k</sup><br>
+          V       = X · W<sub>V</sub>  ∈ ℝ<sup>N × d_v</sup><br>
+          QK<sup>T</sup>     ∈ ℝ<sup>N × N</sup>   (her patch çiftinin uyum skoru)<br>
+          softmax(QK<sup>T</sup>/√d_k)  ∈ ℝ<sup>N × N</sup>   (attention weights)<br>
+          Çıktı   ∈ ℝ<sup>N × d_v</sup>
+        </div>
+
+        <div id="bolum2-4"></div>
+        <h3>2.4. Adım adım örnek hesaplama</h3>
+
+        <p>
+          Soyut formülü somutlaştıralım. Diyelim ki 3 patch'imiz var ve embedding boyutu d=4.
+          Q, K, V matrisleri 3×4 boyutunda. Hesaplamayı elle takip edelim.
+        </p>
+
+        <div class="matrix-wrap">
+          <div>
+            <div class="label">Q (3 patch × 4 boyut)</div>
+            <div class="matrix m4">
+              <div class="cell hi">1</div><div class="cell">0</div><div class="cell">1</div><div class="cell">0</div>
+              <div class="cell">0</div><div class="cell hi">2</div><div class="cell">0</div><div class="cell">2</div>
+              <div class="cell">1</div><div class="cell">1</div><div class="cell hi">1</div><div class="cell">1</div>
+            </div>
+          </div>
+          <div>
+            <div class="label">K (3 patch × 4 boyut)</div>
+            <div class="matrix m4">
+              <div class="cell hi">1</div><div class="cell">1</div><div class="cell">0</div><div class="cell">0</div>
+              <div class="cell">0</div><div class="cell">0</div><div class="cell hi">1</div><div class="cell">1</div>
+              <div class="cell">1</div><div class="cell">0</div><div class="cell">1</div><div class="cell hi">1</div>
+            </div>
+          </div>
+          <div>
+            <div class="label">V (3 patch × 4 boyut)</div>
+            <div class="matrix m4">
+              <div class="cell">1</div><div class="cell hi">2</div><div class="cell">3</div><div class="cell">4</div>
+              <div class="cell">5</div><div class="cell">6</div><div class="cell hi">7</div><div class="cell">8</div>
+              <div class="cell hi">9</div><div class="cell">10</div><div class="cell">11</div><div class="cell">12</div>
+            </div>
+          </div>
+        </div>
+
+        <h4>Adım 1 — QK<sup>T</sup> hesabı</h4>
+
+        <p>
+          Q (3×4) ile K<sup>T</sup> (4×3) çarpımı → 3×3 matris. Her (i,j) hücresi, Q'nun i'nci
+          satırı ile K'nın j'nci satırının dot product'ıdır.
+        </p>
+
+        <div class="formula">
+          QK<sup>T</sup>[0,0] = Q[0]·K[0] = (1·1) + (0·1) + (1·0) + (0·0) = <strong>1</strong><br>
+          QK<sup>T</sup>[0,1] = Q[0]·K[1] = (1·0) + (0·0) + (1·1) + (0·1) = <strong>1</strong><br>
+          QK<sup>T</sup>[0,2] = Q[0]·K[2] = (1·1) + (0·0) + (1·1) + (0·1) = <strong>2</strong><br>
+          ...
+        </div>
+
+        <div class="matrix-wrap">
+          <div>
+            <div class="label">QK<sup>T</sup> (uyum skorları)</div>
+            <div class="matrix m3">
+              <div class="cell">1</div><div class="cell">1</div><div class="cell hi">2</div>
+              <div class="cell">2</div><div class="cell hi">4</div><div class="cell">2</div>
+              <div class="cell">2</div><div class="cell">2</div><div class="cell hi">3</div>
+            </div>
+          </div>
+        </div>
+
+        <h4>Adım 2 — Ölçekleme (/ √d<sub>k</sub>)</h4>
+
+        <p>
+          d<sub>k</sub> = 4, √d<sub>k</sub> = 2. Tüm değerleri 2'ye bölüyoruz:
+        </p>
+
+        <div class="matrix-wrap">
+          <div>
+            <div class="label">QK<sup>T</sup> / √d<sub>k</sub></div>
+            <div class="matrix m3">
+              <div class="cell">0.5</div><div class="cell">0.5</div><div class="cell hi">1.0</div>
+              <div class="cell">1.0</div><div class="cell hi">2.0</div><div class="cell">1.0</div>
+              <div class="cell">1.0</div><div class="cell">1.0</div><div class="cell hi">1.5</div>
+            </div>
+          </div>
+        </div>
+
+        <h4>Adım 3 — Softmax (her satıra)</h4>
+
+        <p>
+          Birinci satıra softmax: <code>softmax([0.5, 0.5, 1.0])</code>
+        </p>
+
+        <div class="formula">
+          e<sup>0.5</sup> ≈ 1.649<br>
+          e<sup>0.5</sup> ≈ 1.649<br>
+          e<sup>1.0</sup> ≈ 2.718<br>
+          Toplam ≈ 6.016<br>
+          → [0.274, 0.274, 0.452]
+        </div>
+
+        <div class="matrix-wrap">
+          <div>
+            <div class="label">Attention weights (softmax sonrası)</div>
+            <div class="matrix m3">
+              <div class="cell">.27</div><div class="cell">.27</div><div class="cell hi">.45</div>
+              <div class="cell">.21</div><div class="cell hi">.58</div><div class="cell">.21</div>
+              <div class="cell">.27</div><div class="cell">.27</div><div class="cell hi">.46</div>
+            </div>
+          </div>
+        </div>
+
+        <p>
+          Yorumlayalım: Birinci patch en çok 3. patch'e (%45) dikkat ediyor. İkinci patch
+          ağırlıklı olarak kendisine bakıyor (%58). Üçüncü patch yine kendisine yöneliyor (%46).
+          Bu sayılar Q, K, V matrislerinin değerlerinden geldi — yani <em>öğrenilebilir</em>.
+          Eğitim sürecinde W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub> ağırlıkları, attention'ın
+          doğru yere yönelmesini öğrenir.
+        </p>
+
+        <h4>Adım 4 — Attention weights ile V'yi çarp</h4>
+
+        <p>
+          Birinci patch'in yeni temsili:
+        </p>
+
+        <div class="formula">
+          Çıktı[0] = 0.27·V[0] + 0.27·V[1] + 0.45·V[2]<br>
+          = 0.27·[1,2,3,4] + 0.27·[5,6,7,8] + 0.45·[9,10,11,12]<br>
+          = [0.27, 0.54, 0.81, 1.08] + [1.35, 1.62, 1.89, 2.16] + [4.05, 4.50, 4.95, 5.40]<br>
+          ≈ [5.67, 6.66, 7.65, 8.64]
+        </div>
+
+        <p>
+          Birinci patch artık kendi bilgisini değil, üç patch'in bilgisinin ağırlıklı bir karışımını
+          taşıyor — ve bu karışımda en çok üçüncü patch'in etkisi var. Bu süreç, tüm patch'ler
+          için aynı anda yapılıyor (matris çarpımı paralelleştirilebiliyor; bu Transformer'ın
+          GPU'larda hızlı çalışmasının nedeni).
+        </p>
+
+        <div class="success">
+          <strong>Self-attention'ın özü:</strong> Her patch, kendisinin Query'sini diğer
+          patch'lerin Key'leriyle karşılaştırır, uyum derecelerine göre Value'larını ağırlıklı
+          olarak toplar. Çıktı: her patch'in <em>bağlama duyarlı</em> yeni temsili. Yerel
+          komşuluk gerek yok — her patch her diğeriyle tek adımda ilişki kurabilir.
+        </div>
+
+        <h3>2.5. Patch'ler arası attention sezgisi (görüntü perspektifi)</h3>
+
+        <p>
+          Bir kuş görüntüsü düşünün. Patch'lerin bir kısmı kuşun gözüne, kuyruğa, kanatlara,
+          bir kısmı arka plana (gökyüzü, ağaç) denk düşüyor olsun. Eğitilmiş bir ViT'te:
+        </p>
+
+        <ul>
+          <li>Göz patch'inin Query'si, gaga ve kuyruk patch'lerinin Key'leriyle yüksek uyum verir
+          (kuş türünün tanımlayıcı özellikleri).</li>
+          <li>Gökyüzü patch'leri kendi aralarında yüksek uyum verir (benzer doku/renk).</li>
+          <li>Göz patch'i gökyüzü patch'lerine düşük dikkat verir (ilgisiz bilgi).</li>
+        </ul>
+
+        <p>
+          Sonuçta her patch'in temsili, görüntünün <em>tamamına</em> bakarak güncellenir. CNN'de
+          buna ulaşmak için derinlik gerekiyordu; ViT'te ilk attention katmanından itibaren bu
+          erişim var.
+        </p>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Eğitilmiş bir ViT'ten alınmış attention map: bir kuş görüntüsünde seçilen bir patch için, modelin baktığı diğer patch'lerin ısı haritası. Kuşun farklı parçalarına yüksek dikkat, arka plana düşük dikkat.</div>
+      </section>
+
+      <!-- ─── BÖLÜM 3 ─── -->
+      <section class="card fade" id="bolum3">
+        <h2 class="section-title">3. Multi-Head Attention</h2>
+
+        <p class="lead serif">
+          Tek bir self-attention "head"i, patch'ler arası tek bir tür ilişki yakalar. Ama görüntülerde
+          birden fazla ilişki türü vardır — renk benzerliği, şekil benzerliği, semantik benzerlik,
+          uzamsal yakınlık... Hepsini tek head ile yakalamak zor. Çözüm: paralel olarak birden
+          fazla attention çalıştırmak. Buna multi-head attention denir.
+        </p>
+
+        <h3>3.1. Tek head neden yetersiz?</h3>
+
+        <p>
+          Bir attention head'i tek bir Q, K, V projeksiyon setine sahiptir. Bu set, belirli bir
+          ilişki türünü yakalayacak şekilde öğrenilir. Diyelim ki bir head "renk benzerliği"ne
+          odaklandı. O zaman "şekil benzerliği" için ayrı bir mekanizmamız olmalı. Çünkü iki patch
+          renkte yakın ama şekilde uzak olabilir (gökyüzü ve mavi araba), veya tersi (kırmızı
+          elma ve yeşil elma).
+        </p>
+
+        <p>
+          Multi-head fikri: <strong>aynı girdiyi birden fazla farklı projeksiyon setiyle paralel
+          işle</strong>. Her head farklı bir "bakış açısı" geliştirir. Çıktıları birleştirilir.
+        </p>
+
+        <h3>3.2. Mekanik kurulum</h3>
+
+        <p>
+          Diyelim ki d_model = 768 (ViT-Base). 12 head kullanacaksak, her head 768/12 = 64
+          boyutlu çalışır. Yani:
+        </p>
+
+        <div class="formula">
+          Her head için ayrı W<sub>Q</sub><sup>(i)</sup>, W<sub>K</sub><sup>(i)</sup>, W<sub>V</sub><sup>(i)</sup> matrisleri (d_model × d_head)<br>
+          Her head bağımsız scaled dot-product attention hesaplar<br>
+          head<sub>i</sub> = Attention(X·W<sub>Q</sub><sup>(i)</sup>, X·W<sub>K</sub><sup>(i)</sup>, X·W<sub>V</sub><sup>(i)</sup>)<br>
+          <br>
+          Tüm head çıktıları concat edilir, sonra son bir lineer projeksiyondan geçer:<br>
+          MultiHead(X) = Concat(head<sub>1</sub>, ..., head<sub>h</sub>) · W<sub>O</sub>
+        </div>
+
+        <p>
+          Toplam parametre sayısı, tek bir büyük attention ile aynı kalır — paralel head'ler
+          her birini daha küçük tutar. Ama farklı projeksiyon setleri sayesinde model çeşitli
+          ilişki türlerini paralel öğrenebilir.
+        </p>
+
+        <h3>3.3. Multi-head sayıları — pratik değerler</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Model</th><th>d_model</th><th>Head sayısı</th><th>d_head</th><th>Toplam parametre</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>ViT-Base/16</td><td>768</td><td>12</td><td>64</td><td>~86M</td></tr>
+              <tr><td>ViT-Large/16</td><td>1024</td><td>16</td><td>64</td><td>~307M</td></tr>
+              <tr><td>ViT-Huge/14</td><td>1280</td><td>16</td><td>80</td><td>~632M</td></tr>
+              <tr><td>BERT-Base (NLP)</td><td>768</td><td>12</td><td>64</td><td>~110M</td></tr>
+              <tr><td>GPT-3 (NLP)</td><td>12288</td><td>96</td><td>128</td><td>~175B</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>3.4. PyTorch implementasyonu</h3>
+
+        <div class="code-label">Python — Multi-Head Self-Attention</div>
+<pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class MultiHeadSelfAttention(nn.Module):
+    """
+    Self-attention with multiple heads (ViT tarzı).
+    """
+    def __init__(self, d_model=768, num_heads=12, dropout=0.0):
+        super().__init__()
+        assert d_model % num_heads == 0, "d_model num_heads'e tam bölünmeli"
+        
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_head = d_model // num_heads
+        
+        # Q, K, V projeksiyonları — tek bir büyük matriste birleştirilebilir (verim için)
+        self.qkv_proj = nn.Linear(d_model, 3 * d_model, bias=True)
+        self.out_proj = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(dropout)
+        
+        self.scale = self.d_head ** -0.5    # 1 / sqrt(d_head)
+    
+    def forward(self, x):
+        # x: (Batch, N_token, d_model)
+        B, N, D = x.shape
+        
+        # Q, K, V'yi tek seferde projekte et
+        qkv = self.qkv_proj(x)   # (B, N, 3*D)
+        qkv = qkv.reshape(B, N, 3, self.num_heads, self.d_head)
+        qkv = qkv.permute(2, 0, 3, 1, 4)   # (3, B, num_heads, N, d_head)
+        q, k, v = qkv[0], qkv[1], qkv[2]   # her biri (B, num_heads, N, d_head)
+        
+        # Attention skorları: Q · K^T / sqrt(d_head)
+        skorlar = (q @ k.transpose(-2, -1)) * self.scale   # (B, num_heads, N, N)
+        
+        # Softmax ile normalize
+        weights = F.softmax(skorlar, dim=-1)
+        weights = self.dropout(weights)
+        
+        # V ile ağırlıklı toplam
+        cikti = weights @ v   # (B, num_heads, N, d_head)
+        
+        # Head'leri birleştir
+        cikti = cikti.transpose(1, 2).reshape(B, N, D)   # (B, N, D)
+        
+        # Çıkış projeksiyonu
+        cikti = self.out_proj(cikti)
+        return cikti, weights
+
+# Test
+attn = MultiHeadSelfAttention(d_model=768, num_heads=12)
+x = torch.randn(2, 197, 768)    # batch=2, 197 token (196 patch + 1 CLS), 768 boyut
+out, w = attn(x)
+print(f"Çıktı şekli: {out.shape}")       # (2, 197, 768)
+print(f"Attention weights: {w.shape}")    # (2, 12, 197, 197)
+</code></pre>
+
+        <div class="insight">
+          <strong>Önemli detay — bir tek büyük Linear:</strong> Üç ayrı projeksiyon yerine
+          <code>qkv_proj</code> tek bir Linear olarak yazıyoruz (3 × d_model çıktılı). Sonra
+          ortadan üçe bölüyoruz. Bu, modern PyTorch implementasyonlarında standart bir
+          optimizasyondur — GPU'da daha verimli.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 4 ─── -->
+      <section class="card fade" id="bolum4">
+        <h2 class="section-title">4. Transformer Encoder Bloğu</h2>
+
+        <p class="lead serif">
+          Self-attention ve multi-head attention'ı kavradıktan sonra Transformer Encoder bloğunu
+          oluşturmaya hazırız. Bu blok, ViT'in (ve aslında tüm modern Transformer modellerinin)
+          temel yapı taşıdır. Vaswani 2017'de tanımladı, BERT-GPT-T5-ViT hepsi bu bloğu kullanır.
+        </p>
+
+        <div id="bolum4-1"></div>
+        <h3>4.1. Bloğun anatomisi</h3>
+
+        <p>
+          Bir Transformer Encoder bloğu iki ana alt-modülden oluşur:
+        </p>
+
+        <ol>
+          <li><strong>Multi-Head Self-Attention (MHSA):</strong> Az önce kurduğumuz mekanizma.
+          Token'lar arası ilişki öğrenir.</li>
+          <li><strong>Feed-Forward Network (FFN):</strong> Her token'ı bağımsız olarak işleyen
+          bir MLP. Tek token üzerinde non-lineer dönüşüm yapar.</li>
+        </ol>
+
+        <p>
+          Her iki alt-modülün etrafında iki kritik teknik daha vardır:
+        </p>
+
+        <ul>
+          <li><strong>Residual connection (skip):</strong> Alt-modülün girişi çıkışına eklenir.
+          ResNet'ten tanıdığımız fikir. Gradyanın akmasını sağlar, derin ağları eğitilebilir kılar.</li>
+          <li><strong>Layer Normalization:</strong> Aktivasyonları normalize eder. BatchNorm'a
+          benzer ama batch yerine her token'ın <em>kendi içindeki</em> özellikleri normalize eder.</li>
+        </ul>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Transformer Encoder bloğunun şeması: Aşağıdan yukarı: girdi → LayerNorm → MHSA → + (residual) → LayerNorm → FFN → + (residual) → çıktı. Modern "Pre-Norm" akışı gösteriliyor.</div>
+
+        <h3>4.2. Pre-Norm vs Post-Norm — modern tercih</h3>
+
+        <p>
+          Vaswani'nin orijinal Transformer'ı normalizasyonu alt-modüllerin <em>sonrasında</em>
+          uyguluyordu (Post-Norm). ViT ve modern Transformer'lar normalizasyonu alt-modüllerin
+          <em>öncesinde</em> uyguluyor (Pre-Norm). Bu küçük değişiklik eğitim stabilitesinde
+          büyük fark yaratıyor — özellikle derin modellerde.
+        </p>
+
+        <div class="grid2">
+          <div class="mini amber">
+            <h4>Post-Norm (orijinal)</h4>
+            <pre style="margin:8px 0;font-size:.85rem;"><code>x = x + MHSA(x)
+x = LayerNorm(x)
+x = x + FFN(x)
+x = LayerNorm(x)</code></pre>
+            <p>Eğitimi hassas, warmup gerektirir.</p>
+          </div>
+          <div class="mini green">
+            <h4>Pre-Norm (ViT, modern)</h4>
+            <pre style="margin:8px 0;font-size:.85rem;"><code>x = x + MHSA(LayerNorm(x))
+x = x + FFN(LayerNorm(x))</code></pre>
+            <p>Daha stabil, derinleştirmek kolay.</p>
+          </div>
+        </div>
+
+        <div id="bolum4-2"></div>
+        <h3>4.3. Layer Normalization — BatchNorm'dan farkı</h3>
+
+        <p>
+          CNN'lerde BatchNorm kullanıyorduk: aktivasyonları <em>batch boyunca</em> normalize ediyordu.
+          Transformer'larda LayerNorm kullanılır: aktivasyonları <em>her örneğin kendi içinde</em>
+          normalize eder.
+        </p>
+
+        <div class="formula">
+          Her token'ın embedding'i için (768 boyutlu vektör):<br>
+          μ = mean(x)<br>
+          σ² = var(x)<br>
+          x̂ = (x − μ) / √(σ² + ε)<br>
+          y = γ · x̂ + β   (γ, β öğrenilebilir, embedding boyutu kadar)
+        </div>
+
+        <p>Neden BatchNorm yerine LayerNorm?</p>
+
+        <ul>
+          <li><strong>Batch boyutu bağımsızlığı:</strong> Çıkarımda batch=1 ile çalışırken
+          BatchNorm sorunlu olur (running stats kullanmak zorunda). LayerNorm her örnek için
+          ayrı çalışır, batch boyutuna bağlı değil.</li>
+          <li><strong>Dizi modellerinde doğal:</strong> Token'lar arası uzunluk değişebilir
+          (NLP'de). LayerNorm bundan etkilenmez.</li>
+          <li><strong>Daha kararlı eğitim:</strong> Self-attention'ın yüksek varyanslı çıkışları
+          için daha iyi normalize eder.</li>
+        </ul>
+
+        <div id="bolum4-3"></div>
+        <h3>4.4. Feed-Forward Network (FFN)</h3>
+
+        <p>
+          FFN, bloğun ikinci yarısı. Self-attention token'lar arası bilgi karıştırırken, FFN
+          her token üzerinde <em>bağımsız</em> non-lineer dönüşüm yapar. İki Linear katman ve
+          arada bir aktivasyon fonksiyonundan oluşur:
+        </p>
+
+        <div class="formula">
+          FFN(x) = Linear<sub>2</sub>(GELU(Linear<sub>1</sub>(x)))<br>
+          <br>
+          Linear<sub>1</sub>: d_model → 4·d_model  (genişle)<br>
+          Linear<sub>2</sub>: 4·d_model → d_model  (daral)
+        </div>
+
+        <p>
+          ViT-Base'de d_model=768, FFN'in iç boyutu 3072'dir. "Bottleneck'ı tersine" düşünebilirsiniz —
+          önce genişleyip non-lineer dönüşüm yapıyor, sonra daraltıyor. Bu sayede model her token
+          üzerinde zengin bir dönüşüm öğreniyor.
+        </p>
+
+        <h4>GELU aktivasyonu</h4>
+
+        <p>
+          ViT, ReLU yerine <strong>GELU</strong> (Gaussian Error Linear Unit) kullanır:
+        </p>
+
+        <div class="formula">
+          GELU(x) = x · Φ(x) ≈ 0.5x · (1 + tanh(√(2/π)·(x + 0.044715x³)))<br>
+          <br>
+          Burada Φ(x), standart normal dağılımın kümülatif dağılım fonksiyonu.
+        </div>
+
+        <p>
+          GELU, ReLU'nun sert eşiğine kıyasla yumuşak bir geçişe sahiptir. Sıfıra yakın değerler
+          için "biraz pozitif, biraz negatif" geçiş yapar. NLP ve görüntü modellerinde ReLU'dan
+          biraz daha iyi performans verdiği gözlemlenmiştir. BERT, GPT, ViT — hepsi GELU kullanır.
+        </p>
+
+        <h3>4.5. Tam blok — PyTorch</h3>
+
+        <div class="code-label">Python — Transformer Encoder bloğu (Pre-Norm)</div>
+<pre><code>class TransformerEncoderBlock(nn.Module):
+    """
+    ViT-tarzı Pre-Norm Transformer encoder bloğu.
+    """
+    def __init__(self, d_model=768, num_heads=12, ffn_ratio=4, dropout=0.0):
+        super().__init__()
+        # Self-attention dalı
+        self.norm1 = nn.LayerNorm(d_model)
+        self.attn  = MultiHeadSelfAttention(d_model, num_heads, dropout)
+        
+        # Feed-forward dalı
+        self.norm2 = nn.LayerNorm(d_model)
+        d_ff = ffn_ratio * d_model
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(dropout)
+        )
+    
+    def forward(self, x):
+        # Self-attention dalı + residual
+        attn_out, _ = self.attn(self.norm1(x))
+        x = x + attn_out
+        
+        # FFN dalı + residual
+        x = x + self.ffn(self.norm2(x))
+        return x
+
+# Test
+block = TransformerEncoderBlock(d_model=768, num_heads=12)
+x = torch.randn(2, 197, 768)
+out = block(x)
+print(f"Çıktı şekli: {out.shape}")   # (2, 197, 768) — şekil korunur!
+</code></pre>
+
+        <div class="insight">
+          <strong>Bloğun büyük resmi:</strong> Self-attention "token'lar arası iletişim",
+          FFN "token içi işleme" yapar. Bu iki adım, residual + LayerNorm ile sarmalanır.
+          Block çıkışı girişle aynı şekildedir (N tokens × d_model). Bu, blokların birbirine
+          yığılmasını çok kolaylaştırır. ViT-Base'de bu blokların 12 tanesi üst üste konur.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 5 ─── -->
+      <section class="card fade" id="bolum5">
+        <h2 class="section-title">5. Positional Encoding — Sıraya Anlam Katmak</h2>
+
+        <p class="lead serif">
+          Self-attention bir gizli soruna sahip: <strong>permütasyon-değişmez</strong> (permutation-invariant).
+          Yani patch'lerin sırasını karıştırırsanız çıktı değişmez. Görüntü için bu kabul edilemez:
+          bir patch'in görüntünün sol üstünde mi yoksa sağ altta mı olduğu önemli. Positional
+          encoding bu eksikliği gideren mekanizmadır.
+        </p>
+
+        <h3>5.1. Sorun: attention konum bilmiyor</h3>
+
+        <p>
+          Daha önceki bölümde self-attention formülünü gördük: <code>Attention(Q,K,V) = softmax(QK<sup>T</sup>/√d)V</code>.
+          Şimdi düşünelim: Q, K, V matrislerinin satırlarını karıştırırsak ne olur? Çıktı satırları
+          da aynı şekilde karışır ama içerik aynı kalır. Yani modelden bakıldığında "ilk patch ile
+          son patch" arasında hiçbir fark yok.
+        </p>
+
+        <p>
+          Bu, görüntü için kötü bir özelliktir. Bir kuşun gagasının nerede olduğu (sol mu sağ mı,
+          üst mü alt mı) anlamlıdır. Sırayı kaybedersek model "bir kuş var" der ama "kuş hangi yönde
+          bakıyor" anlayamaz.
+        </p>
+
+        <div class="warning">
+          <strong>Net bir test:</strong> Bir görüntünün patch'lerini rastgele karıştırın. Eğer
+          modelinizin tahmini hiç değişmiyorsa, modelinizde positional encoding yoktur. Bu
+          modern derin öğrenmenin ironik gözlemlerinden biridir: ViT'in CNN'e kıyasla bilmediği
+          en temel şey, patch'lerin nerede olduğu. Pozisyon bilgisini <em>açıkça</em> eklemek zorundayız.
+        </div>
+
+        <h3>5.2. Çözüm: pozisyon embeddinglerini ekle</h3>
+
+        <p>
+          Çözüm konseptsel olarak çok basit: her patch için bir "konum vektörü" oluştur ve patch
+          embedding'ine ekle. Yani her patch token'ı, "ne olduğu" bilgisinin yanına "nerede olduğu"
+          bilgisini de taşıyacak.
+        </p>
+
+        <div class="formula">
+          X' = X + PE<br>
+          <br>
+          X: patch embeddingler (N × d_model)<br>
+          PE: positional encoding (N × d_model)
+        </div>
+
+        <p>İki ana yaklaşım var:</p>
+
+        <div class="grid2">
+          <div class="mini indigo">
+            <h4>Sinusoidal (orijinal Transformer)</h4>
+            <p>Vaswani 2017, her pozisyon için sinüs ve kosinüs fonksiyonlarıyla deterministik
+            bir vektör üretir:</p>
+            <div class="formula" style="font-size:.95rem;">
+              PE(pos, 2i) = sin(pos / 10000<sup>2i/d</sup>)<br>
+              PE(pos, 2i+1) = cos(pos / 10000<sup>2i/d</sup>)
+            </div>
+            <p><strong>Avantaj:</strong> Öğrenmesi gerekmiyor, eğitim sırasında görmediği uzunluğa
+            extrapolate edebilir.</p>
+          </div>
+          <div class="mini fuchsia">
+            <h4>Learnable (ViT'in tercihi)</h4>
+            <p>Her pozisyon için <em>öğrenilebilir</em> bir vektör. Embedding matrisi gibi:</p>
+            <pre style="margin:8px 0;font-size:.85rem;"><code>pos_embed = nn.Parameter(
+  torch.zeros(1, N+1, d_model)
+)
+nn.init.trunc_normal_(pos_embed, std=0.02)</code></pre>
+            <p><strong>Avantaj:</strong> Daha esnek, model kendi optimal kodlamayı bulur.
+            ViT'te bu kullanılır.</p>
+          </div>
+        </div>
+
+        <h3>5.3. ViT'te positional encoding</h3>
+
+        <p>
+          ViT, <strong>1D learnable</strong> positional encoding kullanır. Yani 196 patch için
+          196 ayrı vektör + CLS token için 1 vektör = toplam 197 vektör öğrenilir. 2D yapı
+          (örn. patch (3,4) ile patch (3,5) arasındaki yatay komşuluk) açıkça verilmez —
+          model bunu kendisi keşfetmek zorunda.
+        </p>
+
+        <p>
+          İlginç bir şekilde, eğitilmiş bir ViT'in positional embedding'leri görselleştirildiğinde,
+          model 2D yapıyı <em>kendiliğinden öğreniyor</em>. Yakın patch'lerin embeddingleri
+          birbirine benziyor; satırların ve sütunların yapısı ortaya çıkıyor. Bu, ViT'in induktif
+          bias'ı düşük olmasına rağmen veriden uzamsal yapıyı çıkarabildiğinin kanıtıdır.
+        </p>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Eğitilmiş ViT'in positional embedding kosinüs benzerlik matrisi: Her hücre (i,j), i. patch ile j. patch'in pos embed'lerinin benzerliği. Görsel olarak 2D ızgara yapısı kendiliğinden ortaya çıkıyor — modelin "öğrenilmiş" 2D pozisyon bilgisi.</div>
+
+        <div class="historical">
+          <strong>2D positional encoding farkları:</strong> Sonraki çalışmalar (DeiT, Swin, Beit)
+          2D-aware positional encoding yöntemlerini denedi: relative position bias, 2D sinusoidal,
+          rotary position embedding (RoPE). ViT'in orijinal seçimi olan 1D learnable hala
+          sıkça kullanılıyor ama bazı varyantlar 2D yöntemlerle iyileşme sağlıyor.
+        </div>
+
+        <h3>5.4. CLS token için pozisyon</h3>
+
+        <p>
+          ViT'te bir özel token vardır: CLS token. Patch'lerin <em>başına</em> eklenir ve
+          sınıflandırma için kullanılır (detayını bir sonraki bölümde göreceğiz). CLS token'ın
+          da bir position embedding'i var (her zaman aynı, çünkü her zaman aynı pozisyonda).
+          Bu yüzden ViT'te toplam 197 pozisyon vardır: 196 patch + 1 CLS.
+        </p>
+      </section>
+
+      <!-- ─── BÖLÜM 6 ─── -->
+      <section class="card fade" id="bolum6">
+        <h2 class="section-title">6. Vision Transformer (ViT) — Tam Mimari</h2>
+
+        <p class="lead serif">
+          Şimdi tüm parçaları birleştiriyoruz. Self-attention, multi-head, encoder bloğu, positional
+          encoding — hepsi yerlerine oturdu. Geriye kalan: bunları görüntü için bir araya getirmek.
+          Bu bölümde ViT'in tam akışını adım adım kuracak, sonunda sıfırdan PyTorch implementasyonunu
+          inceleyeceğiz.
+        </p>
+
+        <div class="placeholder tall">GÖRSEL ALANI<br>ViT'in tam mimari diyagramı (Dosovitskiy 2020 makalesinin meşhur şekli): 1) Görüntü 16×16 patch'lere bölünür, 2) Her patch flatten edilip linear projection ile embedding'e dönüşür, 3) CLS token başa eklenir, 4) Positional embedding eklenir, 5) N adet transformer encoder bloğundan geçer, 6) CLS token'ın son temsili MLP head'e gider, 7) Sınıf tahmini.</div>
+
+        <div id="bolum6-1"></div>
+        <h3>6.1. Patch Embedding — görüntüyü "cümle"ye çevirmek</h3>
+
+        <p>
+          ViT'in ilk adımı, 2D görüntüyü 1D "token dizisi"ne dönüştürmektir. Adım adım:
+        </p>
+
+        <h4>Adım 1: Görüntüyü patch'lere böl</h4>
+
+        <p>
+          224×224×3 (RGB) bir görüntüyü 16×16 piksel boyutlu, üst üste binmeyen patch'lere böl:
+        </p>
+
+        <div class="formula">
+          Görüntü:     224 × 224 × 3<br>
+          Patch boyutu: 16 × 16<br>
+          Patch sayısı: (224/16) × (224/16) = 14 × 14 = <strong>196 patch</strong><br>
+          Her patch:    16 × 16 × 3 = <strong>768 piksel değeri</strong>
+        </div>
+
+        <h4>Adım 2: Her patch'i düzleştir</h4>
+
+        <p>
+          Her 16×16×3 patch'i tek bir 768 boyutlu vektöre düzleştir. Sonuç: 196 vektör, her biri
+          768 boyutlu. Yani bir <strong>196 × 768</strong> matrisi.
+        </p>
+
+        <h4>Adım 3: Linear projection ile embedding'e dönüştür</h4>
+
+        <p>
+          768 piksel değeri "ham" bir gösterim. Bunu öğrenilebilir bir Linear katmandan geçirip
+          modelin çalışacağı embedding uzayına projekte ederiz:
+        </p>
+
+        <div class="formula">
+          E = X<sub>patches</sub> · W<sub>embed</sub><br>
+          <br>
+          X<sub>patches</sub>: (196 × 768)  — ham patch pikselleri<br>
+          W<sub>embed</sub>:    (768 × d_model)  — öğrenilebilir<br>
+          E:                   (196 × d_model)  — patch embeddingler
+        </div>
+
+        <p>
+          ViT-Base'de d_model = 768 olduğu için bu projeksiyon aslında 768→768. Ama d_model
+          farklı seçilebilir.
+        </p>
+
+        <h4>Verimli implementasyon: Conv2d trick</h4>
+
+        <p>
+          Aslında bu üç adımı tek bir Conv2d katmanıyla yapabiliriz. <code>stride = kernel_size = 16</code>
+          olan bir konvolüsyon, görüntüyü 16×16'lık üst üste binmeyen alanlara böler ve her birini
+          d_model boyutlu çıktıya projekte eder. PyTorch implementasyonlarında bu yöntem kullanılır.
+        </p>
+
+        <div class="code-label">Python — Patch Embedding (Conv2d ile)</div>
+<pre><code>class PatchEmbedding(nn.Module):
+    """
+    224×224 görüntüyü 196 patch embedding'e dönüştürür.
+    Verimli implementasyon: stride=kernel_size olan Conv2d.
+    """
+    def __init__(self, img_size=224, patch_size=16, in_channels=3, d_model=768):
+        super().__init__()
+        self.img_size = img_size
+        self.patch_size = patch_size
+        self.num_patches = (img_size // patch_size) ** 2     # 14×14 = 196
+        
+        # Conv2d: stride=patch_size sayesinde her 16×16 alan tek bir embedding'e
+        self.proj = nn.Conv2d(
+            in_channels, d_model,
+            kernel_size=patch_size,
+            stride=patch_size
+        )
+    
+    def forward(self, x):
+        # x: (B, 3, 224, 224)
+        x = self.proj(x)              # (B, 768, 14, 14)
+        x = x.flatten(2)              # (B, 768, 196)
+        x = x.transpose(1, 2)         # (B, 196, 768)
+        return x
+
+# Test
+patch_embed = PatchEmbedding()
+img = torch.randn(2, 3, 224, 224)
+tokens = patch_embed(img)
+print(f"Çıktı şekli: {tokens.shape}")    # (2, 196, 768)
+</code></pre>
+
+        <div id="bolum6-2"></div>
+        <h3>6.2. CLS Token — sınıflandırma için "rezerve edilmiş" token</h3>
+
+        <p>
+          ViT'in sınıflandırma stratejisi ilginçtir. 196 patch token'ından sonra sınıf tahmini
+          için ne kullanacağız? "Tüm token'ların ortalamasını al" diyebiliriz, ama ViT'in tercihi
+          farklı: <strong>özel bir öğrenilebilir token ekle</strong>.
+        </p>
+
+        <p>
+          BERT'ten ödünç alınan bu fikre <strong>[CLS] token</strong> denir (classification token).
+          Patch sırasının başına eklenen, eğitim başında rastgele başlatılmış bir d_model boyutlu
+          öğrenilebilir vektördür. Self-attention katmanları boyunca bu token, tüm patch'lerle
+          ilişki kurar ve "tüm görüntünün özetini" temsil etmeyi öğrenir.
+        </p>
+
+        <p>
+          Sınıflandırma kafası sadece bu CLS token'ın son temsiline bakar. Patch token'larının
+          son temsilleri segmentasyon, detection gibi başka görevler için kullanılabilir ama
+          sınıflandırma için CLS token yeterlidir.
+        </p>
+
+        <div class="formula">
+          Sequence = [CLS, patch_1, patch_2, ..., patch_196]<br>
+          Uzunluk = 197 token
+        </div>
+
+        <div class="insight">
+          <strong>Neden CLS token, ortalama almak yerine?</strong> Eğitilebilir bir token,
+          "her patch'ten ne kadar bilgi alacağını" attention mekanizması ile öğrenir. Sabit
+          ortalama, tüm patch'lere eşit ağırlık verir — bazı patch'lerin daha bilgilendirici
+          olabileceği gerçeğini yakalamaz. Pratikte CLS token biraz daha iyi performans verir,
+          ama global average pooling (GAP) de yaygın bir alternatiftir. ViT-22B gibi devasa
+          modellerde GAP tercih edilir.
+        </div>
+
+        <div id="bolum6-3"></div>
+        <h3>6.3. Tam ViT akışı — adım adım</h3>
+
+        <div class="step-flow">
+          <div class="step-box">224×224×3 görüntü</div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">PatchEmbed<br><small>196×768</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">CLS ekle<br><small>197×768</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">+ PosEmbed<br><small>197×768</small></div>
+        </div>
+        <div class="step-flow" style="margin-top:-10px;">
+          <div class="step-box">12 × Encoder Bloğu<br><small>197×768</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">LayerNorm<br><small>197×768</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">CLS çıkar<br><small>1×768</small></div>
+          <div class="step-arrow">→</div>
+          <div class="step-box">MLP Head<br><small>1×num_classes</small></div>
+        </div>
+
+        <h3>6.4. ViT'in boyut varyantları</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Model</th><th>Katman</th><th>d_model</th><th>Heads</th><th>FFN dim</th><th>Parametre</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>ViT-Tiny/16</td><td>12</td><td>192</td><td>3</td><td>768</td><td>5.7M</td></tr>
+              <tr><td>ViT-Small/16</td><td>12</td><td>384</td><td>6</td><td>1536</td><td>22M</td></tr>
+              <tr><td>ViT-Base/16</td><td>12</td><td>768</td><td>12</td><td>3072</td><td>86M</td></tr>
+              <tr><td>ViT-Large/16</td><td>24</td><td>1024</td><td>16</td><td>4096</td><td>307M</td></tr>
+              <tr><td>ViT-Huge/14</td><td>32</td><td>1280</td><td>16</td><td>5120</td><td>632M</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Model isimlendirmesindeki "/16" patch boyutunu gösterir. ViT-Base/16 = 16×16 patch'ler,
+          ViT-Huge/14 = 14×14 patch'ler. Patch küçüldükçe token sayısı artar, hesaplama maliyeti
+          yükselir ama doğruluk genelde iyileşir (daha ince ayrıntı).
+        </p>
+
+        <div id="bolum6-4"></div>
+        <h3>6.5. Sıfırdan ViT implementasyonu</h3>
+
+        <p>
+          Şimdiye kadar her bileşeni ayrı yazdık. Şimdi hepsini birleştirip tam bir ViT modeli kuralım.
+          Bu kod pratik kullanım için değil (Hugging Face'i kullanacağız), eğitici amaçlıdır —
+          mimarinin nasıl çalıştığını net görmek için.
+        </p>
+
+        <div class="code-label">Python — Sıfırdan Vision Transformer</div>
+<pre><code>class VisionTransformer(nn.Module):
+    """
+    Vision Transformer (Dosovitskiy 2020) — sıfırdan PyTorch implementasyonu.
+    """
+    def __init__(
+        self,
+        img_size=224,
+        patch_size=16,
+        in_channels=3,
+        num_classes=1000,
+        d_model=768,
+        depth=12,           # encoder bloğu sayısı
+        num_heads=12,
+        ffn_ratio=4,
+        dropout=0.0,
+    ):
+        super().__init__()
+        # 1) Patch embedding
+        self.patch_embed = PatchEmbedding(img_size, patch_size, in_channels, d_model)
+        num_patches = self.patch_embed.num_patches
+        
+        # 2) CLS token — öğrenilebilir
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, d_model))
+        nn.init.trunc_normal_(self.cls_token, std=0.02)
+        
+        # 3) Positional embedding — öğrenilebilir, 197 pozisyon için
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, d_model))
+        nn.init.trunc_normal_(self.pos_embed, std=0.02)
+        
+        self.dropout = nn.Dropout(dropout)
+        
+        # 4) Transformer encoder yığını — 12 blok
+        self.blocks = nn.ModuleList([
+            TransformerEncoderBlock(d_model, num_heads, ffn_ratio, dropout)
+            for _ in range(depth)
+        ])
+        
+        # 5) Son LayerNorm
+        self.norm = nn.LayerNorm(d_model)
+        
+        # 6) MLP Head — sınıflandırma için
+        self.head = nn.Linear(d_model, num_classes)
+    
+    def forward(self, x):
+        B = x.shape[0]
+        
+        # Patch embedding
+        x = self.patch_embed(x)                           # (B, 196, 768)
+        
+        # CLS token ekle
+        cls_tokens = self.cls_token.expand(B, -1, -1)     # (B, 1, 768)
+        x = torch.cat([cls_tokens, x], dim=1)             # (B, 197, 768)
+        
+        # Position embedding ekle
+        x = x + self.pos_embed                            # (B, 197, 768)
+        x = self.dropout(x)
+        
+        # Transformer blokları
+        for block in self.blocks:
+            x = block(x)                                   # (B, 197, 768)
+        
+        # Son norm
+        x = self.norm(x)
+        
+        # CLS token'ı al ve sınıflandır
+        cls_temsil = x[:, 0]                              # (B, 768)
+        logits = self.head(cls_temsil)                    # (B, num_classes)
+        
+        return logits
+
+# Test
+model = VisionTransformer(num_classes=1000)
+toplam_param = sum(p.numel() for p in model.parameters())
+print(f"Toplam parametre: {toplam_param:,}")               # ≈ 86M
+
+img = torch.randn(2, 3, 224, 224)
+logits = model(img)
+print(f"Çıktı şekli: {logits.shape}")                      # (2, 1000)
+</code></pre>
+
+        <div class="success">
+          <strong>Bu 70 satırlık kod, ViT'in tamamı.</strong> 1 milyar dolardan fazla yatırım
+          almış araştırma laboratuvarlarının kullandığı mimarinin tüm temel taşları burada.
+          Tabii ki pratik kullanımda Hugging Face'in optimize edilmiş ve pretrained sürümünü
+          kullanacağız — ama yukarıdaki kod, "ne çalıştırdığımı biliyorum" hissini veriyor.
+        </div>
+
+        <div class="historical">
+          <strong>ViT makalesi başlığı bile bir kıyamet — "An Image is Worth 16×16 Words":</strong>
+          Bu başlığın hem mizahi hem felsefi bir vurusu var. NLP'de cümleler kelimelerden oluşur;
+          görüntülerin "kelimeleri" 16×16 patch'lerdir, makaleye göre. Aralık 2020'de yayınlandığında
+          bilgisayarla görü topluluğu şüpheciydi: "CNN olmadan görüntü işlemek mümkün mü?"
+          Makale ImageNet'te %88.55 top-1 doğruluk göstererek bu şüpheyi sildi. Üstelik daha
+          büyük modellerle (ViT-Huge, JFT-300M ile pretrain) %90+ ulaşıldı. CNN tek hâkim
+          değildi artık.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 7 ─── -->
+      <section class="card fade" id="bolum7">
+        <h2 class="section-title">7. CNN vs ViT — Karşılaştırmalı Analiz</h2>
+
+        <p class="lead serif">
+          ViT'i kurduktan sonra doğal soru şu: "ViT mi yoksa CNN mi?" Cevap basit bir "biri diğerinden
+          iyi" değil — kullanım durumuna, veri miktarına, hesaplama bütçesine bağlı. Bu bölümde
+          iki paradigmayı sistematik olarak karşılaştırıyoruz.
+        </p>
+
+        <h3>7.1. İnduktif bias karşılaştırması</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Özellik</th><th>CNN</th><th>ViT</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Yerellik</td>
+                <td>✅ Mimari olarak yerleşik (3×3 conv)</td>
+                <td>❌ Yok (her patch her diğerine bakabilir)</td>
+              </tr>
+              <tr>
+                <td>Translasyon dayanıklılığı</td>
+                <td>✅ Parametre paylaşımıyla yerleşik</td>
+                <td>❌ Veriden öğrenilmek zorunda</td>
+              </tr>
+              <tr>
+                <td>2D uzamsal yapı</td>
+                <td>✅ Yerleşik (kernel'lar 2D)</td>
+                <td>⚠️ Sadece positional encoding'den</td>
+              </tr>
+              <tr>
+                <td>Hiyerarşik öğrenme</td>
+                <td>✅ Pooling ile yerleşik</td>
+                <td>⚠️ Yok (hiyerarşik ViT'ler — Swin — bunu ekler)</td>
+              </tr>
+              <tr>
+                <td>Uzun menzilli bağımlılık</td>
+                <td>❌ Derinlik gerektirir</td>
+                <td>✅ İlk katmandan itibaren</td>
+              </tr>
+              <tr>
+                <td>Modellemenin esnekliği</td>
+                <td>⚠️ Görüntü için tasarlanmış</td>
+                <td>✅ Her dizi tipine genelleşir</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>7.2. Veri ihtiyacı: ölçek meselesi</h3>
+
+        <p>
+          ViT makalesinde gösterilen en kritik bulgu, veri miktarının iki mimariyi nasıl farklı
+          etkilediği. Sonuçlar:
+        </p>
+
+        <div class="grid3">
+          <div class="mini orange">
+            <h4>Küçük veri (ImageNet-1k)</h4>
+            <p>1.3M görüntü ile eğitildiğinde <strong>CNN daha iyi.</strong> ResNet-50 yaklaşık
+            %76 top-1, ViT-Base ancak %77 civarında — fark yok denecek kadar küçük ama ViT'in
+            avantajı yok.</p>
+          </div>
+          <div class="mini amber">
+            <h4>Orta veri (ImageNet-21k)</h4>
+            <p>14M görüntü ile pretrain edildiğinde ViT yakalıyor. ViT-Large/16 ImageNet'te
+            %85+ doğruluğa ulaşıyor. CNN ile başa baş.</p>
+          </div>
+          <div class="mini green">
+            <h4>Büyük veri (JFT-300M)</h4>
+            <p>300M görüntü ile pretrain edildiğinde <strong>ViT açıkça öne çıkıyor.</strong>
+            ViT-Huge/14 ImageNet'te %88.55 top-1 doğruluk. Aynı veriyle CNN'ler bu seviyeye
+            ulaşamıyor.</p>
+          </div>
+        </div>
+
+        <blockquote>
+          "Veri büyüdükçe ViT'in avantajı büyüyor. Bu, foundation models çağında ViT'in tercih
+          edilen mimari olmasının ana nedeni — bu çağ veri ölçeklendirme çağıdır."
+        </blockquote>
+
+        <h3>7.3. Hesaplama maliyeti</h3>
+
+        <p>
+          Attention'ın hesaplama karmaşıklığı O(N²·d), yani patch sayısının karesi ile büyür.
+          224×224 görüntüde N=196 makul. Ama 1024×1024 görüntüde N=4096 olur — 268 milyon işlem
+          her attention katmanında. Bu, ViT'in yüksek çözünürlüklü görüntülerde sınırlı kalmasının
+          ana nedeni.
+        </p>
+
+        <p>
+          CNN'in maliyeti O(H·W·K²·C²) — yani uzamsal boyutla doğrusal büyür. Yüksek çözünürlükte
+          CNN'ler ölçeklenebilir kalır.
+        </p>
+
+        <div class="warning">
+          <strong>Pratik sonuç:</strong> Yüksek çözünürlüklü görüntüler (uydu, tıbbi taramalar,
+          yüksek detaylı endüstriyel görüntüleme) için saf ViT pahalı. Çözüm: Swin Transformer
+          gibi hiyerarşik ve yerel pencere kullanan varyantlar, ya da CNN-Transformer hibritleri.
+        </div>
+
+        <h3>7.4. Yorumlanabilirlik</h3>
+
+        <p>
+          ViT'in göze çarpan bir avantajı: <strong>attention weights doğal görselleştirme aracıdır</strong>.
+          Modelin hangi patch'e ne kadar baktığını doğrudan görebiliyoruz. CNN'de Grad-CAM gibi
+          ek araçlara ihtiyacımız vardı; ViT'te attention map "ücretsiz" bir yorumlama veriyor.
+        </p>
+
+        <p>
+          "Attention rollout" tekniği, tüm katmanların attention'larını çarparak modelin nihai
+          olarak nereye odaklandığını görselleştirir. Bunu uygulama bölümünde göreceğiz.
+        </p>
+
+        <h3>7.5. Hangi durumda hangisini seçmeli?</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Durum</th><th>Önerilen</th><th>Neden?</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Az veri (<10K örnek)</td>
+                <td><strong>CNN (pretrained)</strong></td>
+                <td>İnduktif bias'lar az veriyle kurtarır</td>
+              </tr>
+              <tr>
+                <td>Orta veri + pretrained mevcut</td>
+                <td><strong>Pretrained ViT fine-tune</strong></td>
+                <td>Pretrained ağırlıklar veri açlığını çözer</td>
+              </tr>
+              <tr>
+                <td>Çok büyük veri (>10M)</td>
+                <td><strong>ViT veya hibrit</strong></td>
+                <td>ViT'in ölçekleme avantajı</td>
+              </tr>
+              <tr>
+                <td>Yüksek çözünürlük (>512²)</td>
+                <td><strong>Swin / Hibrit / EfficientNet</strong></td>
+                <td>ViT O(N²) maliyeti pahalı</td>
+              </tr>
+              <tr>
+                <td>Edge cihazlar / mobil</td>
+                <td><strong>MobileNet, EfficientNet</strong></td>
+                <td>ViT parametre yoğun, hızlı çıkarım zor</td>
+              </tr>
+              <tr>
+                <td>Açıklanabilirlik şart</td>
+                <td><strong>ViT</strong></td>
+                <td>Attention maps doğal yorumlama</td>
+              </tr>
+              <tr>
+                <td>Çok modallık (görüntü+metin)</td>
+                <td><strong>ViT</strong></td>
+                <td>CLIP gibi modellerle uyumlu</td>
+              </tr>
+              <tr>
+                <td>Klasik benchmark, ResNet ile karşılaştırma</td>
+                <td><strong>ResNet</strong></td>
+                <td>Endüstride hâlâ en yaygın baseline</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="success">
+          <strong>Pratik tavsiye:</strong> 2026'da yeni bir görüntü projesi başlatıyorsanız,
+          <em>pretrained ViT veya Swin fine-tune</em> ile başlayın. Sonuçlar tatmin etmezse
+          ya da kaynaklar sınırlıysa pretrained ResNet/EfficientNet'e dönün. Sıfırdan eğitim
+          her iki paradigma için de çoğunlukla israftır.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 8 ─── -->
+      <section class="card fade" id="bolum8">
+        <h2 class="section-title">8. Modern Türevler — ViT'ten Sonra</h2>
+
+        <p class="lead serif">
+          ViT'in 2020'deki yayınından sonra Transformer-tabanlı görüntü modelleri patlama yaşadı.
+          Her yeni model, ViT'in bir sınırını çözmek için bir fikir öneriyordu. Bu bölümde dört
+          önemli türevi inceliyoruz: DeiT (veri verimliliği), Swin Transformer (yerel + hiyerarşik),
+          ConvNeXt (CNN'in dönüşü) ve MAE/DINO (self-supervised).
+        </p>
+
+        <div id="bolum8-1"></div>
+        <h3>8.1. DeiT — Data-efficient Image Transformer (Touvron 2021)</h3>
+
+        <div class="arch-card" style="border-color:#4338ca;background:#eef2ff;">
+          <h4 style="color:var(--indigo);">📊 DeiT — ViT'i ImageNet'le eğitebilir hale getir</h4>
+          <p><strong>Çözdüğü sorun:</strong> ViT'in JFT-300M (Google'a özel) gerektirmesi.
+          Akademik araştırmacılar ImageNet'in ötesine geçemiyor. DeiT, sadece ImageNet-1k ile
+          rekabetçi ViT eğitmek için yöntemler önerir.</p>
+          <p><strong>Anahtar fikirler:</strong>
+            <span class="tag indigo">Agresif augmentation (Mixup, CutMix, RandAugment)</span>
+            <span class="tag indigo">Knowledge distillation (CNN öğretmenden)</span>
+            <span class="tag indigo">Distillation token (CLS gibi ama öğretmenden öğrenir)</span>
+          </p>
+          <p><strong>Sonuç:</strong> ImageNet üzerinde sıfırdan eğitilmiş DeiT, ResNet50'yi geçti
+          (%83.1 vs %76.5). ViT'i "akademik dostu" hale getirdi.</p>
+        </div>
+
+        <div id="bolum8-2"></div>
+        <h3>8.2. Swin Transformer — yerel pencereler + hiyerarşi (Liu 2021)</h3>
+
+        <div class="arch-card" style="border-color:#a21caf;background:#fdf4ff;">
+          <h4 style="color:var(--fuchsia);">🪟 Swin — ViT için CNN'in sezgilerini geri getir</h4>
+          <p><strong>Çözdüğü sorun:</strong> ViT'in tüm patch'ler arasında full attention yapması
+          O(N²) maliyetli. Yüksek çözünürlükte tıkanıyor. Ayrıca hiyerarşik yapı eksik
+          (segmentasyon, detection için gerekli).</p>
+          <p><strong>Anahtar fikirler:</strong>
+            <span class="tag fuchsia">Shifted Windows — attention sadece yerel pencerelerde</span>
+            <span class="tag fuchsia">Patch merging — hiyerarşik downsampling</span>
+            <span class="tag fuchsia">Çoklu ölçekli özellikler (CNN gibi)</span>
+          </p>
+          <p><strong>Mekanik:</strong> Görüntüyü 7×7 pencerelere böl, her pencere içinde
+          self-attention yap. Sonraki katmanda pencereyi kaydır (shifted). Bu sayede hem yerel
+          hem global bilgi karışır, hesaplama doğrusal kalır.</p>
+          <p><strong>Etki:</strong> Object detection ve segmentasyonda standart oldu. Swin'in
+          v2 ve v3 sürümleri çıktı. SAM (Segment Anything) gibi modern modellerin temelinde Swin var.</p>
+        </div>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Swin Transformer'ın hiyerarşik yapısı: Solda küçük patch'ler, sağa doğru patch merging ile büyüyen alanlar. Aşağıda her seviyede shifted windows içinde attention'ın çalışması.</div>
+
+        <div id="bolum8-3"></div>
+        <h3>8.3. ConvNeXt — CNN'in dönüşü (Liu 2022)</h3>
+
+        <div class="arch-card" style="border-color:#0f766e;background:#f0fdf4;">
+          <h4 style="color:var(--teal);">🔄 ConvNeXt — "ViT'in iyi olanı CNN'e ekleyelim"</h4>
+          <p><strong>Tez:</strong> ViT'in başarısının sebebi attention değil, modern eğitim
+          pratikleri. CNN'i ViT-stili eğitim hile'leriyle güncellersek aynı performansı
+          alabiliriz.</p>
+          <p><strong>Yapılan değişiklikler:</strong>
+            <span class="tag teal">Daha büyük kernel (7×7)</span>
+            <span class="tag teal">Depthwise separable conv</span>
+            <span class="tag teal">LayerNorm (BatchNorm yerine)</span>
+            <span class="tag teal">GELU (ReLU yerine)</span>
+            <span class="tag teal">İnvertet bottleneck (FFN gibi)</span>
+            <span class="tag teal">AdamW + cosine schedule</span>
+            <span class="tag teal">Mixup, CutMix vs.</span>
+          </p>
+          <p><strong>Sonuç:</strong> ConvNeXt, ViT ve Swin ile aynı seviyede performans gösterdi.
+          "Attention şart değil, doğru eğitim önemli" mesajı verdi. Tartışma şu hâlâ devam ediyor:
+          attention'ın özgün bir katkısı var mı, yoksa sadece modern tariflerin yan etkisi mi?</p>
+        </div>
+
+        <h3>8.4. Self-Supervised Vision Transformers — MAE ve DINO</h3>
+
+        <div class="grid2">
+          <div class="mini violet">
+            <h4>MAE — Masked Autoencoder (He 2021)</h4>
+            <p>NLP'deki BERT mantığını görüntüye taşır. Patch'lerin %75'ini maskele, kalan
+            %25'ten orijinal patch'leri tahmin et. Etiketsiz görüntülerle güçlü temsiller öğrenir.
+            Daha sonra fine-tune için pretrained backbone.</p>
+            <p><strong>Önemi:</strong> Self-supervised vision'da çığır açtı. Etiketli veriye
+            ihtiyacı azalttı.</p>
+          </div>
+          <div class="mini violet">
+            <h4>DINO — self-Distillation (Caron 2021)</h4>
+            <p>Aynı görüntünün iki augmentasyonu üzerinden öğrenir. Teacher ve student ağ aynı
+            görüntünün farklı görünümlerine benzer temsiller üretmeli. Etiket gerekmez.</p>
+            <p><strong>Özelliği:</strong> DINO ile eğitilmiş ViT'in attention map'leri kendiliğinden
+            <em>nesne segmentasyonu</em> yapar — hiç segmentasyon etiketi görmeden! Bu, modelin
+            görüntüleri gerçekten anladığının kanıtı sayıldı.</p>
+          </div>
+        </div>
+
+        <h3>8.5. Tarihsel akış özetı</h3>
+
+        <div class="timeline">
+          <div class="timeline-item"><strong>2020 — ViT:</strong> Saf transformer görüntüde çalışır.</div>
+          <div class="timeline-item"><strong>2021 — DeiT:</strong> ImageNet ile eğitilebilir hale getirildi.</div>
+          <div class="timeline-item"><strong>2021 — Swin:</strong> Yerel pencere + hiyerarşi. Detection/segmentasyon dünyasına girdi.</div>
+          <div class="timeline-item"><strong>2021 — MAE, DINO:</strong> Self-supervised ViT'ler. Etiketsiz öğrenme.</div>
+          <div class="timeline-item"><strong>2022 — ConvNeXt:</strong> "CNN modern tariflerle hâlâ rekabetçi" cevabı.</div>
+          <div class="timeline-item"><strong>2023 — SAM, DINOv2:</strong> Foundation vision modelleri.</div>
+          <div class="timeline-item"><strong>2024-2026 — Multi-modal:</strong> Vision modelleri NLP ile birleşiyor.</div>
+        </div>
+
+        <div class="success">
+          <strong>Bu bölümün anahtar mesajı:</strong> 2020'den beri görüntü işlemede temel akım
+          Transformer/hibrit modellerin etrafında şekilleniyor. Pratik kullanımda bugün ya bir
+          ViT türevi (Swin, MAE-pretrained) ya da modern bir CNN (ConvNeXt, EfficientNet) tercih
+          edilir. ResNet hâlâ baseline olarak yaşıyor ama nadiren state-of-the-art.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 9 ─── -->
+      <section class="card fade" id="bolum9">
+        <h2 class="section-title">9. Uygulama: Pretrained ViT ile Transfer Learning</h2>
+
+        <p class="lead serif">
+          Şimdi teorik temeli pratiğe dökme zamanı. Bu bölümde Hugging Face <code>transformers</code>
+          kütüphanesini kullanarak pretrained bir ViT modelini Oxford Flowers 102 veri setinde
+          fine-tune edeceğiz. Ardından attention rollout görselleştirmesi yapacak, son olarak
+          10. haftadan tanıdığımız Pnömoni X-Ray problemini ViT ile çözüp ResNet50 ile karşılaştıracağız.
+        </p>
+
+        <div class="huggingface">
+          <strong>🤗 Neden Hugging Face?</strong> <code>transformers</code> kütüphanesi modern AI
+          ekosisteminin omurgası. 500.000+ pretrained model, standart API, kolay deployment.
+          Görüntü, ses, metin — hepsi aynı arayüzde. Öğrencilerin kariyerinde mutlaka karşılaşacağı
+          araç. PyTorch'la sıkı entegre, ama detayları gizlemiyor — istediğinizde model içine
+          inebilirsiniz.
+        </div>
+
+        <h3>Kurulum</h3>
+
+        <div class="code-label">Bash — Gerekli paketler</div>
+<pre><code># Hugging Face transformers ve datasets
+pip install transformers datasets accelerate
+
+# Görüntü işleme ve görselleştirme
+pip install torch torchvision pillow matplotlib seaborn
+
+# Attention görselleştirme için
+pip install opencv-python scikit-learn
+
+# Token'lı erişim için (büyük modeller için)
+# pip install huggingface_hub
+# huggingface-cli login  # token gerek olursa
+</code></pre>
+
+        <div id="bolum9-1"></div>
+        <h3>9.1. Hugging Face ile Pretrained ViT — Hızlı Başlangıç</h3>
+
+        <p>
+          Bir görüntüyü sınıflandırmak için sadece birkaç satır kod yeterli. Pretrained ViT
+          ImageNet'te eğitilmiş, 1000 sınıfı tanıyor.
+        </p>
+
+        <div class="code-label">Python — En basit kullanım (3 satır)</div>
+<pre><code>from transformers import pipeline
+
+# Pretrained ViT yükle
+classifier = pipeline("image-classification", model="google/vit-base-patch16-224")
+
+# Bir görüntü ver
+sonuc = classifier("kedi.jpg")
+print(sonuc)
+# [{'label': 'tabby cat', 'score': 0.847}, ...]
+</code></pre>
+
+        <p>
+          Pipeline çok kolaylaştırıyor ama model içine erişim yok. Şimdi daha kontrollü
+          versiyonunu yazalım.
+        </p>
+
+        <div class="code-label">Python — ViTImageProcessor + ViTForImageClassification</div>
+<pre><code>from transformers import ViTImageProcessor, ViTForImageClassification
+from PIL import Image
+import torch
+
+# Pretrained model ve preprocessor yükle
+model_adi = "google/vit-base-patch16-224"
+processor = ViTImageProcessor.from_pretrained(model_adi)
+model = ViTForImageClassification.from_pretrained(model_adi)
+model.eval()
+
+# Görüntüyü hazırla
+img = Image.open("kedi.jpg").convert("RGB")
+inputs = processor(images=img, return_tensors="pt")
+# inputs['pixel_values'] şekli: (1, 3, 224, 224)
+
+# Çıkarım
+with torch.no_grad():
+    outputs = model(**inputs)
+
+logits = outputs.logits      # (1, 1000)
+probabilities = torch.softmax(logits, dim=-1)
+
+# Top-5 tahmin
+top5_prob, top5_idx = probabilities[0].topk(5)
+for prob, idx in zip(top5_prob, top5_idx):
+    label = model.config.id2label[idx.item()]
+    print(f"  {label:30s}: {prob.item()*100:.2f}%")
+</code></pre>
+
+        <div class="result-box">
+          <div class="label">Çıktı (örnek):</div>
+          tabby cat                     : 84.73%<br>
+          tiger cat                     :  8.21%<br>
+          Egyptian cat                  :  3.45%<br>
+          lynx                          :  1.12%<br>
+          Persian cat                   :  0.83%
+        </div>
+
+        <div id="bolum9-2"></div>
+        <h3>9.2. Custom Dataset Üzerinde Fine-tune — Oxford Flowers 102</h3>
+
+        <p>
+          Şimdi pretrained ViT'i kendi sınıflarımızla fine-tune edeceğiz. Oxford Flowers 102
+          veri seti 102 farklı çiçek türü içerir, toplam 8189 görüntü. Patch fikrinin görsel
+          olarak anlamlı olduğu bir veri seti — çiçeklerin farklı kısımları (yapraklar, taç
+          yapraklar, sapı) farklı patch'lere denk düşer.
+        </p>
+
+        <h4>Adım 1 — Veri setini yükle</h4>
+
+        <div class="code-label">Python — flowers_dataset.py</div>
+<pre><code>from datasets import load_dataset
+from torchvision import transforms
+
+# HF Datasets ile direkt yükle
+dataset = load_dataset("nelorth/oxford-flowers")
+print(dataset)
+# DatasetDict({
+#     train: Dataset({features: ['image', 'label'], num_rows: 7169}),
+#     test: Dataset({features: ['image', 'label'], num_rows: 1020})
+# })
+
+# Sınıf sayısı
+num_classes = len(dataset['train'].features['label'].names)
+print(f"Sınıf sayısı: {num_classes}")     # 102
+
+# Train/val ayır
+dataset = dataset['train'].train_test_split(test_size=0.1, seed=42)
+train_ds = dataset['train']
+val_ds   = dataset['test']
+
+# ViT processor
+processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224")
+
+# Eğitim transform — agresif augmentation (ViT veri-aç)
+train_transform = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(20),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
+])
+
+val_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
+])
+
+# Hugging Face dataset için transform fonksiyonu
+def transform_fn(batch, train=True):
+    transform = train_transform if train else val_transform
+    batch['pixel_values'] = [transform(img.convert('RGB')) for img in batch['image']]
+    return batch
+
+train_ds.set_transform(lambda b: transform_fn(b, train=True))
+val_ds.set_transform(lambda b: transform_fn(b, train=False))
+</code></pre>
+
+        <h4>Adım 2 — Modeli yükle ve fine-tune için hazırla</h4>
+
+        <div class="code-label">Python — model_setup.py</div>
+<pre><code>from transformers import ViTForImageClassification
+
+# Pretrained ViT — sınıflandırma kafasını yeniden başlat
+model = ViTForImageClassification.from_pretrained(
+    "google/vit-base-patch16-224",
+    num_labels=102,                    # Flowers'da 102 sınıf
+    ignore_mismatched_sizes=True,      # Eski 1000-sınıf kafayı at
+    id2label={i: name for i, name in
+              enumerate(train_ds.features['label'].names)},
+    label2id={name: i for i, name in
+              enumerate(train_ds.features['label'].names)}
+)
+
+# Strateji: tüm modeli fine-tune et, ama düşük LR ile
+# Alternatif: backbone'u dondur, sadece classifier'ı eğit
+DONDUR = False
+if DONDUR:
+    for name, param in model.named_parameters():
+        if not name.startswith('classifier'):
+            param.requires_grad = False
+
+n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(f"Eğitilebilir parametre: {n_params:,}")     # ~86M (full) veya ~78K (sadece kafa)
+</code></pre>
+
+        <h4>Adım 3 — Trainer API ile eğitim</h4>
+
+        <p>
+          Hugging Face <code>Trainer</code> sınıfı, eğitim döngüsünü tamamen otomatikleştirir.
+          PyTorch'ta yazacağımız ~50 satırlık kodu birkaç satıra indirir.
+        </p>
+
+        <div class="code-label">Python — training.py</div>
+<pre><code>from transformers import TrainingArguments, Trainer
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+
+# Custom collator — pixel_values ve labels'ı topla
+def collate_fn(batch):
+    return {
+        'pixel_values': torch.stack([item['pixel_values'] for item in batch]),
+        'labels': torch.tensor([item['label'] for item in batch])
+    }
+
+# Custom metrik hesaplama
+def compute_metrics(eval_pred):
+    predictions, labels = eval_pred
+    predictions = np.argmax(predictions, axis=1)
+    return {
+        'accuracy': accuracy_score(labels, predictions),
+        'f1': f1_score(labels, predictions, average='weighted')
+    }
+
+# Eğitim parametreleri
+training_args = TrainingArguments(
+    output_dir='./vit-flowers',
+    num_train_epochs=10,
+    per_device_train_batch_size=32,
+    per_device_eval_batch_size=64,
+    learning_rate=2e-5,                # ViT fine-tune için tipik
+    warmup_ratio=0.1,                   # Warmup ŞART (ViT için)
+    weight_decay=0.01,
+    eval_strategy='epoch',
+    save_strategy='epoch',
+    load_best_model_at_end=True,
+    metric_for_best_model='accuracy',
+    logging_dir='./logs',
+    logging_steps=50,
+    fp16=True,                          # Mixed precision (GPU varsa)
+    report_to='none',
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_ds,
+    eval_dataset=val_ds,
+    data_collator=collate_fn,
+    compute_metrics=compute_metrics,
+)
+
+# Eğit
+trainer.train()
+
+# Test setinde değerlendir
+test_results = trainer.evaluate()
+print(f"\nTest doğruluğu: {test_results['eval_accuracy']*100:.2f}%")
+print(f"Test F1: {test_results['eval_f1']:.4f}")
+
+# Modeli kaydet
+trainer.save_model('./vit-flowers-final')
+</code></pre>
+
+        <div class="result-box">
+          <div class="label">Beklenen eğitim çıktısı (NVIDIA T4 GPU, ~40 dakika):</div>
+          Epoch 1/10 | Train Loss: 2.834 | Val Loss: 1.823 | Val Acc: 67.32%<br>
+          Epoch 2/10 | Train Loss: 1.245 | Val Loss: 0.654 | Val Acc: 85.67%<br>
+          Epoch 4/10 | Train Loss: 0.421 | Val Loss: 0.312 | Val Acc: 92.15%<br>
+          Epoch 7/10 | Train Loss: 0.123 | Val Loss: 0.187 | Val Acc: 95.42%<br>
+          Epoch 10/10 | Train Loss: 0.054 | Val Loss: 0.156 | Val Acc: 96.18%<br>
+          ─────────────────────────────────────────────<br>
+          Test doğruluğu: 96.18%<br>
+          Test F1:        0.9615
+        </div>
+
+        <div class="success">
+          <strong>Bu sonuç önemli:</strong> 102 sınıflık ince taneli bir problemde %96 doğruluk,
+          pretrained ViT'in transfer learning gücünün somut bir göstergesi. Aynı problemi
+          sıfırdan eğitilmiş bir CNN ile çözmek için on binlerce ek görüntü gerekirdi.
+        </div>
+
+        <div id="bolum9-3"></div>
+        <h3>9.3. Attention Rollout — Model Nereye Bakıyor?</h3>
+
+        <p>
+          Şimdi ViT'in en güzel özelliklerinden birini kullanacağız: attention'ı görselleştirmek.
+          Attention rollout (Abnar & Zuidema 2020) tekniği, tüm katmanların attention'larını
+          birleştirerek modelin "nihai dikkat haritası"nı çıkarır.
+        </p>
+
+        <div class="code-label">Python — attention_rollout.py</div>
+<pre><code>import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+from PIL import Image
+
+def attention_rollout(model, image_tensor, discard_ratio=0.9):
+    """
+    Tüm katmanların attention'ını birleştirerek rollout hesapla.
+    
+    image_tensor: (1, 3, 224, 224)
+    """
+    model.eval()
+    attentions = []
+    
+    # Tüm attention'ları yakalamak için hook
+    def hook_fn(module, input, output):
+        # output: attention weights (B, heads, N, N)
+        attentions.append(output.detach())
+    
+    # ViT modelinin tüm attention modüllerine hook
+    hooks = []
+    for layer in model.vit.encoder.layer:
+        h = layer.attention.attention.register_forward_hook(
+            lambda m, i, o: attentions.append(o[1])    # (attn_output, attn_weights)
+        )
+        hooks.append(h)
+    
+    with torch.no_grad():
+        outputs = model(image_tensor, output_attentions=True)
+    
+    # Hook'ları temizle
+    for h in hooks:
+        h.remove()
+    
+    # output_attentions=True ise direkt outputs.attentions'tan al
+    attentions = outputs.attentions   # tuple of (B, heads, N, N)
+    
+    # Her katmanda head'lerin ortalaması
+    rollout = torch.eye(attentions[0].size(-1)).to(image_tensor.device)
+    
+    for attn in attentions:
+        # Head'leri ortala
+        attn_avg = attn.mean(dim=1)[0]    # (N, N)
+        
+        # Residual ekle ve normalize
+        attn_avg = attn_avg + torch.eye(attn_avg.size(0)).to(attn_avg.device)
+        attn_avg = attn_avg / attn_avg.sum(dim=-1, keepdim=True)
+        
+        # Rollout çarpımı
+        rollout = attn_avg @ rollout
+    
+    # CLS token'ın diğer token'lara olan attention'ı
+    cls_attention = rollout[0, 1:]    # CLS hariç patch'ler (196,)
+    
+    # 14×14 grid'e yeniden şekillendir
+    cls_attention = cls_attention.reshape(14, 14).cpu().numpy()
+    
+    # 224×224 görüntü boyutuna yükselt
+    cls_attention = cv2.resize(cls_attention, (224, 224))
+    cls_attention = (cls_attention - cls_attention.min()) / \
+                    (cls_attention.max() - cls_attention.min() + 1e-8)
+    
+    return cls_attention
+
+
+# Kullanım
+img = Image.open('cicek.jpg').convert('RGB')
+inputs = processor(images=img, return_tensors="pt")
+attention_map = attention_rollout(model, inputs['pixel_values'])
+
+# Görselleştir — 3 panel
+img_np = np.array(img.resize((224, 224))) / 255.0
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+axes[0].imshow(img_np)
+axes[0].set_title('Orijinal')
+axes[0].axis('off')
+
+axes[1].imshow(attention_map, cmap='jet')
+axes[1].set_title('Attention Rollout')
+axes[1].axis('off')
+
+# Üst üste bindir
+heatmap = cv2.applyColorMap(np.uint8(255 * attention_map), cv2.COLORMAP_JET) / 255.0
+overlay = 0.5 * heatmap[..., ::-1] + 0.5 * img_np
+overlay = np.clip(overlay, 0, 1)
+axes[2].imshow(overlay)
+axes[2].set_title('Modelin Baktığı Bölgeler')
+axes[2].axis('off')
+
+plt.tight_layout()
+plt.savefig('vit_attention.png', dpi=150)
+plt.show()
+</code></pre>
+
+        <div class="placeholder medium">GÖRSEL ALANI<br>Üç panel: (1) Orijinal çiçek fotoğrafı (2) Attention rollout ısı haritası — model çiçeğin taç yapraklarına odaklanmış (3) Üst üste bindirilmiş hâl. Yapraklar yerine çiçek merkezi vurgulu.</div>
+
+        <div class="insight">
+          <strong>ViT'in CNN üzerindeki avantajı:</strong> Bu görselleştirme tamamen "ücretsiz".
+          Modelin doğal attention mekanizmasından geliyor; ekstra bir teknik (Grad-CAM gibi)
+          gerekmiyor. CNN'le Grad-CAM hesaplamak için ileri-geri yayılım gerekiyordu; ViT'te
+          sadece ileri yayılım yeterli.
+        </div>
+
+        <div id="bolum9-4"></div>
+        <h3>9.4. Pnömoni X-Ray — ResNet50 vs ViT Karşılaştırması</h3>
+
+        <p>
+          Geçen hafta Pnömoni veri setinde pretrained ResNet50 ile transfer learning yapmıştık.
+          ROC-AUC: 0.95, sensitivity: %94.6 sonuçlarını almıştık. Şimdi aynı problemi ViT ile
+          çözüp karşılaştıralım. Bu karşılaştırma "ViT her zaman daha iyi mi?" sorusuna somut
+          bir cevap verecek.
+        </p>
+
+        <div class="code-label">Python — pneumonia_vit.py</div>
+<pre><code>from transformers import ViTForImageClassification, ViTImageProcessor
+
+# 1️⃣ Pretrained ViT yükle
+processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224")
+model = ViTForImageClassification.from_pretrained(
+    "google/vit-base-patch16-224",
+    num_labels=2,                        # NORMAL vs PNEUMONIA
+    ignore_mismatched_sizes=True,
+    id2label={0: 'NORMAL', 1: 'PNEUMONIA'},
+    label2id={'NORMAL': 0, 'PNEUMONIA': 1}
+)
+
+# 2️⃣ Veri setini hazırla (10. haftadakiyle aynı yapı)
+# ... ImageFolder kullanımı 10. haftadaki gibi ...
+
+# 3️⃣ Sınıf ağırlıkları (dengesizlik için)
+import numpy as np
+sinif_sayilari = np.bincount([y for _, y in train_dataset.samples])
+sinif_agirliklari = torch.tensor(
+    [len(train_dataset) / (2 * c) for c in sinif_sayilari],
+    dtype=torch.float32
+)
+
+# 4️⃣ Custom Trainer — class weights ile
+class WeightedTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        labels = inputs.pop("labels")
+        outputs = model(**inputs)
+        logits = outputs.logits
+        
+        loss_fct = nn.CrossEntropyLoss(
+            weight=sinif_agirliklari.to(logits.device)
+        )
+        loss = loss_fct(logits, labels)
+        return (loss, outputs) if return_outputs else loss
+
+# 5️⃣ Trainer args
+training_args = TrainingArguments(
+    output_dir='./vit-pneumonia',
+    num_train_epochs=8,
+    per_device_train_batch_size=16,      # ViT bellek-yoğun
+    per_device_eval_batch_size=32,
+    learning_rate=1e-5,                   # Tıbbi görüntü — düşük LR
+    warmup_ratio=0.1,
+    weight_decay=0.01,
+    eval_strategy='epoch',
+    save_strategy='epoch',
+    load_best_model_at_end=True,
+    metric_for_best_model='eval_auc',
+    fp16=True,
+)
+
+trainer = WeightedTrainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=val_dataset,
+    compute_metrics=compute_metrics_with_auc,
+)
+
+trainer.train()
+
+# 6️⃣ Test seti değerlendirme — ResNet50 ile karşılaştır
+test_results = trainer.evaluate(test_dataset)
+</code></pre>
+
+        <div class="result-box">
+          <div class="label">Tipik sonuçlar (Pnömoni X-Ray, 8 epoch eğitim):</div>
+          MODEL              | Parametre | Eğitim Süresi | ROC-AUC | Sensitivity | Specificity<br>
+          ─────────────────────────────────────────────────────────────────────────<br>
+          ResNet50 (10.hf)   |     25M   |    18 dk      |  0.954  |    94.6%    |    76.9%<br>
+          ViT-Base/16        |     86M   |    32 dk      |  0.961  |    95.4%    |    74.2%<br>
+          DeiT-Small         |     22M   |    19 dk      |  0.957  |    94.8%    |    77.3%
+        </div>
+
+        <div class="insight">
+          <strong>Bu karşılaştırmadan çıkarılacak dersler:</strong>
+          <ul>
+            <li><strong>ViT marginal olarak daha iyi</strong> AUC olarak (~0.7 puan). Ama
+            <em>dramatik</em> bir fark yok.</li>
+            <li><strong>Hesaplama maliyeti 1.8× artıyor</strong> aynı performans için.</li>
+            <li>DeiT-Small ResNet50 ile aynı parametre ölçeğinde, marginal iyileşme sağlıyor.</li>
+            <li><strong>Klinik kullanımda fark anlamlı değil.</strong> Tıbbi cihaz onayı,
+            popülasyon çeşitliliği, sistem entegrasyonu — bunlar 0.7 puan AUC farkından çok
+            daha önemli.</li>
+          </ul>
+        </div>
+
+        <blockquote>
+          "Pratikte 'hangisi daha iyi?' sorusunun cevabı çoğu zaman 'fark etmez.' Tıbbi görüntü
+          için ResNet50 ve ViT-Base benzer performans veriyor. Karar; hesaplama bütçesi,
+          eğitim süresi, attention map ihtiyacı gibi pratik faktörlerle veriliyor."
+        </blockquote>
+
+        <div class="success">
+          <strong>Bu uygulamadan çıkarılacak dersler:</strong>
+          <ol>
+            <li>Pretrained ViT, küçük bir custom dataset üzerinde dahi etkili olabilir (transfer
+            learning sayesinde).</li>
+            <li>Hugging Face <code>Trainer</code> API, kompleks eğitim loop'larını birkaç satıra
+            indirger.</li>
+            <li>ViT veri açlığını <em>pretrained</em> ile aşıyor. Sıfırdan eğitmek hala JFT-300M
+            gerektiriyor.</li>
+            <li>Attention rollout, model kararlarını açıklamak için CNN'in Grad-CAM'ından daha
+            doğal bir araç.</li>
+            <li>Belirli bir görev için ViT'in CNN'den iyi olduğunu varsaymak yanlış. Her zaman
+            test et ve hesaplama maliyetini hesaba kat.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 10 ─── -->
+      <section class="card fade" id="bolum10">
+        <h2 class="section-title">10. Foundation Models'a Köprü — Geleceğe Bakış</h2>
+
+        <p class="lead serif">
+          ViT'i öğrenmek, sadece bir mimariyi öğrenmek değil. Modern AI ekosisteminin omurgasını
+          oluşturan paradigmaya giriş yapmak. Bu bölümde son 3-4 yılda ortaya çıkan ve bilgisayarla
+          görü alanını dönüştüren <strong>foundation models</strong>'ı kısaca tanıyacağız.
+          Detaylarına girmiyoruz — bu derinlikte her biri ayrı bir ders gerektirir. Amaç,
+          öğrencilerin "bunlar var, ileride bakarım" demesini sağlamak.
+        </p>
+
+        <h3>10.1. Foundation Model nedir?</h3>
+
+        <p>
+          "Foundation model" terimi 2021'de Stanford araştırmacıları tarafından önerildi. Tanım:
+          <em>Devasa, çeşitli veri üzerinde önceden eğitilmiş, çok sayıda farklı görev için temel
+          oluşturabilen büyük modeller.</em> Örnekler: GPT serisi (NLP), CLIP (görüntü+metin),
+          SAM (segmentasyon), DALL-E (görüntü üretme).
+        </p>
+
+        <p>
+          Ortak özellikleri:
+        </p>
+        <ul>
+          <li><strong>Çok büyük:</strong> Yüz milyonlarca ila yüz milyarlarca parametre.</li>
+          <li><strong>Çok veri:</strong> İnternet ölçeğinde veri seti.</li>
+          <li><strong>Çok görev:</strong> Tek model, çok farklı problemi çözebiliyor.</li>
+          <li><strong>Self-supervised:</strong> Çoğu zaman etiketsiz veriden öğreniyor.</li>
+          <li><strong>Transformer tabanlı:</strong> Hemen hepsi Transformer kullanıyor.</li>
+        </ul>
+
+        <h3>10.2. CLIP — Görüntü ve metni birlikte öğrenmek (OpenAI 2021)</h3>
+
+        <div class="arch-card" style="border-color:#4338ca;background:#eef2ff;">
+          <h4 style="color:var(--indigo);">🔗 CLIP — Contrastive Language-Image Pre-training</h4>
+          <p><strong>Fikir:</strong> İnternetten 400 milyon görüntü-metin çifti topla. Bir görüntü
+          encoder (ViT) ve bir metin encoder (Transformer) eğit. Eğitim hedefi:
+          <em>aynı çiftin görüntü ve metin temsilleri yakın, farklı çiftlerinki uzak olsun.</em></p>
+          <p><strong>Sonuç:</strong> Aynı vektör uzayında görüntü ve metin birlikte yaşıyor.
+          "Bir kediye ait fotoğraf" ile "kedi" kelimesi yakın gömme noktalarında.</p>
+          <p><strong>Sihir:</strong> CLIP, hiç görmediği sınıfları sınıflandırabilir (zero-shot
+          classification). "Bir kedi fotoğrafı, bir köpek fotoğrafı, bir kuş fotoğrafı..." gibi
+          metin promptlarını verirsiniz, görüntü hangisine en yakınsa o sınıfı seçer.
+          ImageNet'te zero-shot ile %76 doğruluk (özel eğitim olmadan!).</p>
+          <p><strong>Etki:</strong>
+            <span class="tag indigo">DALL-E, Stable Diffusion'ın metin encoder'ı</span>
+            <span class="tag indigo">Görsel arama motorları</span>
+            <span class="tag indigo">Multi-modal modellerin altyapısı</span>
+          </p>
+        </div>
+
+        <h3>10.3. SAM — Segment Anything (Meta 2023)</h3>
+
+        <div class="arch-card" style="border-color:#a21caf;background:#fdf4ff;">
+          <h4 style="color:var(--fuchsia);">✂️ SAM — Segment Anything Model</h4>
+          <p><strong>Fikir:</strong> Veri seti = 1.1 milyar maske. Tek bir model, herhangi bir
+          nesneyi segmente edebilsin. Prompt olarak nokta, kutu veya metin verilir; SAM segmentasyon
+          maskesini üretir.</p>
+          <p><strong>Mimari:</strong> Görüntü encoder olarak Vision Transformer (devasa — ViT-H).
+          Prompt encoder farklı prompt tiplerini işler. Maske decoder hızlı bir transformer.</p>
+          <p><strong>Etki:</strong> Tıbbi görüntü, uydu görüntüsü, robotik, video editörleri —
+          her yerde kullanılıyor. "Segment Anything" gerçekten her şeyi segmente ediyor; çoğu
+          alanda fine-tune olmadan çalışıyor. 2024'te SAM 2 video desteği ile çıktı.</p>
+        </div>
+
+        <h3>10.4. DALL-E, Stable Diffusion — görüntü üretimi</h3>
+
+        <div class="arch-card" style="border-color:#0f766e;background:#f0fdf4;">
+          <h4 style="color:var(--teal);">🎨 Diffusion Modelleri — Metin'den Görüntüye</h4>
+          <p><strong>Fikir:</strong> Görüntüye yavaş yavaş gürültü eklemeyi öğren. Tersine
+          çevir: gürültüden görüntü oluşturmayı öğren. Bu süreç, metin promptlarıyla yönlendirilebilir.</p>
+          <p><strong>Anahtar bileşenler:</strong>
+            <ul>
+              <li><strong>U-Net (yine bir CNN-Transformer hibridi):</strong> Denoising adımları.</li>
+              <li><strong>CLIP metin encoder:</strong> Metni embedding'e dönüştürür.</li>
+              <li><strong>VAE (Variational Autoencoder):</strong> Latent space sıkıştırma.</li>
+            </ul>
+          </p>
+          <p><strong>Modeller:</strong> DALL-E (OpenAI), Stable Diffusion (Stability AI, açık kaynak),
+          Midjourney, Imagen (Google), FLUX. 2022 sonundan beri görsel sanat dünyasını dönüştürüyor.</p>
+        </div>
+
+        <h3>10.5. Multi-modal LLM'ler — GPT-4V, Gemini, Claude</h3>
+
+        <p>
+          2023-2024 dönemi, görüntü ve metni aynı modelde işleyen büyük dil modellerinin
+          (multi-modal LLMs) yaygınlaştığı dönem. GPT-4V (Vision), Gemini, Claude — hepsi
+          görüntüleri "anlayabiliyor". Mekanizma genelde şöyle:
+        </p>
+
+        <ol>
+          <li>Görüntü, bir ViT-tabanlı encoder ile token'lara dönüştürülür.</li>
+          <li>Bu token'lar, LLM'in metin token'larıyla birlikte verilir.</li>
+          <li>Model, görüntüye bakarak metin yanıtı üretir.</li>
+        </ol>
+
+        <p>
+          Yani modern multi-modal modellerin temelinde hâlâ ViT var. Bu hafta öğrendiklerinizin
+          bu modellerin nasıl çalıştığını anlamanız için ne kadar değerli olduğunu görebiliyorsunuz.
+        </p>
+
+        <h3>10.6. Yakın geleceğe bakış</h3>
+
+        <div class="grid2">
+          <div class="mini fuchsia">
+            <h4>Vision yakın gelecek</h4>
+            <ul>
+              <li>Daha verimli attention (linear, sparse)</li>
+              <li>Foundation model'lerin tıp, uzay, biyolojiye genişlemesi</li>
+              <li>Video ve 3D'ye genişleme (SAM 2, Sora)</li>
+              <li>Edge'de çalışabilen küçük foundation modeller</li>
+            </ul>
+          </div>
+          <div class="mini teal">
+            <h4>Yapmanız gerekenler</h4>
+            <ul>
+              <li>Hugging Face dokümantasyonu okuyun</li>
+              <li>arxiv.org'da güncel makaleleri takip edin</li>
+              <li>OpenAI, Meta, Anthropic blog yazıları</li>
+              <li>Papers with Code üzerinden state-of-the-art izleyin</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="success">
+          <strong>Bu bölümün anahtar mesajı:</strong> Foundation models çağındayız ve hepsinin
+          omurgasında Transformer var. ViT, CLIP, SAM, DALL-E — hepsi self-attention'ı temel
+          alıyor. Bu hafta öğrendiğiniz mimari, gelecek 5 yılın görüntü işleme paradigmasını
+          anlamanızın anahtarı.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 11 ─── -->
+      <section class="card fade" id="bolum11">
+        <h2 class="section-title">11. Pratik Notlar ve Yaygın Hatalar</h2>
+
+        <p class="lead serif">
+          ViT ile çalışırken karşılaşılan tipik tuzakları ve bunların çözümlerini topluyoruz.
+          CNN ile ViT'in pratik kullanımı bazı noktalarda farklılaşır; bu farklılıklar bilinmediğinde
+          eğitim başarısız olur.
+        </p>
+
+        <h3>11.1. Veri ve preprocessing</h3>
+
+        <div class="kv-row">
+          <div class="kv-key">❌ Pretrained model normalizasyonunu kaçırmak</div>
+          <div class="kv-val">Her pretrained model kendi mean/std değerleriyle normalize edilmeli.
+          Hugging Face <code>ViTImageProcessor</code> bunu otomatik yapıyor — manuel kullanırken
+          <code>processor.image_mean</code> ve <code>processor.image_std</code>'yi kullanın.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Yanlış patch_size ile pretrained yükleme</div>
+          <div class="kv-val">"vit-base-patch16-224" 16×16 patch, "vit-base-patch32-384" 32×32
+          patch kullanır. Patch boyutu modele özgüdür ve positional embedding'ler bu yapıya göre
+          eğitilmiştir. Karıştırılırsa model çalışmaz.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Yetersiz augmentation</div>
+          <div class="kv-val">ViT veri-aç; CNN'den çok daha agresif augmentation ister.
+          RandAugment, Mixup, CutMix, Random Erasing — hepsi standartrtır. Augmentation olmadan
+          ViT overfit eder.</div>
+        </div>
+
+        <h3>11.2. Eğitim ayarları</h3>
+
+        <div class="kv-row">
+          <div class="kv-key">❌ Çok yüksek learning rate</div>
+          <div class="kv-val">CNN'de 1e-3 normal. ViT'te <strong>1e-4 yüksek</strong>, fine-tune
+          için <strong>1e-5 ila 5e-5 ideal</strong>. Yüksek LR ile pretrained ağırlıklar
+          mahvolur, eğitim NaN'a gider.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Warmup atlamak</div>
+          <div class="kv-val">Transformer eğitiminde LR warmup <strong>şart</strong>. İlk %5-10
+          epoch sıfırdan başlanan LR yavaşça hedefe yükselir. Aksi halde ilk batch'lerde gradyan
+          patlaması olur. Hugging Face Trainer <code>warmup_ratio=0.1</code> ile bunu otomatik yapar.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ AdamW yerine SGD</div>
+          <div class="kv-val">ViT, AdamW optimizer ile eğitilmek üzere tasarlandı. SGD ile çalışmaz.
+          Weight decay 0.01-0.1 arası, betas (0.9, 0.999).</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ BatchNorm'lu bir hibrit beklemek</div>
+          <div class="kv-val">ViT BatchNorm <em>kullanmaz</em>, LayerNorm kullanır. Modelin
+          istatistik tutmasına gerek yok. <code>model.eval()</code> ve <code>model.train()</code>
+          arasındaki davranış farkı dropout dışında yok.</div>
+        </div>
+
+        <h3>11.3. Hesaplama ve bellek</h3>
+
+        <div class="kv-row">
+          <div class="kv-key">❌ Büyük batch ile bellek taşması</div>
+          <div class="kv-val">ViT attention O(N²) bellek kullanır. Yüksek çözünürlükte (>448²)
+          veya küçük patch'le (8×8) bellek hızla şişer. <code>fp16=True</code> mixed precision
+          ve gradient accumulation kullanın.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ CPU'da ViT eğitmek</div>
+          <div class="kv-val">CNN CPU'da yavaş ama yapılabilir. ViT pratik olarak imkânsız.
+          Mutlaka GPU veya Colab kullanın. Google Colab T4 ücretsiz; ViT-Base fine-tune için yeterli.</div>
+        </div>
+
+        <h3>11.4. Mimari hataları</h3>
+
+        <div class="kv-row">
+          <div class="kv-key">❌ CLS token'ı unutmak</div>
+          <div class="kv-val">Sıfırdan ViT yazarken patch'lerin önüne CLS token eklemeyi unutmak
+          en yaygın hata. Sınıflandırma kafası beklediği yerde token bulamaz.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ Positional embedding boyutunu yanlış</div>
+          <div class="kv-val">Eğer farklı görüntü boyutunda fine-tune yapıyorsanız (örneğin 224 yerine 384),
+          pretrained positional embedding'leri <em>interpolate</em> etmeniz gerekir. Hugging Face
+          bunu otomatik yapar, manuel yazarken dikkat.</div>
+        </div>
+        <div class="kv-row">
+          <div class="kv-key">❌ output_attentions=True unutmak</div>
+          <div class="kv-val">Attention rollout için modelin attention'larını döndürmesi gerek.
+          <code>model(x, output_attentions=True)</code> kullanın, aksi halde attention yok kabul edilir.</div>
+        </div>
+
+        <h3>11.5. Hızlı debug kontrol listesi</h3>
+
+        <div class="exercise">
+          ViT eğitiminiz başarısızsa şu sırayla kontrol edin:
+          <ol>
+            <li><strong>Pretrained model adı doğru mu?</strong> 'google/vit-base-patch16-224' veya
+            'facebook/deit-base-distilled-patch16-224' gibi resmi isimler.</li>
+            <li><strong>Image processor pretrained ile eşleşiyor mu?</strong> Farklı modellerin
+            farklı normalizasyon değerleri var.</li>
+            <li><strong>Loss başlangıçta makul mu?</strong> N sınıflı için ~ln(N). 102 sınıf için ~4.6.</li>
+            <li><strong>Learning rate çok yüksek mi?</strong> ViT için 1e-3 fazla. 1e-4 maksimum.</li>
+            <li><strong>Warmup var mı?</strong> İlk epoch'larda eğitim NaN'a gidiyorsa warmup ekleyin.</li>
+            <li><strong>Augmentation yetersiz mi?</strong> Train acc çok yüksek, val acc düşükse overfit.
+            Daha güçlü augmentation veya Mixup ekleyin.</li>
+            <li><strong>Veri seti çok küçük mü?</strong> <5000 örnekle ViT zor. Pretrained backbone'u
+            dondurmayı veya CNN'e geçmeyi düşünün.</li>
+          </ol>
+        </div>
+
+        <div class="warning">
+          <strong>Altın tavsiye:</strong> Yeni bir ViT projesinde "default ayarlardan başlayın".
+          Hugging Face <code>TrainingArguments</code>'ın varsayılan değerleri 2025 itibarıyla
+          oldukça iyi tunelenmiş. Önce çalıştırın, sonra hyperparameter arama yapın. Aksi halde
+          neyin etkilediğini bilemezsiniz.
+        </div>
+      </section>
+
+      <!-- ─── BÖLÜM 12 ─── -->
+      <section class="card fade" id="bolum12">
+        <h2 class="section-title">12. Öğretim Notları, Ödevler ve Bu Haftanın Özeti</h2>
+
+        <div class="teaching">
+          <strong>Kavramsal sıralama önerisi:</strong>
+          <p>ViT'i anlatırken işe yarayan sıralama:</p>
+          <ol>
+            <li>Önce CNN'in <em>başaramadıkları</em>nı kur — uzun menzilli bağımlılık örneğiyle.</li>
+            <li>"Patch'i kelime gibi düşün" sezgisini erken ver — bu sezgi yerleşmeden mekaniğe
+            geçmek faydasız.</li>
+            <li>Query-Key-Value'yu kütüphane analojisiyle anlat. Soyut formülden önce sezgi gerekli.</li>
+            <li>3×4 matrislerle elle hesap yaptır. Bu zihinsel modeli oturtur.</li>
+            <li>Sonra multi-head'i "farklı bakış açıları" olarak sun.</li>
+            <li>Transformer bloğunu modülerlik üzerinden açıkla: "girdi şekliyle çıkış şekli aynı,
+            bu yüzden üst üste yığabiliyoruz."</li>
+            <li>Pozisyon bilgisinin neden gerekli olduğunu somut bir örnekle göster ("patch'leri
+            karıştırırsam ne olur?").</li>
+            <li>ViT'in tam mimarisini bir diyagramla anlat — bütün parçaları birden gör.</li>
+            <li>CNN vs ViT karşılaştırmasında "veri" değişkenini öne çıkar — bu pratik kararın temeli.</li>
+            <li>Hugging Face uygulamasında 5 satırla başla, sonra detaylandır. Etki büyük.</li>
+            <li>Foundation models bölümünde "var, ileride bakarsınız" tonuyla gez — derinleştirme.</li>
+          </ol>
+        </div>
+
+        <h3>12.1. Bu haftanın anahtar mesajları</h3>
+
+        <div class="grid2">
+          <div class="mini green">
+            <h4>✅ CNN'den ViT'e</h4>
+            <p>CNN'in yerel bağlantısı uzun menzilli bağımlılıkları derinlik gerektirir. ViT
+            self-attention ile ilk katmandan itibaren global erişim sağlar.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Patch = token</h4>
+            <p>Görüntüyü 16×16 patch'lere böl, her patch'i embedding'e çevir, Transformer encoder'a
+            ver. Görüntü artık "kelime dizisi" gibi işlenir.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Self-attention QKV</h4>
+            <p>Her patch Query, Key, Value üretir. Q ile K'lar karşılaştırılır, softmax ile
+            ağırlıklar bulunur, V'ler ağırlıklı toplanır. Her patch güncellenmiş temsil alır.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ İnduktif bias trade-off</h4>
+            <p>CNN güçlü bias, az veriyle iyi. ViT zayıf bias, çok veriyle harika. Pretrained
+            ile ViT az veri sorununu büyük ölçüde aşar.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Pretrained model standart</h4>
+            <p>Üretim projelerinde sıfırdan ViT eğitilmez. Hugging Face'in pretrained
+            modelleri fine-tune edilir. Bu standart pratiktir.</p>
+          </div>
+          <div class="mini green">
+            <h4>✅ Foundation models çağı</h4>
+            <p>CLIP, SAM, DALL-E — hepsi Transformer tabanlı. ViT'i anlamak, modern AI'ı
+            anlamanın anahtarı. 2026 dünyasında bu mimari bilinmek zorunda.</p>
+          </div>
+        </div>
+
+        <h3>12.2. İleri haftalara köprü</h3>
+
+        <div class="highlight">
+          <p>Bu hafta öğrendikleriniz şu konulara doğrudan zemin hazırlar:</p>
+          <ul>
+            <li><strong>Semantik Segmentasyon (12. hafta):</strong> U-Net mimarisi. Transformer
+            tabanlı segmentasyon: Mask2Former, SAM.</li>
+            <li><strong>Generative modeller (13. hafta):</strong> GAN ve Diffusion modelleri. ViT
+            tabanlı diffusion: DiT (Diffusion Transformer).</li>
+            <li><strong>Self-supervised learning:</strong> MAE, DINO, SimMIM gibi etiketsiz öğrenme
+            yöntemleri.</li>
+            <li><strong>Multi-modal modeller:</strong> CLIP, BLIP, Flamingo. Görüntü ve metni birleştiren
+            sistemler.</li>
+            <li><strong>3D ve video Transformer'lar:</strong> Video MAE, Point Cloud Transformer.
+            Bilgisayarla görünün geleceği.</li>
+          </ul>
+        </div>
+
+        <h3>12.3. Ödevler ve Alıştırmalar</h3>
+
+        <div class="exercise">
+          <strong>Temel Seviye:</strong>
+          <ol>
+            <li>3×3 boyutlu Q, K, V matrisleriyle self-attention hesabını elle yapın. Adımları
+            tek tek yazın (QK<sup>T</sup>, ölçekleme, softmax, V çarpımı).</li>
+            <li>Hugging Face <code>pipeline</code> ile 5 farklı pretrained ViT modeli yükleyin
+            (vit-base, vit-large, deit-small, swin-base, beit-base). Aynı görüntüye uygulayın,
+            tahminleri karşılaştırın.</li>
+            <li>Bir görüntünün patch'lerini rastgele karıştırın ve aynı ViT'e verin. Tahmin nasıl
+            değişiyor? Positional embedding'in önemini deneyimleyin.</li>
+          </ol>
+
+          <strong>Orta Seviye:</strong>
+          <ol start="4">
+            <li>Oxford Flowers 102 üzerinde üç model fine-tune edin: ResNet50, ViT-Base/16,
+            DeiT-Small/16. Eğitim süresi, parametre sayısı, test doğruluğu tablosu hazırlayın.</li>
+            <li>Pnömoni veri setinde ViT fine-tune edin, ResNet50 ile karşılaştırın. Attention
+            rollout ile modelin baktığı bölgeleri Grad-CAM ile karşılaştırın. Hangisi daha
+            klinik anlamlı?</li>
+            <li>Sıfırdan yazdığınız ViT'in (Bölüm 6.5) parametre sayısını hesaplayın. Hugging
+            Face'in <code>ViTForImageClassification</code>'ı ile karşılaştırın. Fark varsa nedenini
+            açıklayın.</li>
+            <li>ViT-Base/16'nın positional embedding matrisini görselleştirin (cosine similarity
+            heatmap). 2D yapı öğrenilmiş mi?</li>
+          </ol>
+
+          <strong>İleri Seviye:</strong>
+          <ol start="8">
+            <li>Bir Swin Transformer modeli yükleyin (microsoft/swin-base-patch4-window7-224).
+            ViT-Base ile karşılaştırın: parametre, FLOPS, doğruluk, yüksek çözünürlükte hız.</li>
+            <li>CLIP modelini kullanarak <em>zero-shot</em> sınıflandırma yapın. Kendi seçtiğiniz
+            10 sınıflık problemde, sıfır eğitimsiz olarak ne kadar doğruluk alıyor?</li>
+            <li>Sıfırdan yazdığınız ViT implementasyonunu CIFAR-10'da eğitin (32×32 girdiyi
+            uygun şekilde uyarlayın — patch_size=4 ile 8×8=64 token). Pretrained kullanmadan
+            ne kadar doğruluk alıyor? Bu, ViT'in "veri açlığı" tezini deneyimsel olarak doğrular.</li>
+            <li>DINO ile self-supervised pretrained bir ViT yükleyin (<code>facebook/dino-vits16</code>).
+            Attention maps'ini görselleştirin. Hiç etiket görmeden segmentasyon yapabildiğini gözlemleyin.</li>
+            <li>Bir multi-modal görev tasarlayın: CLIP ile bir görüntü gallery'sinde metin
+            sorgusuyla arama. "Kırmızı bir araba" yazınca galeriden ilgili görüntüleri sıralasın.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ─── ATIFLAR ─── -->
+      <section class="card fade" id="atiflar">
+        <h2 class="section-title">Atıflar ve Temel Kaynaklar</h2>
+        <ol class="footnotes">
+          <li>Bahdanau, D., Cho, K., & Bengio, Y. (2014). Neural machine translation by jointly
+          learning to align and translate. <em>ICLR 2015</em>. (Attention mekanizmasının doğuşu)</li>
+          <li>Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). Attention is all you need.
+          <em>NeurIPS 2017</em>. (Transformer mimarisi)</li>
+          <li>Devlin, J., Chang, M. W., Lee, K., & Toutanova, K. (2019). BERT: Pre-training of
+          deep bidirectional transformers for language understanding. <em>NAACL 2019</em>.</li>
+          <li>Dosovitskiy, A., Beyer, L., Kolesnikov, A., et al. (2020). An image is worth 16×16
+          words: Transformers for image recognition at scale. <em>ICLR 2021</em>. (ViT'in orijinal makalesi)</li>
+          <li>Touvron, H., Cord, M., Douze, M., et al. (2021). Training data-efficient image
+          transformers & distillation through attention. <em>ICML 2021</em>. (DeiT)</li>
+          <li>Liu, Z., Lin, Y., Cao, Y., et al. (2021). Swin transformer: Hierarchical vision
+          transformer using shifted windows. <em>ICCV 2021</em>.</li>
+          <li>Liu, Z., Mao, H., Wu, C. Y., et al. (2022). A ConvNet for the 2020s.
+          <em>CVPR 2022</em>. (ConvNeXt)</li>
+          <li>He, K., Chen, X., Xie, S., et al. (2022). Masked autoencoders are scalable vision
+          learners. <em>CVPR 2022</em>. (MAE)</li>
+          <li>Caron, M., Touvron, H., Misra, I., et al. (2021). Emerging properties in
+          self-supervised vision transformers. <em>ICCV 2021</em>. (DINO)</li>
+          <li>Radford, A., Kim, J. W., Hallacy, C., et al. (2021). Learning transferable visual
+          models from natural language supervision. <em>ICML 2021</em>. (CLIP)</li>
+          <li>Kirillov, A., Mintun, E., Ravi, N., et al. (2023). Segment anything.
+          <em>ICCV 2023</em>. (SAM)</li>
+          <li>Rombach, R., Blattmann, A., Lorenzen, D., et al. (2022). High-resolution image
+          synthesis with latent diffusion models. <em>CVPR 2022</em>. (Stable Diffusion)</li>
+          <li>Abnar, S., & Zuidema, W. (2020). Quantifying attention flow in transformers.
+          <em>ACL 2020</em>. (Attention Rollout)</li>
+          <li>Bommasani, R., Hudson, D. A., Adeli, E., et al. (2021). On the opportunities and
+          risks of foundation models. <em>arXiv:2108.07258</em>. (Foundation Models terimi)</li>
+          <li>Steiner, A., Kolesnikov, A., Zhai, X., et al. (2021). How to train your ViT?
+          Data, augmentation, and regularization in vision transformers. <em>TMLR 2022</em>.</li>
+          <li>Tay, Y., Dehghani, M., Bahri, D., & Metzler, D. (2022). Efficient transformers:
+          A survey. <em>ACM Computing Surveys</em>.</li>
+        </ol>
+      </section>
+
+      <!-- ─── KAYNAKLAR ─── -->
+      <section class="card fade" id="kaynaklar">
+        <h2 class="section-title">Daha Ayrıntılı Kaynaklar</h2>
+
+        <h3>📚 Temel Kitaplar</h3>
+        <ul class="resources">
+          <li><a href="https://d2l.ai/chapter_attention-mechanisms-and-transformers/index.html" target="_blank">Zhang vd. — Dive into Deep Learning: Attention Mechanisms and Transformers</a> — PyTorch kodlarıyla.</li>
+          <li>Tunstall, L., von Werra, L., & Wolf, T. (2022). <em>Natural Language Processing with Transformers</em>. O'Reilly. — Hugging Face yazarlarından.</li>
+          <li>Howard, J., & Gugger, S. (2020). <em>Deep Learning for Coders with fastai and PyTorch</em>. O'Reilly. — Modern pratik odaklı.</li>
+        </ul>
+
+        <h3>🎓 Online Kurslar ve Dersler</h3>
+        <ul class="resources">
+          <li><a href="https://huggingface.co/learn/computer-vision-course" target="_blank">Hugging Face — Computer Vision Course</a> — ViT ve modern CV için ücretsiz kurs.</li>
+          <li><a href="https://huggingface.co/learn/nlp-course" target="_blank">Hugging Face — NLP Course</a> — Transformer'ı NLP perspektifinden anlatır.</li>
+          <li><a href="https://www.youtube.com/watch?v=TrdevFK_am4" target="_blank">Yannic Kilcher — ViT Paper Review</a> — ViT makalesinin detaylı incelemesi.</li>
+          <li><a href="http://nlp.seas.harvard.edu/2018/04/03/attention.html" target="_blank">The Annotated Transformer (Harvard)</a> — Transformer'ı satır satır anlatan klasik.</li>
+          <li><a href="https://jalammar.github.io/illustrated-transformer/" target="_blank">Jay Alammar — The Illustrated Transformer</a> — Görsellerle Transformer.</li>
+          <li><a href="https://jalammar.github.io/illustrated-bert/" target="_blank">Jay Alammar — The Illustrated BERT</a> — BERT ve transfer learning.</li>
+        </ul>
+
+        <h3>🛠️ PyTorch ve Hugging Face</h3>
+        <ul class="resources">
+          <li><a href="https://huggingface.co/docs/transformers/index" target="_blank">Hugging Face Transformers Dokümantasyonu</a></li>
+          <li><a href="https://huggingface.co/docs/transformers/model_doc/vit" target="_blank">ViT Modeli Dokümantasyonu</a> — ViTForImageClassification API'ı.</li>
+          <li><a href="https://huggingface.co/docs/transformers/tasks/image_classification" target="_blank">HF — Image Classification Tutorial</a></li>
+          <li><a href="https://github.com/huggingface/transformers/tree/main/examples/pytorch/image-classification" target="_blank">HF Transformers — Image Classification Examples</a></li>
+          <li><a href="https://github.com/rwightman/pytorch-image-models" target="_blank">timm (PyTorch Image Models)</a> — 700+ pretrained görüntü modeli, ViT türevleri dahil.</li>
+          <li><a href="https://github.com/lucidrains/vit-pytorch" target="_blank">vit-pytorch (Lucidrains)</a> — ViT'in çok temiz PyTorch implementasyonu, eğitim için ideal.</li>
+        </ul>
+
+        <h3>📊 Veri Setleri</h3>
+        <ul class="resources">
+          <li><a href="https://huggingface.co/datasets/nelorth/oxford-flowers" target="_blank">Oxford Flowers 102</a> — 102 sınıf çiçek, Hugging Face Datasets.</li>
+          <li><a href="https://huggingface.co/datasets/food101" target="_blank">Food-101</a> — 101 sınıf yemek görüntüsü.</li>
+          <li><a href="https://huggingface.co/datasets/cifar100" target="_blank">CIFAR-100</a> — Klasik benchmark.</li>
+          <li><a href="https://image-net.org/" target="_blank">ImageNet</a> — Standart pretrained referans.</li>
+          <li><a href="https://huggingface.co/datasets" target="_blank">Hugging Face Datasets Hub</a> — 100.000+ açık veri seti.</li>
+        </ul>
+
+        <h3>📄 Makalelere Doğrudan Erişim</h3>
+        <ul class="resources">
+          <li>Transformer: <a href="https://arxiv.org/abs/1706.03762" target="_blank">arxiv.org/abs/1706.03762</a></li>
+          <li>ViT: <a href="https://arxiv.org/abs/2010.11929" target="_blank">arxiv.org/abs/2010.11929</a></li>
+          <li>DeiT: <a href="https://arxiv.org/abs/2012.12877" target="_blank">arxiv.org/abs/2012.12877</a></li>
+          <li>Swin: <a href="https://arxiv.org/abs/2103.14030" target="_blank">arxiv.org/abs/2103.14030</a></li>
+          <li>ConvNeXt: <a href="https://arxiv.org/abs/2201.03545" target="_blank">arxiv.org/abs/2201.03545</a></li>
+          <li>MAE: <a href="https://arxiv.org/abs/2111.06377" target="_blank">arxiv.org/abs/2111.06377</a></li>
+          <li>DINO: <a href="https://arxiv.org/abs/2104.14294" target="_blank">arxiv.org/abs/2104.14294</a></li>
+          <li>CLIP: <a href="https://arxiv.org/abs/2103.00020" target="_blank">arxiv.org/abs/2103.00020</a></li>
+          <li>SAM: <a href="https://arxiv.org/abs/2304.02643" target="_blank">arxiv.org/abs/2304.02643</a></li>
+        </ul>
+
+        <h3>🎨 Görsel ve İnteraktif Kaynaklar</h3>
+        <ul class="resources">
+          <li><a href="https://poloclub.github.io/transformer-explainer/" target="_blank">Transformer Explainer</a> — Tarayıcıda interaktif Transformer görselleştirmesi.</li>
+          <li><a href="https://distill.pub/2021/multimodal-neurons/" target="_blank">Distill — Multimodal Neurons in CLIP</a> — CLIP'in iç çalışmasının görselleştirmesi.</li>
+          <li><a href="https://huggingface.co/spaces" target="_blank">Hugging Face Spaces</a> — Interaktif AI demoları, ViT ve foundation models için.</li>
+          <li><a href="https://www.bertviz.com/" target="_blank">BertViz</a> — Attention görselleştirme aracı (Transformer için).</li>
+        </ul>
+
+        <h3>🌐 Topluluklar ve Güncel Takip</h3>
+        <ul class="resources">
+          <li><a href="https://paperswithcode.com/sota/image-classification-on-imagenet" target="_blank">Papers with Code — ImageNet Leaderboard</a> — State-of-the-art izleme.</li>
+          <li><a href="https://huggingface.co/blog" target="_blank">Hugging Face Blog</a> — Yeni modeller ve teknikler için.</li>
+          <li><a href="https://twitter.com/hardmaru" target="_blank">@hardmaru</a>, <a href="https://twitter.com/karpathy" target="_blank">@karpathy</a> — Twitter/X'te takip edilesi AI araştırmacıları.</li>
+          <li><a href="https://www.reddit.com/r/MachineLearning/" target="_blank">r/MachineLearning</a> — Reddit topluluğu, paper tartışmaları.</li>
+        </ul>
+      </section>
+
+    </main><!-- /content -->
+  </div><!-- /layout -->
+
+  <footer class="footer">
+    <p>Derin Öğrenme ile Görüntü İşleme &nbsp;·&nbsp; 11. Hafta Ders Notu</p>
+    <p>Vision Transformer: Görüntü için Tasarlanmış Yeni Paradigma</p>
+    <a href="#top" class="backtop">↑ Sayfanın başına dön</a>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    }),
+    { threshold: 0.06 }
+  );
+  document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
