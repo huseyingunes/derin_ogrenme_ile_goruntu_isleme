@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNN’den Vision Transformer’a: Görüntüleri Filtrelerle Değil, İlişkilerle Anlamak</title>
+  <style>
+    :root {
+      --bg: #f6f3ed;
+      --paper: #fffaf2;
+      --paper-2: #fbf0dd;
+      --text: #23201b;
+      --muted: #665f54;
+      --soft: #8b7d68;
+      --border: #e0d3bf;
+      --accent: #9b5b2e;
+      --accent-2: #2e6f6d;
+      --accent-soft: #f0dcc7;
+      --code-bg: #efe5d6;
+      --shadow: 0 22px 60px rgba(63, 45, 24, 0.13);
+      --figure-bg: linear-gradient(135deg, rgba(155,91,46,0.12), rgba(46,111,109,0.10));
+    }
+
+    html[data-theme="dark"] {
+      --bg: #12100d;
+      --paper: #1d1a16;
+      --paper-2: #272219;
+      --text: #f3eadc;
+      --muted: #c9bda9;
+      --soft: #a9967b;
+      --border: #40382e;
+      --accent: #f0a96a;
+      --accent-2: #7bd2cf;
+      --accent-soft: rgba(240,169,106,0.16);
+      --code-bg: #2b251d;
+      --shadow: 0 22px 70px rgba(0,0,0,0.42);
+      --figure-bg: linear-gradient(135deg, rgba(240,169,106,0.14), rgba(123,210,207,0.10));
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(155,91,46,0.18), transparent 34rem),
+        radial-gradient(circle at top right, rgba(46,111,109,0.14), transparent 32rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.72;
+      font-size: 18px;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      right: 18px;
+      top: 18px;
+      z-index: 20;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(12px);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+    }
+
+    html[data-theme="dark"] .theme-toggle {
+      background: rgba(24,21,18,0.78);
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 64px 20px 96px;
+    }
+
+    .book {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 34px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    header.hero {
+      padding: 72px 74px 54px;
+      background:
+        linear-gradient(135deg, rgba(155,91,46,0.17), transparent 42%),
+        linear-gradient(315deg, rgba(46,111,109,0.12), transparent 38%),
+        var(--paper);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .kicker {
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 0.83rem;
+      margin-bottom: 16px;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      line-height: 1.14;
+      color: var(--text);
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 5.2rem);
+      letter-spacing: -0.045em;
+      max-width: 950px;
+    }
+
+    .subtitle {
+      max-width: 790px;
+      color: var(--muted);
+      font-size: 1.18rem;
+      margin-top: 28px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 34px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.34);
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 42px;
+      padding: 42px 58px 72px;
+    }
+
+    aside.toc {
+      position: sticky;
+      top: 76px;
+      align-self: start;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--paper-2);
+      font-size: 0.94rem;
+      max-height: calc(100vh - 120px);
+      overflow: auto;
+    }
+
+    .toc strong {
+      display: block;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .toc a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      padding: 6px 0 6px 10px;
+      line-height: 1.35;
+    }
+
+    .toc a:hover {
+      color: var(--text);
+      border-left-color: var(--accent);
+    }
+
+    article {
+      max-width: 780px;
+      min-width: 0;
+    }
+
+    section {
+      padding-top: 28px;
+      margin-top: 18px;
+    }
+
+    h2 {
+      font-size: clamp(1.75rem, 3vw, 2.55rem);
+      letter-spacing: -0.025em;
+      margin-bottom: 20px;
+    }
+
+    h3 {
+      font-size: 1.55rem;
+      margin-top: 30px;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    h4 {
+      font-size: 1.16rem;
+      margin-top: 22px;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    p { margin: 0 0 20px; }
+
+    a { color: var(--accent-2); }
+
+    .lead {
+      font-size: 1.22rem;
+      color: var(--muted);
+      border-left: 4px solid var(--accent);
+      padding-left: 20px;
+      margin: 10px 0 34px;
+    }
+
+    .callout, .teacher-note, .lab-box, .historical-note {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 22px 24px;
+      margin: 28px 0;
+      background: var(--paper-2);
+    }
+
+    .callout {
+      border-left: 5px solid var(--accent);
+    }
+
+    .teacher-note {
+      border-left: 5px solid var(--accent-2);
+    }
+
+    .historical-note {
+      background: linear-gradient(135deg, var(--accent-soft), transparent), var(--paper-2);
+    }
+
+    .label {
+      display: inline-block;
+      color: var(--accent);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 850;
+      margin-bottom: 8px;
+    }
+
+    .figure-placeholder {
+      border: 2px dashed color-mix(in srgb, var(--accent), var(--border) 45%);
+      border-radius: 26px;
+      background: var(--figure-bg);
+      min-height: 260px;
+      padding: 28px;
+      margin: 32px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .figure-placeholder .fig-title {
+      font-weight: 850;
+      color: var(--accent);
+      font-size: 1.02rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .figure-placeholder .fig-main {
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      font-size: 1.45rem;
+      line-height: 1.3;
+      color: var(--text);
+      font-weight: 750;
+    }
+
+    .figure-placeholder .fig-desc {
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+      margin: 26px 0 32px;
+    }
+
+    .time-item {
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 16px;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--paper-2);
+    }
+
+    .year {
+      color: var(--accent);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .time-item p { margin: 0; }
+
+    .comparison {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 26px 0;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      font-size: 0.96rem;
+    }
+
+    .comparison th, .comparison td {
+      padding: 14px 16px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison th {
+      background: var(--paper-2);
+      color: var(--accent);
+      text-align: left;
+      font-weight: 850;
+    }
+
+    .comparison tr:last-child td { border-bottom: 0; }
+
+    code, pre {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    code {
+      background: var(--code-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.08rem 0.34rem;
+      font-size: 0.92em;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      overflow-x: auto;
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    ul, ol { padding-left: 1.35rem; margin: 0 0 20px; }
+    li { margin: 8px 0; }
+
+    .chapter-end {
+      margin-top: 44px;
+      padding: 30px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(46,111,109,0.14), rgba(155,91,46,0.12)), var(--paper-2);
+      border: 1px solid var(--border);
+    }
+
+    .references li {
+      margin-bottom: 12px;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+    }
+
+    sup.ref {
+      color: var(--accent-2);
+      font-weight: 800;
+      font-size: 0.72em;
+    }
+
+    .formula-lite {
+      display: block;
+      padding: 16px 18px;
+      margin: 18px 0 22px;
+      border-radius: 16px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      text-align: center;
+      font-weight: 750;
+      color: var(--text);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 30px 58px 44px;
+      color: var(--soft);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+      header.hero { padding: 56px 28px 38px; }
+      main { display: block; padding: 28px 24px 54px; }
+      aside.toc { position: static; max-height: none; margin-bottom: 28px; }
+      .time-item { grid-template-columns: 1fr; gap: 4px; }
+      body { font-size: 17px; }
+      footer { padding: 28px 24px 40px; }
+    }
+
+    @media print {
+      body { background: white; font-size: 11.5pt; }
+      .theme-toggle, aside.toc { display: none; }
+      .page { max-width: none; padding: 0; }
+      .book { box-shadow: none; border: 0; border-radius: 0; }
+      header.hero, main, footer { padding-left: 0; padding-right: 0; }
+      main { display: block; }
+      .figure-placeholder { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Tema değiştir">☀️ / 🌙 Tema</button>
+  <div class="page">
+    <div class="book">
+      <header class="hero">
+        <div class="kicker">Derin Öğrenme ile Görüntü İşleme · Kitap Bölümü</div>
+        <h1>CNN’den Vision Transformer’a: Görüntüleri Filtrelerle Değil, İlişkilerle Anlamak</h1>
+        <p class="subtitle">Bu bölüm, evrişimli sinir ağlarından Vision Transformer mimarisine geçişi tarihsel, sezgisel ve mantık odaklı bir biçimde açıklar. Amaç, öğrencinin formüllere boğulmadan şu soruyu kavramasıdır: Bir görüntüyü anlamak, yalnızca kenar ve doku filtreleriyle mi olur, yoksa görüntünün farklı parçaları arasındaki ilişkileri öğrenmek daha güçlü bir bakış açısı mıdır?</p>
+        <div class="meta">
+          <span class="pill">Seviye: Lisans / yüksek lisans başlangıç</span>
+          <span class="pill">Ön bilgi: CNN, özellik çıkarımı, temel derin öğrenme</span>
+          <span class="pill">Odak: Mantık, tarih, mimari sezgi</span>
+        </div>
+      </header>
+
+      <main>
+        <aside class="toc">
+          <strong>İçindekiler</strong>
+          <a href="#giris">1. Giriş: Görüntüyü nasıl anlarız?</a>
+          <a href="#tarihsel-zemin">2. Tarihsel zemin</a>
+          <a href="#cnn-dusuncesi">3. CNN düşüncesi</a>
+          <a href="#sinirlar">4. CNN’in güçlü ve sınırlı tarafları</a>
+          <a href="#attention">5. Attention fikri</a>
+          <a href="#transformer">6. Transformer’ın ortaya çıkışı</a>
+          <a href="#vit">7. Vision Transformer</a>
+          <a href="#mimari">8. ViT mimarisi</a>
+          <a href="#ogrenme">9. Eğitim ve ön öğrenme</a>
+          <a href="#aile">10. ViT ailesi</a>
+          <a href="#karsilastirma">11. CNN ve ViT karşılaştırması</a>
+          <a href="#uygulama">12. Ders sonu uygulaması</a>
+          <a href="#sonuc">13. Sonuç</a>
+          <a href="#kaynakca">Kaynakça</a>
+        </aside>
+
+        <article>
+          <section id="giris">
+            <h2>1. Giriş: Görüntüyü nasıl anlarız?</h2>
+            <p class="lead">Bir insan bir fotoğrafa baktığında yalnızca pikselleri görmez. Göz, burun, ağız, arka plan, ışık yönü, nesneler arasındaki mesafe ve sahnenin anlamı birlikte değerlendirilir. Derin öğrenmede de temel problem budur: Bir görüntüdeki sayısal piksellerden anlamlı bir temsil nasıl çıkarılır?</p>
+            <p>Görüntü işleme ve bilgisayarlı görü tarihinde uzun süre temel varsayım şuydu: Görüntüler yerel yapılardan oluşur. Kenarlar, köşeler, dokular, renk geçişleri ve küçük örüntüler bir araya gelerek daha büyük nesneleri oluşturur. Evrişimli sinir ağları, yani CNN’ler, tam olarak bu sezgi üzerine kuruldu. Bir filtre küçük bir pencere üzerinde gezer, yerel bir örüntüyü arar ve bulduğu örüntüleri katman katman daha soyut temsillere dönüştürür.</p>
+            <p>Bu yaklaşım son derece başarılı oldu. El yazısı rakam tanımadan tıbbi görüntü analizine, otonom araçlardan yüz tanımaya kadar birçok alanda CNN’ler bilgisayarlı görünün ana mimarisi haline geldi. Ancak zamanla şu soru daha belirgin hale geldi: Bir görüntüyü anlamak için yalnızca yakın komşuluklara bakmak yeterli midir? Örneğin bir kişinin elindeki nesnenin ne olduğunu anlamak için yalnızca el bölgesine değil, kişinin duruşuna, yüz ifadesine, bulunduğu ortama ve nesnenin sahnedeki bağlamına da bakmak gerekebilir.</p>
+            <p>Vision Transformer bu noktada devreye girer. ViT, görüntüyü doğrudan küçük parçalara böler ve bu parçalar arasındaki ilişkileri öğrenmeye çalışır. Başka bir ifadeyle CNN, görüntüye çoğunlukla “hangi filtre nerede etkinleşti?” sorusuyla yaklaşırken, Vision Transformer “görüntünün hangi parçası hangi parçayla ilişkili?” sorusunu sorar.</p>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 1 için yer tutucu</div>
+              <div class="fig-main">CNN ve ViT’in bakış farkı</div>
+              <div class="fig-desc">Sol tarafta küçük bir filtrenin görüntü üzerinde gezdiği klasik CNN mantığı; sağ tarafta görüntü patch’leri arasında çift yönlü bağlantılar kuran attention tabanlı ViT mantığı gösterilebilir. Görselin ana mesajı: CNN yerel örüntüleri filtrelerle yakalar, ViT parçalar arasındaki ilişkileri öğrenir.</div>
+            </div>
+
+            <div class="callout">
+              <span class="label">Ana fikir</span>
+              <p>Bu bölümde Transformer ve Vision Transformer matematiksel ayrıntıların ötesinde bir düşünme biçimi olarak ele alınacaktır. CNN’ler görüntüyü filtrelerle tarar; ViT görüntüyü parçalara ayırır ve parçalar arasındaki ilişki haritasını öğrenir.</p>
+            </div>
+          </section>
+
+          <section id="tarihsel-zemin">
+            <h2>2. Tarihsel zemin: Görme, hiyerarşi ve öğrenen filtreler</h2>
+            <p>Derin öğrenme tarihindeki birçok büyük mimari değişim aslında aynı soruya verilen farklı cevaplardan doğmuştur: Verideki düzen nasıl temsil edilir? Görüntü söz konusu olduğunda bu soru daha da önemlidir çünkü görüntüler düz bir sayı dizisi değildir. Bir pikselin anlamı, yakınındaki piksellerle ve sahnedeki genel yapı ile birlikte ortaya çıkar.</p>
+            <p>Modern CNN düşüncesinin zihinsel kökenlerinden biri biyolojik görme sistemidir. İnsan ve hayvan görme korteksinde bazı hücrelerin kenar yönelimlerine ve yerel görsel örüntülere duyarlı olduğu uzun zamandır bilinmektedir. Bu fikir, bilgisayarlı görü tarafında “basitten karmaşığa doğru hiyerarşik temsil” düşüncesini besledi. Önce kenar, sonra köşe, sonra parça, sonra nesne. CNN’ler bu hiyerarşiyi mühendislik düzeyinde son derece etkili bir modele dönüştürdü.</p>
+            <p>1980’lerde Kunihiko Fukushima’nın Neocognitron modeli, bugünkü CNN’lere ilham veren önemli yapılardan biri olarak kabul edilir. Neocognitron, görsel örüntü tanıma için katmanlı ve hiyerarşik bir yapı öneriyordu. Daha sonra LeCun, Bottou, Bengio ve Haffner’ın 1998 tarihli çalışması, evrişimli ağların özellikle el yazısı karakter tanıma gibi görevlerde ne kadar güçlü olabileceğini gösterdi. Bu çizgi, 2012’de AlexNet’in ImageNet başarısıyla bilgisayarlı görü dünyasında büyük bir kırılmaya dönüştü. AlexNet, büyük veri, GPU hesaplama ve derin CNN mimarisinin birleştiğinde görüntü sınıflandırmada dramatik bir başarı sıçraması yaratabileceğini gösterdi. <sup class="ref">[1][2][3]</sup></p>
+
+            <div class="timeline">
+              <div class="time-item">
+                <div class="year">1980</div>
+                <p><strong>Neocognitron:</strong> Görsel örüntü tanıma için katmanlı, hiyerarşik ve biyolojik görmeden ilham alan erken bir model.</p>
+              </div>
+              <div class="time-item">
+                <div class="year">1998</div>
+                <p><strong>LeNet çizgisi:</strong> Evrişimli ağların el yazısı karakter ve belge tanıma gibi pratik problemlerde güçlü sonuçlar verebileceği gösterildi.</p>
+              </div>
+              <div class="time-item">
+                <div class="year">2012</div>
+                <p><strong>AlexNet:</strong> ImageNet yarışmasında derin CNN, GPU ve büyük veri birleşimi bilgisayarlı görüde yeni dönemi başlattı.</p>
+              </div>
+              <div class="time-item">
+                <div class="year">2015</div>
+                <p><strong>ResNet:</strong> Artık yalnızca daha geniş değil, çok daha derin ağların da eğitilebileceği gösterildi. Residual bağlantılar derinlik sorununu hafifletti.</p>
+              </div>
+              <div class="time-item">
+                <div class="year">2017</div>
+                <p><strong>Transformer:</strong> “Attention Is All You Need” çalışması, tekrarlayan yapılar ve konvolüsyonlar olmadan yalnızca attention mekanizmasıyla güçlü bir mimari kurulabileceğini gösterdi.</p>
+              </div>
+              <div class="time-item">
+                <div class="year">2020</div>
+                <p><strong>Vision Transformer:</strong> Görüntünün patch dizisi olarak ele alınabileceği ve saf Transformer encoder ile güçlü görüntü sınıflandırma yapılabileceği gösterildi.</p>
+              </div>
+            </div>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 2 için yer tutucu</div>
+              <div class="fig-main">Bilgisayarlı görüde mimari dönüşüm zaman çizelgesi</div>
+              <div class="fig-desc">Neocognitron → LeNet → AlexNet → ResNet → Transformer → ViT → Swin/MAE/CLIP hattını yatay bir zaman çizelgesi olarak gösterin. Her durak için bir küçük ikon kullanılabilir: göz, filtre, GPU, atlama bağlantısı, attention ağı, patch grid, multimodal temsil.</div>
+            </div>
+
+            <p>Bu tarihsel akışta dikkat edilmesi gereken önemli nokta şudur: Transformer, CNN’in başarısız olmasından doğmadı. Tam tersine, CNN’lerin başarıları görüntü temsilinin ne kadar güçlü öğrenilebileceğini gösterdi. Transformer ise başka bir alanda, özellikle dil modelleme ve makine çevirisinde, ilişki öğrenmenin çok daha esnek bir yolunu sundu. Vision Transformer’ın yeniliği, bu ilişki öğrenme mantığını görüntülere doğrudan taşımaya cesaret etmesiydi.</p>
+          </section>
+
+          <section id="cnn-dusuncesi">
+            <h2>3. CNN düşüncesi: Görüntüyü filtrelerle okumak</h2>
+            <p>CNN’in temel gücü, görüntüye uygun bazı varsayımları mimarinin içine yerleştirmesidir. Bu varsayımlara makine öğrenmesinde <em>inductive bias</em> denir. Yani model, veriyi tamamen sıfırdan anlamaya çalışmaz; görüntülerin doğası hakkında bazı ön kabullerle yola çıkar.</p>
+            <p>Bu ön kabullerin ilki yerelliktir. Görüntüde yakın pikseller genellikle birbirleriyle daha ilişkilidir. Bir gözün kenarı, gözün içindeki ve etrafındaki piksellerle anlam kazanır. Bir araba tekerleğinin sınırı, yakındaki siyah-beyaz geçişlerle yakalanır. CNN, küçük filtreleri görüntü üzerinde gezdirerek bu yerel örüntüleri yakalar.</p>
+            <p>İkinci önemli varsayım ağırlık paylaşımıdır. Aynı filtre görüntünün her yerinde kullanılabilir. Bir kenar filtresi sol üst köşede de, görüntünün merkezinde de, sağ altta da aynı tür kenarı arayabilir. Bu, modelin parametre sayısını azaltır ve öğrenmeyi verimli hale getirir.</p>
+            <p>Üçüncü varsayım hiyerarşidir. İlk katmanlar basit kenar ve renk geçişlerini öğrenebilir. Orta katmanlar doku ve parça düzeyindeki yapıları yakalayabilir. Son katmanlar ise nesne düzeyinde daha soyut temsiller oluşturabilir. Bu nedenle CNN’ler yalnızca bir sınıflandırıcı değil, aynı zamanda güçlü bir özellik çıkarıcıdır.</p>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 3 için yer tutucu</div>
+              <div class="fig-main">CNN’de özellik hiyerarşisi</div>
+              <div class="fig-desc">Bir görüntünün ilk katmanlarda kenar/doku, orta katmanlarda parça, son katmanlarda nesne temsiline dönüştüğünü gösteren üç veya dört aşamalı bir şema ekleyin. Bu görselde filtrelerin lokal pencereler halinde çalıştığı açıkça gösterilmeli.</div>
+            </div>
+
+            <div class="teacher-note">
+              <span class="label">Ders anlatım notu</span>
+              <p>Bu noktada öğrencilere şu soruyu sorun: “CNN neden görüntü verisinde tam bağlı ağdan daha başarılıdır?” Beklenen cevap, yalnızca “daha derin olduğu için” değildir. Asıl cevap, CNN’in görüntünün yerel yapısına uygun bir mimari önyargı taşımasıdır.</p>
+            </div>
+          </section>
+
+          <section id="sinirlar">
+            <h2>4. CNN’in güçlü ve sınırlı tarafları: Yerel bakışın bedeli</h2>
+            <p>CNN’ler güçlüdür çünkü yerel örüntüleri çok verimli yakalar. Fakat aynı özellik bazı durumlarda sınırlama da yaratır. Bir konvolüsyon filtresi küçük bir bölgeye bakar. Daha büyük bağlamı görmek için katmanların üst üste eklenmesi gerekir. Ağ derinleştikçe bir nöronun gördüğü alan, yani <em>receptive field</em>, büyür. Fakat bu büyüme dolaylıdır.</p>
+            <p>Bir sahneyi düşünelim: Bir çocuk parkta kırmızı bir top tutuyor. Topun top olduğunu anlamak için küçük dairesel kenarlar ve renk bilgisi yeterli olabilir. Ancak sahnenin anlamını çözmek için çocuğun duruşu, elin pozisyonu, zemindeki park dokusu ve diğer nesnelerle ilişki önemlidir. CNN, bu tür uzak ilişkileri katmanlar ilerledikçe yakalayabilir; fakat mimarinin ilk refleksi yerel örüntüdür.</p>
+            <p>Vision Transformer’ın ortaya attığı düşünce burada önemlidir. Görüntünün farklı bölgeleri arasında doğrudan ilişki kurmak mümkün olsaydı ne olurdu? Bir patch, görüntünün çok uzak bir bölgesindeki başka bir patch’e doğrudan dikkat edebilseydi? İşte self-attention mekanizması bu soruya verilen cevaptır.</p>
+
+            <div class="callout">
+              <span class="label">Kritik ayrım</span>
+              <p>CNN’de uzak bölgeler arasındaki ilişki genellikle derinlik yoluyla dolaylı olarak öğrenilir. Transformer’da ise her token, diğer token’larla doğrudan ilişki kurabilir. Bu fark, yalnızca teknik bir ayrıntı değil, görüntü temsilinin mantığını değiştiren bir bakış açısıdır.</p>
+            </div>
+          </section>
+
+          <section id="attention">
+            <h2>5. Attention fikri: Model nereye bakacağını öğrenirse</h2>
+            <p>Attention kavramını anlamanın en kolay yolu insan dikkatinden yola çıkmaktır. Bir fotoğrafa baktığımızda tüm pikselleri eşit önemde değerlendirmeyiz. Bir yüz fotoğrafında gözlere, ağıza ve yüz konturuna daha fazla dikkat ederiz. Bir trafik sahnesinde yaya, araç, trafik ışığı ve yol çizgileri daha fazla önem taşır. Attention mekanizması da benzer bir fikir taşır: Model, hangi parçanın hangi parçayla ilişkili olduğunu öğrenir.</p>
+            <p>Transformer’da attention yalnızca “önemli bölgeyi seçmek” anlamına gelmez. Daha derin anlamda attention, veri içindeki birimlerin birbirleriyle olan ilişki haritasını üretir. Dil modelinde kelimeler birbirine bakar. Görüntü modelinde patch’ler birbirine bakar. Ses modelinde zaman parçaları birbirine bakabilir. Bu nedenle attention, farklı veri türlerine uygulanabilen genel bir ilişki öğrenme mekanizmasıdır.</p>
+
+            <h3>Query, Key, Value mantığı</h3>
+            <p>Transformer’daki Query, Key ve Value kavramları ilk bakışta soyut görünebilir. Fakat sezgisel olarak şöyle düşünülebilir:</p>
+            <ul>
+              <li><strong>Query:</strong> Bir token’ın aradığı bilgi türüdür. “Ben şu anda neye dikkat etmeliyim?” sorusunu temsil eder.</li>
+              <li><strong>Key:</strong> Diğer token’ların kendilerini tanıtma biçimidir. “Ben hangi bilgiye sahibim?” sorusunu temsil eder.</li>
+              <li><strong>Value:</strong> Dikkat edildiğinde aktarılacak asıl bilgidir. “Bana dikkat edersen sana şu bilgiyi veririm” anlamına gelir.</li>
+            </ul>
+            <p>Bir sınıfta öğrencinin soru sorduğunu düşünelim. Soru, Query gibidir. Sınıftaki öğrencilerin hangi konuda bilgi sahibi oldukları Key gibidir. Cevap verdiklerinde aktardıkları içerik ise Value gibidir. Model, hangi Key’in Query ile daha iyi eşleştiğini hesaplar ve o kaynaktan gelen Value bilgisini daha güçlü kullanır.</p>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 4 için yer tutucu</div>
+              <div class="fig-main">Query-Key-Value sezgisel diyagramı</div>
+              <div class="fig-desc">Bir patch’in “ben ne arıyorum?” sorusuyla diğer patch’lerin “ben neyim?” bilgilerini karşılaştırdığı ve sonunda bazı patch’lerden daha fazla bilgi aldığı bir akış çizilebilir. Görselde matematiksel sembollerden çok oklar, ağırlıklar ve ilişki çizgileri kullanılmalı.</div>
+            </div>
+
+            <h3>Self-attention: Her parça diğer parçalara bakar</h3>
+            <p><em>Self-attention</em> ifadesindeki “self” kelimesi önemlidir. Burada model dışarıdan başka bir veri kaynağına bakmaz; aynı veri içindeki parçaların birbirleriyle ilişkisini hesaplar. Bir cümlede her kelime diğer kelimelere bakar. Bir görüntüde her patch diğer patch’lere bakar.</p>
+            <p>Bu yapı görüntü açısından güçlü bir anlam taşır. Örneğin bir kuş fotoğrafında kanat bölgesindeki patch, baş ve gövde bölgesiyle ilişki kurabilir. Arka plan patch’leri daha düşük öneme sahip olabilir. Böylece model yalnızca lokal kenarları değil, görüntünün bütünündeki semantik ilişkileri de öğrenmeye başlar.</p>
+
+            <div class="historical-note">
+              <span class="label">Tarihsel bağlam</span>
+              <p>Attention fikri Transformer’dan önce de vardı; özellikle makine çevirisinde encoder-decoder yapılarında hedef kelime üretilirken kaynak cümlenin hangi kısımlarına bakılacağı önemli bir problemdi. 2017’deki Transformer çalışmasının radikal tarafı, attention’ı yardımcı bir bileşen olmaktan çıkarıp mimarinin ana motoru haline getirmesiydi. <sup class="ref">[5]</sup></p>
+            </div>
+          </section>
+
+          <section id="transformer">
+            <h2>6. Transformer’ın ortaya çıkışı: Tekrarlayan yapı olmadan bağlam öğrenmek</h2>
+            <p>Transformer mimarisi ilk olarak doğal dil işleme problemleri için güçlü bir alternatif olarak ortaya çıktı. O dönemde makine çevirisi gibi dizisel görevlerde RNN, LSTM ve GRU gibi tekrarlayan yapılar yaygındı. Bu yapılar kelimeleri sırayla işlerdi. Ancak uzun dizilerde uzak bağımlılıkları taşımak zorlaşabiliyor, ayrıca eğitim süreci paralelleştirme açısından sınırlı kalabiliyordu.</p>
+            <p>“Attention Is All You Need” başlıklı çalışma, radikal bir öneri sundu: Bir diziyi anlamak için tekrarlayan yapı şart olmayabilir. Eğer her token diğer token’larla doğrudan ilişki kurabiliyorsa, bağlamı attention üzerinden öğrenmek mümkündür. Bu fikir yalnızca dil işleme için değil, daha sonra görüntü, ses, video ve multimodal yapay zekâ sistemleri için de temel bir dönüşüm yarattı. <sup class="ref">[5]</sup></p>
+            <p>Transformer’ın temel bloğu üç ana düşünceye dayanır. Birincisi, veri token’lara ayrılır. İkincisi, her token sayısal bir embedding ile temsil edilir. Üçüncüsü, self-attention aracılığıyla token’lar birbirleriyle ilişkilendirilir. Bu işlem katmanlar boyunca tekrarlandıkça model, yalnızca tek tek token’ları değil, token’lar arasındaki bağlamı da öğrenir.</p>
+
+            <div class="callout">
+              <span class="label">Formülsüz özet</span>
+              <p>Transformer’ı bir cümleyle anlatmak gerekirse: Transformer, veriyi parçalara ayırır, her parçayı bir vektöre dönüştürür ve sonra her parçanın diğer parçalarla ilişkisini öğrenerek bağlamsal temsil üretir.</p>
+            </div>
+
+            <p>Transformer’ın bu kadar etkili olmasının nedenlerinden biri de ölçeklenebilirliğidir. Büyük veri ve büyük model kapasitesiyle birlikte, attention tabanlı modeller temsil öğrenmede çok güçlü hale gelmiştir. BERT gibi modeller Transformer encoder yapısının dil anlama görevlerinde ne kadar başarılı olabileceğini gösterdi. Bu başarı, “acaba görüntü de bir token dizisi gibi ele alınabilir mi?” sorusunu doğal hale getirdi. <sup class="ref">[11]</sup></p>
+          </section>
+
+          <section id="vit">
+            <h2>7. Vision Transformer: Bir görüntü kaç kelimedir?</h2>
+            <p>Vision Transformer’ın meşhur çalışmasının başlığı oldukça öğreticidir: <em>An Image is Worth 16x16 Words</em>. Başlıktaki kelime oyunu, görüntünün 16×16 boyutlu patch’lere ayrılmasına gönderme yapar. Buradaki fikir son derece yalındır: Görüntüyü küçük karelere böl, her kareyi bir token gibi düşün ve bu token dizisini Transformer encoder’a ver. <sup class="ref">[6]</sup></p>
+            <p>Örneğin 224×224 piksel boyutunda RGB bir görüntünüz olduğunu düşünelim. Bu görüntüyü 16×16 piksel boyutunda kare patch’lere bölerseniz, yatayda 14, dikeyde 14 patch elde edersiniz. Toplam patch sayısı 196 olur. Artık görüntü, model açısından 196 parçalık bir dizidir. Dil modelinde cümle kelimelerden oluşuyorsa, Vision Transformer’da görüntü patch’lerden oluşur.</p>
+
+            <div class="formula-lite">224×224 görüntü → 16×16 patch’ler → 14×14 = 196 görsel token</div>
+
+            <p>Bu dönüşüm ilk bakışta basit görünebilir; ancak bilgisayarlı görü açısından düşünsel olarak büyüktür. Çünkü görüntü artık klasik anlamda iki boyutlu bir piksel matrisi gibi değil, Transformer’ın işleyebileceği bir token dizisi gibi temsil edilir. Model, bu patch’ler arasındaki ilişkileri self-attention ile öğrenir.</p>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 5 için yer tutucu</div>
+              <div class="fig-main">Görüntünün patch token dizisine dönüşmesi</div>
+              <div class="fig-desc">224×224 bir görüntüyü 16×16 patch’lere bölen grid yapısını gösterin. Ardından her patch’in düzleştirilip embedding vektörüne dönüştüğünü ve başa CLS token eklendiğini gösteren bir akış verin.</div>
+            </div>
+
+            <h3>Patch neden önemlidir?</h3>
+            <p>Patch boyutu, ViT’in görüntüyü hangi çözünürlükte okuyacağını belirler. Büyük patch kullanırsanız token sayısı azalır, model daha hızlı çalışır; fakat küçük ayrıntılar kaybolabilir. Küçük patch kullanırsanız daha fazla ayrıntı korunur; fakat token sayısı arttığı için self-attention maliyeti yükselir. Bu nedenle ViT-B/16 veya ViT-B/32 gibi isimlerdeki 16 ve 32 sayıları yalnızca teknik bir etiket değildir; modelin görüntüyü hangi granülerlikte okuyacağını anlatır.</p>
+            <p>Bu noktada CNN ile güçlü bir karşılaştırma yapılabilir. CNN’de küçük filtreler görüntünün her yerinde dolaşır. ViT’te ise görüntü önce küçük bloklara ayrılır ve her blok bir temsil vektörüne dönüştürülür. CNN filtreleri yerel örüntü arar; ViT patch’ler arasında ilişki kurar.</p>
+          </section>
+
+          <section id="mimari">
+            <h2>8. ViT mimarisi: Patch’ten sınıf tahminine</h2>
+            <p>Vision Transformer’ın mimarisi ilk bakışta karmaşık görünebilir; fakat akış oldukça düzenlidir. Bir görüntü önce patch’lere ayrılır. Her patch düzleştirilir ve lineer bir katmandan geçirilerek embedding vektörüne dönüştürülür. Daha sonra her patch embedding’ine konum bilgisi eklenir. Başına sınıflandırma için özel bir token, yani CLS token, yerleştirilir. Sonra bu dizi Transformer encoder bloklarından geçer. En sonunda CLS token’ın taşıdığı temsil sınıflandırıcı katmana verilir.</p>
+
+            <pre><code>Görüntü
+  ↓
+Patch'lere bölme
+  ↓
+Patch embedding
+  ↓
+Position embedding ekleme
+  ↓
+Transformer encoder blokları
+  ↓
+CLS token temsili
+  ↓
+MLP head
+  ↓
+Sınıf tahmini</code></pre>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 6 için yer tutucu</div>
+              <div class="fig-main">Vision Transformer mimarisi</div>
+              <div class="fig-desc">Input image → patch grid → linear projection → position embedding + CLS token → Transformer encoder blokları → MLP head → class prediction akışını tek bir yatay mimari diyagram olarak çizin. Encoder bloğunun içinde Multi-Head Self-Attention, MLP, LayerNorm ve Residual Connection bileşenleri küçük kutularla gösterilebilir.</div>
+            </div>
+
+            <h3>CLS token: Görüntünün temsilini taşıyan özel token</h3>
+            <p>ViT’te başa eklenen CLS token, sınıflandırma sonucunu üretmek için kullanılır. Bu token başlangıçta görüntünün herhangi bir parçasına karşılık gelmez. Ancak Transformer encoder blokları boyunca diğer patch token’larla etkileşime girer. Son katmana gelindiğinde CLS token, görüntünün genel temsilini taşıyan bir özet gibi davranır.</p>
+
+            <h3>Position embedding: Model konumu nereden bilecek?</h3>
+            <p>CNN’de konumsal yakınlık mimarinin doğasında vardır. Bir filtre komşu pikseller üzerinde çalışır. Transformer’da ise token dizisi işlenir; model, patch’in görüntünün sol üstünde mi, merkezinde mi, sağ altında mı olduğunu doğuştan bilmez. Bu nedenle patch embedding’lerine position embedding eklenir. Böylece model yalnızca patch’in içeriğini değil, görüntüdeki konumunu da hesaba katabilir.</p>
+
+            <h3>Multi-head attention: Tek bakış değil, çoklu bakış</h3>
+            <p>Bir attention head, token’lar arasında belirli bir ilişki türünü öğrenebilir. Ancak görüntülerde tek tür ilişki yeterli değildir. Bir head renk benzerliklerine, bir başkası şekil bütünlüğüne, bir diğeri nesne-arka plan ayrımına duyarlı hale gelebilir. Multi-head attention, modelin görüntüyü tek bir bakış açısından değil, eş zamanlı birçok ilişki perspektifinden değerlendirmesini sağlar.</p>
+
+            <div class="teacher-note">
+              <span class="label">CNN bağlantısı</span>
+              <p>Öğrenciler için iyi bir benzetme şudur: CNN’de farklı filtreler farklı görsel örüntüleri yakalarken, Transformer’da farklı attention head’leri farklı ilişki türlerini öğrenir. Bu birebir aynı şey değildir, fakat pedagojik olarak geçişi kolaylaştırır.</p>
+            </div>
+          </section>
+
+          <section id="ogrenme">
+            <h2>9. Eğitim ve ön öğrenme: ViT neden veri ister?</h2>
+            <p>Vision Transformer’ın ilk önemli mesajlarından biri şuydu: Saf Transformer yapısı görüntü sınıflandırmada çok iyi çalışabilir; ancak özellikle büyük veriyle ön eğitildiğinde. Bu ayrıntı çok önemlidir. Çünkü ViT, CNN kadar güçlü yerel önyargılara sahip değildir. CNN, görüntüde komşuluğun önemli olduğunu mimarisi gereği zaten bilir. ViT ise bu tür ilişkileri daha fazla veriden öğrenmek zorundadır.</p>
+            <p>Bu nedenle küçük bir veri setinde ViT’i sıfırdan eğitmek çoğu zaman iyi sonuç vermez. Modelin kapasitesi yüksektir, ancak görüntüye özgü yerel düzeni öğrenmesi için yeterli veri olmayabilir. Buna karşılık büyük veri üzerinde ön eğitilmiş bir ViT modeli alınıp küçük veri setinde fine-tuning yapılırsa çok güçlü sonuçlar alınabilir.</p>
+
+            <div class="callout">
+              <span class="label">Yanlış anlaşılmayı önleyin</span>
+              <p>“ViT küçük veri setinde kötü çalıştı, o halde CNN daha iyidir” sonucu eksik bir yorumdur. Daha doğru yorum şudur: CNN küçük veriyle daha avantajlı inductive bias taşır; ViT ise büyük veri, ön eğitim ve transfer learning ile gücünü daha iyi gösterir.</p>
+            </div>
+
+            <h3>Transfer learning açısından ViT</h3>
+            <p>Derste uygulama yaparken sıfırdan ViT eğitmek yerine önceden eğitilmiş bir ViT kullanmak daha doğru olur. Çünkü öğrenciler gerçek hayatta modern görüntü modellerinin çoğunlukla ön eğitimden yararlandığını görmelidir. ImageNet veya daha büyük veri kümelerinde öğrenilmiş görsel temsil, daha küçük özel veri setlerine aktarılabilir.</p>
+            <p>Bu bakış açısı, günümüzde görüntü işleme uygulamalarının çoğunda pratik bir standart haline gelmiştir. Tıbbi görüntü analizi, tarımsal yaprak hastalığı sınıflandırma, endüstriyel hata tespiti veya mimari görüntü analizi gibi alanlarda çoğu zaman veri sınırlıdır. Bu yüzden ön eğitimli modelleri uygun biçimde fine-tune etmek, sıfırdan dev bir model eğitmekten daha gerçekçi bir stratejidir.</p>
+          </section>
+
+          <section id="aile">
+            <h2>10. ViT ailesi: Saf fikirden modern görsel omurgalara</h2>
+            <p>Vision Transformer tek başına bir son nokta değil, büyük bir araştırma ailesinin başlangıcıdır. ViT’in başarısından sonra araştırmacılar şu soruları sormaya başladı: ViT daha az veriyle nasıl eğitilir? Görüntüdeki hiyerarşik yapı Transformer’a nasıl eklenir? Görüntüler etiketsiz veriden nasıl öğrenilebilir? Görüntü ile metin aynı temsil uzayında nasıl buluşturulur?</p>
+
+            <h3>DeiT: Daha veri-verimli Vision Transformer</h3>
+            <p>DeiT, Vision Transformer’ın büyük veri ve büyük altyapı ihtiyacını azaltmaya çalışan önemli bir çalışmadır. Bilgi damıtma yaklaşımıyla, yani güçlü bir öğretmen modelden öğrenci modele bilgi aktararak, dış veri kullanmadan ImageNet üzerinde rekabetçi sonuçlar elde etmeyi hedeflemiştir. Bu çalışma, ViT’in yalnızca dev ölçekli laboratuvarların kullanabileceği bir fikir olmaktan çıkıp daha erişilebilir hale gelmesinde önemli bir adımdır. <sup class="ref">[7]</sup></p>
+
+            <h3>Swin Transformer: Görüntünün çok ölçekli doğasına dönüş</h3>
+            <p>Klasik ViT görüntüyü düz bir patch dizisi gibi işler. Bu, sınıflandırma için etkili olabilir; ancak nesne tespiti ve segmentasyon gibi yoğun tahmin görevlerinde görüntünün çok ölçekli yapısı önemlidir. Swin Transformer, attention hesaplamasını kaydırılmış pencereler içinde yaparak hem verimlilik sağlar hem de hiyerarşik temsil üretir. Bu yönüyle Swin, Transformer mantığını CNN’lerin çok ölçekli görsel temsil gücüyle yakınlaştıran önemli bir mimaridir. <sup class="ref">[8]</sup></p>
+
+            <h3>DINO: Etiketsiz öğrenmede semantik yapı</h3>
+            <p>DINO, self-supervised öğrenme ile Vision Transformer özelliklerinin dikkat çekici semantik yapılar üretebildiğini gösteren önemli bir yaklaşımdır. Etiket olmadan öğrenilen ViT temsillerinin, görüntüdeki nesne bölgeleri hakkında anlamlı bilgiler taşıyabilmesi özellikle etkileyicidir. Bu, “model yalnızca sınıf etiketi öğrenmiyor; görüntünün iç yapısını da keşfedebiliyor” fikrini güçlendirir. <sup class="ref">[9]</sup></p>
+
+            <h3>MAE: Görüntünün eksik parçalarını tahmin etmek</h3>
+            <p>Masked Autoencoder yaklaşımı, görüntünün bazı patch’lerini maskeleyip modelden eksik parçaları yeniden oluşturmasını ister. Bu fikir, dildeki maskeli kelime tahmini mantığına benzer. Ancak görüntüde çoğu patch maskelendiğinde bile model sahnenin yapısını öğrenmeye zorlanır. MAE çalışması, yüksek maskeleme oranlarıyla bile etkili self-supervised görsel öğrenmenin mümkün olduğunu göstermiştir. <sup class="ref">[10]</sup></p>
+
+            <h3>CLIP: Görüntü ile metni aynı uzayda buluşturmak</h3>
+            <p>CLIP, görüntü ve metin eşleşmeleri üzerinden öğrenerek görsel temsilin yalnızca sabit sınıf etiketleriyle sınırlı kalmayabileceğini gösterdi. Model, görüntü ve doğal dil açıklamalarını aynı temsil uzayına yaklaştırır. Böylece daha önce doğrudan eğitilmediği sınıflar için bile metinsel açıklamalar üzerinden zero-shot sınıflandırma yapabilir. Bu yaklaşım, modern multimodal yapay zekâ sistemlerinin temel taşlarından biri haline gelmiştir. <sup class="ref">[12]</sup></p>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 7 için yer tutucu</div>
+              <div class="fig-main">ViT sonrası modern araştırma yönleri</div>
+              <div class="fig-desc">Merkezde ViT olacak şekilde dallanan bir kavram haritası çizin: DeiT → veri verimliliği, Swin → hiyerarşik görsel backbone, DINO → self-supervised semantik özellikler, MAE → maskeli patch yeniden kurma, CLIP → görüntü-metin ortak temsil uzayı.</div>
+            </div>
+          </section>
+
+          <section id="karsilastirma">
+            <h2>11. CNN ve ViT karşılaştırması: Rakip değil, iki farklı düşünme biçimi</h2>
+            <p>CNN ve Vision Transformer çoğu zaman birbirinin rakibi gibi anlatılır. Bu kısmen doğrudur; ikisi de görüntü sınıflandırma gibi görevlerde kullanılabilir. Ancak pedagojik olarak daha doğru yaklaşım, bu iki mimariyi iki farklı temsil felsefesi olarak görmektir.</p>
+            <p>CNN, görüntünün yerel ve hiyerarşik yapısını mimariye gömer. Bu nedenle veri sınırlı olduğunda avantajlı olabilir. ViT ise daha genel bir ilişki öğrenme mekanizmasına dayanır. Bu, özellikle büyük veri ve ön eğitimle birlikte daha esnek ve ölçeklenebilir temsiller üretmesini sağlar.</p>
+
+            <table class="comparison">
+              <thead>
+                <tr>
+                  <th>Boyut</th>
+                  <th>CNN</th>
+                  <th>Vision Transformer</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Temel işlem</td>
+                  <td>Konvolüsyon filtresi</td>
+                  <td>Self-attention</td>
+                </tr>
+                <tr>
+                  <td>Görüntüye bakış</td>
+                  <td>Yerel pencere ve hiyerarşik özellikler</td>
+                  <td>Patch token’ları arasındaki ilişkiler</td>
+                </tr>
+                <tr>
+                  <td>Konum bilgisi</td>
+                  <td>Mimarinin doğasında güçlü biçimde vardır</td>
+                  <td>Position embedding ile ayrıca eklenir</td>
+                </tr>
+                <tr>
+                  <td>Küçük veri</td>
+                  <td>Genellikle daha avantajlıdır</td>
+                  <td>Ön eğitim yoksa zorlanabilir</td>
+                </tr>
+                <tr>
+                  <td>Büyük veri ve ölçek</td>
+                  <td>Çok güçlüdür</td>
+                  <td>Özellikle ön eğitimle çok güçlü hale gelir</td>
+                </tr>
+                <tr>
+                  <td>Global ilişki</td>
+                  <td>Derin katmanlarla dolaylı öğrenilir</td>
+                  <td>Attention sayesinde doğrudan modellenebilir</td>
+                </tr>
+                <tr>
+                  <td>Modern kullanım</td>
+                  <td>Hâlâ çok yaygın ve pratik</td>
+                  <td>Özellikle multimodal ve foundation model ekosisteminde merkezi</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 8 için yer tutucu</div>
+              <div class="fig-main">CNN ve ViT karşılaştırma infografiği</div>
+              <div class="fig-desc">İki sütunlu bir görsel hazırlayın. Sol sütunda filtre, receptive field, feature map, pooling; sağ sütunda patch, token, attention map, CLS token kavramları yer alsın. Altta “CNN: yerel örüntülerden nesneye”, “ViT: parça ilişkilerinden temsile” mesajı verilebilir.</div>
+            </div>
+
+            <p>Bu karşılaştırma sonunda öğrencinin şu sonuca ulaşması gerekir: ViT, CNN’i “geçersiz kılan” bir mimari değildir. CNN hâlâ birçok görevde etkili, hızlı ve pratik bir çözümdür. Ancak ViT, özellikle global bağlam, ön eğitim, büyük veri ve multimodal öğrenme açısından yeni bir temsil paradigması sunar.</p>
+          </section>
+
+          <section id="uygulama">
+            <h2>12. Ders sonu uygulaması: CNN ve ön eğitimli ViT’i karşılaştırmak</h2>
+            <p>Bu bölümün sonunda yapılabilecek en öğretici uygulama, aynı veri seti üzerinde küçük bir CNN ile ön eğitimli bir ViT modelini karşılaştırmaktır. Buradaki amaç yalnızca yüksek doğruluk elde etmek değildir. Asıl amaç, iki mimarinin öğrenme davranışını gözlemlemektir.</p>
+
+            <div class="lab-box">
+              <span class="label">Uygulama önerisi</span>
+              <h3>CNN vs Pretrained ViT ile görüntü sınıflandırma</h3>
+              <p><strong>Veri seti:</strong> CIFAR-10, küçük bir yaprak sınıflandırma veri seti, çiçek/yaprak türleri veya öğrencilerin kolayca anlayabileceği 3–5 sınıflı özel bir veri seti.</p>
+              <p><strong>Model 1:</strong> Basit bir CNN. Amaç, sıfırdan eğitilen yerel filtre tabanlı modelin davranışını görmek.</p>
+              <p><strong>Model 2:</strong> Ön eğitimli ViT-B/16. Amaç, transfer learning ile patch-attention tabanlı modelin nasıl kullanılacağını görmek.</p>
+              <p><strong>Karşılaştırma:</strong> Eğitim doğruluğu, test doğruluğu, confusion matrix, yanlış sınıflandırılan örnekler, eğitim süresi ve küçük veri davranışı.</p>
+            </div>
+
+            <h3>Uygulamanın akışı</h3>
+            <ol>
+              <li>Veri setini yükleyin ve eğitim/test ayrımını yapın.</li>
+              <li>Görüntüleri CNN için uygun boyuta ve normalize edilmiş tensörlere dönüştürün.</li>
+              <li>Aynı veri setini ViT için gereken giriş boyutuna, örneğin 224×224’e, dönüştürün.</li>
+              <li>Küçük bir CNN modeli oluşturup birkaç epoch eğitin.</li>
+              <li>Ön eğitimli ViT modelinin son sınıflandırma katmanını veri setindeki sınıf sayısına göre değiştirin.</li>
+              <li>ViT’i fine-tune edin veya yalnızca son katmanını eğiterek transfer learning davranışını gözlemleyin.</li>
+              <li>Her iki modelin sonuçlarını confusion matrix ve yanlış tahmin örnekleriyle karşılaştırın.</li>
+            </ol>
+
+            <div class="figure-placeholder">
+              <div class="fig-title">Görsel 9 için yer tutucu</div>
+              <div class="fig-main">Ders sonu uygulama akışı</div>
+              <div class="fig-desc">Aynı veri setinden iki kola ayrılan bir deney şeması çizin: sol kol Basit CNN → eğitim → test; sağ kol Pretrained ViT → classifier head değişimi → fine-tuning → test. En sonda accuracy, confusion matrix ve yanlış tahmin örnekleri ortak karşılaştırma kutusunda buluşsun.</div>
+            </div>
+
+            <h3>Patch görselleştirme etkinliği</h3>
+            <p>Uygulamanın başında öğrencilerin bir görüntünün patch’lere ayrıldığını görmesi çok faydalıdır. Basit bir Python kodu ile 224×224 boyutundaki bir görüntüyü 16×16 grid’e ayırıp her patch’i numaralandırabilirsiniz. Bu etkinlik, ViT’in görüntüyü nasıl “kelimelere” böldüğünü somutlaştırır.</p>
+
+            <pre><code>Görüntü: 224 × 224
+Patch: 16 × 16
+Grid: 14 × 14
+Toplam patch: 196
+CLS token ile toplam token: 197</code></pre>
+
+            <h3>Öğrencilere sorulacak değerlendirme soruları</h3>
+            <ul>
+              <li>CNN küçük veri setinde neden daha hızlı öğrenmiş olabilir?</li>
+              <li>ViT ön eğitimli olduğunda neden güçlü sonuç verebilir?</li>
+              <li>Patch boyutu küçülürse ne kazanılır, ne kaybedilir?</li>
+              <li>Attention map görselleştirilirse modelin hangi bölgelere baktığını yorumlamak mümkün müdür?</li>
+              <li>Bir nesne tespiti veya segmentasyon görevi için klasik ViT yerine Swin benzeri hiyerarşik bir model neden daha uygun olabilir?</li>
+            </ul>
+
+            <div class="teacher-note">
+              <span class="label">Öğretim stratejisi</span>
+              <p>Ders sonunda öğrencilerin ViT’i yalnızca “CNN’den daha yeni model” olarak değil, “görüntüyü ilişki tabanlı temsil eden farklı bir mimari düşünce” olarak kavraması hedeflenmelidir. Uygulama sonuçları bu kavramsal farkı desteklemek için kullanılmalıdır.</p>
+            </div>
+          </section>
+
+          <section id="sonuc">
+            <h2>13. Sonuç: Filtrelerden ilişkilere doğru</h2>
+            <p>Bilgisayarlı görü tarihi, görüntüleri anlama biçimimizin sürekli değiştiği bir tarihtir. Önce elle tasarlanmış özellikler vardı. Sonra CNN’ler, özellikleri veriden öğrenmenin ne kadar güçlü olduğunu gösterdi. AlexNet ile büyük veri ve GPU destekli derin CNN dönemi başladı. ResNet gibi mimariler, çok derin ağların eğitilebileceğini gösterdi. Transformer ise başka bir alandan, dilden, gelen bir fikri merkeze aldı: Verideki parçalar arasındaki ilişkileri öğrenmek.</p>
+            <p>Vision Transformer bu fikri görüntülere taşıdı. Görüntüyü patch’lere ayırdı, patch’leri token gibi düşündü ve self-attention ile bu parçalar arasındaki ilişkileri öğrendi. Böylece görüntü işleme yalnızca “filtre nerede etkinleşti?” sorusundan ibaret olmaktan çıktı; “görüntünün hangi parçası hangi parçayla anlamlı ilişki kuruyor?” sorusu merkezi hale geldi.</p>
+            <p>Bu dönüşüm, CNN’lerin önemini azaltmaz. Tam tersine, CNN’lerin güçlü yanlarını daha iyi anlamamızı sağlar. CNN görüntüye uygun yerel önyargılarla hızlı ve verimli öğrenir. ViT daha genel, esnek ve ölçeklenebilir bir ilişki öğrenme çerçevesi sunar. Modern bilgisayarlı görüde bu iki yaklaşım çoğu zaman birbirini dışlamaz; aksine hibrit mimarilerde, ön eğitim stratejilerinde ve uygulama ihtiyaçlarına göre birlikte düşünülür.</p>
+
+            <div class="chapter-end">
+              <span class="label">Bölümün son cümlesi</span>
+              <p>Görüntüyü anlamak, yalnızca kenarları ve dokuları bulmak değildir; parçaların birlikte ne söylediğini kavramaktır. CNN bize görsel dünyanın yerel dilini öğretti. Vision Transformer ise bu dilin cümlelerini, yani parçalar arasındaki ilişkileri okumaya başladı.</p>
+            </div>
+          </section>
+
+          <section id="kaynakca">
+            <h2>Kaynakça ve ileri okuma</h2>
+            <ol class="references">
+              <li>Fukushima, K. “Neocognitron: A self-organizing neural network model for a mechanism of pattern recognition unaffected by shift in position.” 1980.</li>
+              <li>LeCun, Y., Bottou, L., Bengio, Y., Haffner, P. “Gradient-Based Learning Applied to Document Recognition.” Proceedings of the IEEE, 1998.</li>
+              <li>Krizhevsky, A., Sutskever, I., Hinton, G. E. “ImageNet Classification with Deep Convolutional Neural Networks.” NeurIPS, 2012.</li>
+              <li>He, K., Zhang, X., Ren, S., Sun, J. “Deep Residual Learning for Image Recognition.” arXiv:1512.03385, 2015.</li>
+              <li>Vaswani, A. et al. “Attention Is All You Need.” arXiv:1706.03762, 2017.</li>
+              <li>Dosovitskiy, A. et al. “An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale.” arXiv:2010.11929, 2020.</li>
+              <li>Touvron, H. et al. “Training data-efficient image transformers & distillation through attention.” arXiv:2012.12877, 2020.</li>
+              <li>Liu, Z. et al. “Swin Transformer: Hierarchical Vision Transformer using Shifted Windows.” arXiv:2103.14030, 2021.</li>
+              <li>Caron, M. et al. “Emerging Properties in Self-Supervised Vision Transformers.” arXiv:2104.14294, 2021.</li>
+              <li>He, K. et al. “Masked Autoencoders Are Scalable Vision Learners.” arXiv:2111.06377, 2021.</li>
+              <li>Devlin, J. et al. “BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding.” arXiv:1810.04805, 2018.</li>
+              <li>Radford, A. et al. “Learning Transferable Visual Models From Natural Language Supervision.” arXiv:2103.00020, 2021.</li>
+            </ol>
+          </section>
+        </article>
+      </main>
+
+      <footer>
+        <p>Bu HTML dosyası ders notu, kitap bölümü veya çevrim içi ders materyali olarak kullanılabilecek şekilde hazırlanmıştır. Görsel yer tutucularına kendi çizimlerinizi, yapay zekâ ile üretilmiş şemaları veya ders slaytlarından alınmış infografikleri ekleyebilirsiniz.</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const savedTheme = localStorage.getItem('chapter-theme');
+    if (savedTheme) root.setAttribute('data-theme', savedTheme);
+
+    function toggleTheme() {
+      const current = root.getAttribute('data-theme') || 'light';
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('chapter-theme', next);
+    }
+  </script>
+</body>
+</html>
