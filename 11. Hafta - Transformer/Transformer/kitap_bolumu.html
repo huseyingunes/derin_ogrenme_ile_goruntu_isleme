@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transformer’dan Vision Transformer’a — Kitap Bölümü</title>
+  <style>
+    :root{
+      --ink:#152033; --muted:#5b667a; --blue:#083b91; --blue2:#0b62c7;
+      --teal:#007f7f; --purple:#5631a8; --orange:#e86900; --green:#2e7d32;
+      --bg:#f3f6fb; --paper:#ffffff; --line:#d9e2f2; --soft:#eef5ff;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0; background:linear-gradient(180deg,#f5f8fd,#edf3fb);
+      color:var(--ink); font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size:18px; line-height:1.75;
+    }
+    .page{
+      max-width:1160px; margin:0 auto; background:var(--paper);
+      box-shadow:0 24px 70px rgba(20,35,70,.13);
+      min-height:100vh;
+    }
+    header{
+      padding:72px 72px 54px; color:white;
+      background:
+        radial-gradient(circle at 92% 10%,rgba(255,255,255,.20),transparent 24%),
+        linear-gradient(135deg,#061948 0%,#083b91 48%,#5631a8 100%);
+      position:relative; overflow:hidden;
+    }
+    header:after{
+      content:""; position:absolute; right:-130px; bottom:-145px;
+      width:430px; height:430px; border:46px solid rgba(255,255,255,.08);
+      border-radius:50%;
+    }
+    .kicker{font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#bdd8ff; font-size:.9rem; margin-bottom:18px}
+    h1{font-size:3.05rem; line-height:1.08; letter-spacing:-.045em; margin:0 0 22px}
+    .subtitle{font-size:1.22rem; max-width:900px; color:#e5efff; margin:0}
+    .chips{display:flex; flex-wrap:wrap; gap:10px; margin-top:30px}
+    .chip{padding:8px 13px; border-radius:999px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.12); font-size:.92rem}
+    main{padding:50px 72px 84px}
+    h2{
+      margin:64px 0 18px; padding-top:32px; border-top:1px solid var(--line);
+      color:#081f5c; font-size:2.05rem; line-height:1.18; letter-spacing:-.03em;
+    }
+    h2:first-child{margin-top:0; border-top:0; padding-top:0}
+    h3{color:#10367f; margin:34px 0 12px; font-size:1.42rem; line-height:1.25}
+    h4{color:#26334f; margin:28px 0 8px; font-size:1.13rem}
+    p{margin:0 0 18px}
+    a{color:#0b54c5; text-decoration:none; border-bottom:1px solid rgba(11,84,197,.25)}
+    a:hover{border-bottom-color:#0b54c5}
+    .lead{
+      background:var(--soft); border-left:6px solid var(--blue2); border-radius:16px;
+      padding:22px 24px; font-size:1.12rem; color:#39445b; margin-bottom:30px;
+    }
+    .section-no{
+      display:inline-flex; align-items:center; justify-content:center; min-width:38px; height:38px;
+      border-radius:12px; background:#083b91; color:white; font-weight:900; font-size:.92em;
+      margin-right:10px; vertical-align:middle;
+    }
+    .toc{
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 24px;
+      border:1px solid var(--line); border-radius:20px; background:#f8fbff;
+      padding:24px; margin:26px 0 42px;
+    }
+    .toc a{border:0; color:#1c2d50; font-weight:700; padding:5px 0}
+    .toc small{color:var(--muted); font-weight:500}
+    .callout{
+      border:1px solid var(--line); border-radius:18px; padding:22px 24px; margin:26px 0; background:#fbfdff;
+    }
+    .callout strong.label{display:block; text-transform:uppercase; letter-spacing:.06em; font-size:.95rem; margin-bottom:8px; color:#083b91}
+    .teal{background:#f1fbfa; border-left:6px solid var(--teal)}
+    .orange{background:#fff6eb; border-left:6px solid var(--orange)}
+    .purple{background:#f6f2ff; border-left:6px solid var(--purple)}
+    .green{background:#f1fbf3; border-left:6px solid var(--green)}
+    figure{
+      margin:32px 0; padding:14px; border:1px solid var(--line); border-radius:22px;
+      background:#fbfdff; box-shadow:0 12px 34px rgba(20,35,70,.08); page-break-inside:avoid;
+    }
+    figure img{width:100%; height:auto; display:block; border-radius:15px; border:1px solid #dce6f7; background:white}
+    figcaption{font-size:.95rem; color:#4d5a71; margin:12px 6px 4px; line-height:1.5}
+    .math{
+      background:#f7f9fc; border:1px solid #dce3f0; border-radius:16px;
+      padding:16px 18px; margin:18px 0 24px; overflow:auto; color:#111827; font-size:1.02rem;
+    }
+    .eq-note{color:var(--muted); font-size:.96rem; margin-top:-8px}
+    table{
+      width:100%; border-collapse:separate; border-spacing:0; margin:24px 0;
+      border:1px solid var(--line); border-radius:16px; overflow:hidden; font-size:.98rem;
+    }
+    th,td{border-bottom:1px solid var(--line); padding:13px 14px; vertical-align:top}
+    th{background:#083b91; color:white; text-align:left; font-weight:800}
+    tr:last-child td{border-bottom:0}
+    tbody tr:nth-child(even) td{background:#f8fbff}
+    ul,ol{margin-top:8px; margin-bottom:22px}
+    li{margin:6px 0}
+    code{background:#eef3ff; border:1px solid #d9e5ff; border-radius:6px; padding:1px 6px; font-size:.94em}
+    .timeline{position:relative; margin:28px 0 8px; padding-left:24px; border-left:4px solid #dbe7ff}
+    .tl-item{margin:0 0 22px; padding:18px 20px; border:1px solid var(--line); border-radius:16px; background:white; position:relative}
+    .tl-item:before{content:""; position:absolute; left:-34px; top:24px; width:14px; height:14px; background:#0b66d8; border:4px solid #e8f1ff; border-radius:50%}
+    .tl-year{font-weight:900; color:#083b91; font-size:1.12rem; margin-bottom:4px}
+    .teacher{background:#101827; color:#e9efff; border-radius:18px; padding:22px 24px; margin:30px 0}
+    .teacher strong{color:#9dd3ff}
+    .note{font-size:.96rem; color:#4b566d}
+    .refs li{margin-bottom:10px}
+    @media(max-width:900px){
+      header{padding:44px 28px} main{padding:32px 24px 56px}
+      h1{font-size:2.2rem} body{font-size:16px}.toc{grid-template-columns:1fr}
+    }
+    @media print{
+      body{background:white; font-size:12pt}.page{box-shadow:none; max-width:none}
+      header{color:#111; background:white; padding:32px 0 24px; border-bottom:2px solid #111}
+      header:after{display:none}.kicker,.subtitle,.chip{color:#111}.chip{border-color:#999;background:white}
+      main{padding:0}a{color:#111;border:0}figure{box-shadow:none}
+    }
+  </style>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+
+<body>
+<div class="page">
+<header>
+  <div class="kicker">Dijital Derin Öğrenme ile Görüntü İşleme · Kitap Bölümü Taslağı</div>
+  <h1>Transformer’dan Vision Transformer’a: Metinden Görüntüye Dikkat Mimarisi</h1>
+  <p class="subtitle">
+    Bu bölüm, Transformer mimarisinin tarihsel ortaya çıkışını, temel matematiğini ve Vision Transformer’a dönüşümünü; verilen 10 ders görselini kullanarak üniversite öğrencilerinin rahatlıkla takip edebileceği düzeyde açıklar.
+  </p>
+  <div class="chips">
+    <span class="chip">Görseller: 1.png–10.png</span>
+    <span class="chip">HTML kitap bölümü</span>
+    <span class="chip">Temel matematik</span>
+    <span class="chip">Kaynakçalı</span>
+  </div>
+</header>
+
+<main>
+
+<section id="giris">
+  <h2><span class="section-no">0</span>Bölümün amacı</h2>
+  <p class="lead">
+    Transformer, modern derin öğrenmenin en etkili mimarilerinden biridir. Başlangıçta doğal dil işleme ve makine çevirisi için geliştirilmiş; daha sonra görüntü işleme, video analizi, çok modlu öğrenme, tıbbi görüntüleme, uzaktan algılama ve robotik algı gibi alanlara yayılmıştır. Bu bölümde Transformer’ın yalnızca “formüllerden oluşan karmaşık bir yapı” değil, verinin parçaları arasındaki ilişkileri öğrenen genel bir temsil mimarisi olduğu gösterilecektir.
+  </p>
+
+  <p>
+    Bölümün ana hedefi, öğrencinin Transformer ve Vision Transformer mimarilerini hem sezgisel hem de temel matematik düzeyinde anlayabilmesidir. Bu nedenle anlatımda önce tarihsel ihtiyaç ortaya konacak, sonra token, embedding, positional encoding, self-attention, Query-Key-Value, multi-head attention, encoder ve decoder adım adım açıklanacaktır. Son bölümde aynı mantığın görüntülere nasıl aktarıldığı, yani Vision Transformer yaklaşımı ele alınacaktır.
+  </p>
+
+  <h3>İçindekiler</h3>
+  <nav class="toc">
+    <a href="#tarihce">1. Tarihsel arka plan <small>RNN, LSTM, attention, Transformer</small></a>
+    <a href="#neden">2. Transformer’ın temel fikri <small>sıra yerine ilişki</small></a>
+    <a href="#token">3. Tokenizasyon <small>metni işlenebilir parçalara ayırmak</small></a>
+    <a href="#embedding">4. Embedding <small>token’ı vektöre çevirmek</small></a>
+    <a href="#position">5. Positional encoding <small>sıra bilgisini eklemek</small></a>
+    <a href="#selfattention">6. Self-attention <small>token’lar arası ilişki</small></a>
+    <a href="#qkv">7. Query-Key-Value <small>dikkatin hesaplanması</small></a>
+    <a href="#multihead">8. Multi-head attention <small>çoklu bakış</small></a>
+    <a href="#encoder">9. Encoder <small>bağlamsal temsil</small></a>
+    <a href="#decoder">10. Decoder <small>adım adım üretim</small></a>
+    <a href="#pipeline">11. Transformer akışı <small>tüm sürecin birleşimi</small></a>
+    <a href="#vit">12. Vision Transformer <small>görüntü yamaları token olur</small></a>
+    <a href="#guncel">13. Güncel yönelimler <small>Swin, DINOv2, SAM, Mamba</small></a>
+    <a href="#kaynaklar">14. Kaynakça</a>
+  </nav>
+
+  <div class="callout teal">
+    <strong class="label">Dosya yerleşimi</strong>
+    Bu HTML dosyası, <code>1.png</code>, <code>2.png</code>, ..., <code>10.png</code> isimli görsellerle aynı klasörde çalışacak şekilde hazırlanmıştır. Görseller HTML içine gömülü değildir; aynı klasörde bulunmaları yeterlidir.
+  </div>
+</section>
+
+<section id="tarihce">
+  <h2><span class="section-no">1</span>Tarihsel arka plan: Transformer neden ortaya çıktı?</h2>
+
+  <p>
+    Derin öğrenmenin erken dönemlerinde farklı veri türleri için farklı mimari aileleri öne çıktı. Görüntü işleme alanında CNN mimarileri, özellikle 2012 sonrasında büyük bir ivme kazandı. CNN’lerin başarısı, görüntünün yerel yapısını iyi kullanmalarından kaynaklanıyordu. Küçük filtreler görüntü üzerinde gezdiriliyor, kenar, köşe, doku ve daha üst düzey nesne parçaları katman katman öğreniliyordu.
+  </p>
+
+  <p>
+    Dil işleme ve zaman serileri tarafında ise RNN, LSTM ve GRU gibi sıralı modeller uzun süre temel yaklaşım oldu. Bu modeller bir diziyi adım adım işler. Bir cümlede önce birinci kelime, sonra ikinci kelime, sonra üçüncü kelime işlenir. Her adımda model önceki adımlardan gelen bilgiyi gizli durum adı verilen bir temsil içinde taşımaya çalışır.
+  </p>
+
+  <p>
+    Bu yaklaşım sezgisel olarak doğrudur; çünkü insan da metni genellikle soldan sağa okur. Ancak bilgisayar mimarisi açısından önemli sorunlar doğurur. Bir RNN modelinde üçüncü kelimenin işlenebilmesi için ikinci kelimenin, ikinci kelimenin işlenebilmesi için birinci kelimenin işlenmiş olması gerekir. Bu durum paralel hesaplamayı sınırlar. Ayrıca uzun cümlelerde uzak kelimeler arasındaki ilişkileri taşımak zorlaşır.
+  </p>
+
+  <p>
+    LSTM ve GRU bu problemi hafifletmek için kapı mekanizmaları geliştirmiştir. Fakat temel sıralı işleme mantığı korunur. Attention fikri ise bu noktada önemli bir değişim getirmiştir: Model, çıktı üretirken giriş dizisinin yalnızca son durumuna değil, farklı bölümlerine farklı ağırlıklarla bakabilir. 2017’de önerilen Transformer mimarisi bu fikri merkeze koymuş ve recurrence ya da convolution kullanmadan yalnızca attention temelli bir mimariyle güçlü sonuçlar alınabileceğini göstermiştir.
+  </p>
+
+  <figure>
+    <img src="10.png" alt="Transformer ile RNN/LSTM karşılaştırması">
+    <figcaption><strong>Görsel 10.</strong> Transformer’ı klasik sıra modellerinden ayıran ana fikir. RNN/LSTM adım adım ilerlerken Transformer, token’lar arasındaki ilişkileri doğrudan ve paralel biçimde modellemeye çalışır.</figcaption>
+  </figure>
+
+  <div class="callout orange">
+    <strong class="label">Tarihsel kırılma</strong>
+    Transformer’ın önemi yalnızca daha iyi sonuç üretmesi değildir. Asıl kırılma, dizisel veriyi “önceki bilgiyi sonraki adıma taşıma” problemi olmaktan çıkarıp “tüm parçalar arasındaki ilişkileri hesaplama” problemine dönüştürmesidir.
+  </div>
+
+  <h3>Kısa zaman çizelgesi</h3>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-year">1990’lar–2010’lar: RNN ve LSTM dönemi</div>
+      <p>RNN tabanlı modeller dizisel veriyi adım adım işledi. LSTM, uzun bağımlılıkları daha iyi taşıyabilmek için kapı mekanizmaları kullandı.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2014–2016: Attention fikrinin yükselişi</div>
+      <p>Makine çevirisi modellerinde attention, hedef kelime üretilirken kaynak cümlenin ilgili bölümlerine odaklanmayı sağladı. Attention başlangıçta yardımcı bir mekanizmaydı.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2017: Transformer</div>
+      <p><em>Attention Is All You Need</em> çalışması, recurrence ve convolution olmadan, attention temelli encoder-decoder yapısının makine çevirisinde çok güçlü olabileceğini gösterdi.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2018–2019: BERT ve GPT çizgisi</div>
+      <p>BERT, encoder tabanlı çift yönlü bağlamsal temsil fikrini; GPT çizgisi ise decoder tabanlı bir sonraki token üretimi yaklaşımını yaygınlaştırdı.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2020: Vision Transformer</div>
+      <p>Vision Transformer, görüntüyü küçük yamalara ayırıp bu yamaları kelime token’ları gibi işleyerek CNN olmadan güçlü görüntü sınıflandırma yapılabileceğini gösterdi.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2021 ve sonrası: Görsel temel modeller</div>
+      <p>Swin Transformer, CLIP, MAE, DINOv2, SAM ve SAM 2 gibi çalışmalar Transformer tabanlı görsel temsil öğrenmenin segmentasyon, video, çok modlu öğrenme ve self-supervised learning alanlarında da etkili olduğunu gösterdi.</p>
+    </div>
+  </div>
+</section>
+
+<section id="neden">
+  <h2><span class="section-no">2</span>Transformer’ın temel fikri: Tek tek adımlar değil, ilişkiler</h2>
+
+  <p>
+    Transformer’ın temel düşüncesi şudur: Bir veri dizisindeki her parça, diğer parçalarla ilişkisi üzerinden anlam kazanır. Bir cümledeki kelime, yalnızca sözlük anlamıyla değil, cümledeki diğer kelimelerle kurduğu ilişkiyle anlaşılır. Aynı durum görüntü için de geçerlidir. Bir piksel ya da görüntü yaması, tek başına sınırlı bilgi taşır; fakat komşu bölgelerle ve görüntünün uzak bölgeleriyle ilişkisi dikkate alındığında anlamlı hâle gelir.
+  </p>
+
+  <p>
+    Bu nedenle Transformer’ı basitçe “kelimeleri işleyen bir model” olarak görmek eksik olur. Transformer, daha genel olarak <strong>parçalar arası ilişki öğrenen bir mimari</strong>dir. Dil tarafında bu parçalar token’lardır. Görüntü tarafında ise patch adı verilen görüntü yamalarıdır.
+  </p>
+
+  <p>
+    Bu bakış, Vision Transformer için kritik önemdedir. Çünkü CNN’ler görüntüyü yerel filtrelerle işlerken, Vision Transformer görüntüyü bir dizi patch token olarak ele alır ve bu token’ların birbirleriyle ilişkisini self-attention ile öğrenir.
+  </p>
+</section>
+
+<section id="token">
+  <h2><span class="section-no">3</span>Tokenizasyon: Girdiyi işlenebilir parçalara ayırmak</h2>
+
+  <p>
+    Transformer’ın ilk adımı girdiyi küçük işlenebilir parçalara ayırmaktır. Metin için bu parçalara token denir. Token kelime olabilir, kelime parçası olabilir, noktalama işareti olabilir veya özel bir sembol olabilir.
+  </p>
+
+  <p>
+    Örneğin şu cümleyi ele alalım:
+  </p>
+
+  <div class="math">
+    Ben bugün okula gidiyorum.
+  </div>
+
+  <p>
+    Basit bir gösterimde bu cümle şu token’lara ayrılabilir:
+  </p>
+
+  <div class="math">
+    Ben &nbsp; | &nbsp; bugün &nbsp; | &nbsp; okula &nbsp; | &nbsp; gidiyorum &nbsp; | &nbsp; .
+  </div>
+
+  <figure>
+    <img src="1.png" alt="Cümlenin tokenlara ayrılması">
+    <figcaption><strong>Görsel 1.</strong> Cümlenin token’lara ayrılması. Transformer metni tek parça olarak değil, küçük işlenebilir birimler olarak ele alır.</figcaption>
+  </figure>
+
+  <p>
+    Tokenizasyon, modelin dünyayı hangi parçalar üzerinden göreceğini belirler. İnsan için “gidiyorum” tek bir kelime gibi görünür. Ancak Türkçe gibi eklemeli dillerde bu kelime kök ve eklerden oluşur. Bazı modeller bu kelimeyi tek token olarak alabilirken, bazı tokenizasyon yöntemleri kelimeyi alt parçalara ayırabilir.
+  </p>
+
+  <div class="callout purple">
+    <strong class="label">Vision Transformer bağlantısı</strong>
+    Vision Transformer’da token kelime değildir. Görüntü küçük kare yamalara ayrılır. Her yama, metindeki bir kelime gibi modele verilen bir token hâline gelir.
+  </div>
+</section>
+
+<section id="embedding">
+  <h2><span class="section-no">4</span>Embedding: Token’ları sayısal vektörlere dönüştürmek</h2>
+
+  <p>
+    Sinir ağları metni doğrudan işleyemez. “Ben”, “bugün” veya “okula” gibi ifadeler model için başlangıçta semboldür. Modelin bu semboller üzerinde işlem yapabilmesi için her token’ın sayısal bir temsile dönüştürülmesi gerekir. Bu sayısal temsil <strong>embedding</strong> olarak adlandırılır.
+  </p>
+
+  <figure>
+    <img src="2.png" alt="Tokenların sayısal vektörlere dönüştürülmesi">
+    <figcaption><strong>Görsel 2.</strong> Token’ların embedding adı verilen sayısal vektörlere dönüştürülmesi. Model kelimeleri değil, kelimelerin vektörel temsillerini işler.</figcaption>
+  </figure>
+
+  <p>
+    Bir token’ın tek bir sayı ile temsil edilmemesinin nedeni, anlamın tek boyutlu olmamasıdır. “Okula” kelimesi hem bir yer bilgisi taşır, hem yönelme anlamı taşır, hem de “gidiyorum” eylemiyle ilişkili olabilir. Bu nedenle token çok boyutlu bir vektörle temsil edilir.
+  </p>
+
+  <h3>Embedding’in temel matematiği</h3>
+
+  <p>
+    Modelin sözlüğünde \(V\) adet token olsun. Her token \(d_{model}\) boyutlu bir vektörle temsil edilsin. Bu durumda embedding matrisi:
+  </p>
+
+  <div class="math">
+    \[
+      E \in \mathbb{R}^{V \times d_{model}}
+    \]
+  </div>
+
+  <p>
+    Bir token one-hot vektör \(x_i\) ile gösterilirse, embedding vektörü şu şekilde elde edilir:
+  </p>
+
+  <div class="math">
+    \[
+      e_i = x_i E
+    \]
+  </div>
+
+  <p>
+    Burada yapılan işlem aslında embedding matrisinden ilgili token’a karşılık gelen satırı seçmektir. Eğitim sürecinde bu vektörler güncellenir. Model, hangi token’ın hangi sayısal konumda temsil edilmesi gerektiğini veriden öğrenir.
+  </p>
+
+  <div class="callout teal">
+    <strong class="label">Sezgisel açıklama</strong>
+    Embedding vektörü, token’ın anlam uzayındaki koordinatı gibidir. Benzer bağlamlarda kullanılan token’lar eğitim sonunda bu uzayda birbirine daha yakın temsil edilebilir.
+  </div>
+</section>
+
+<section id="position">
+  <h2><span class="section-no">5</span>Positional Encoding: Modelin sıra bilgisini alması</h2>
+
+  <p>
+    Transformer, RNN gibi token’ları sırayla işlemez. Bu paralel çalışma avantajı sağlar. Fakat bunun bir sonucu vardır: Model token’ların sıradaki yerini kendiliğinden bilmez.
+  </p>
+
+  <p>
+    Şu iki cümleyi düşünelim:
+  </p>
+
+  <div class="math">
+    “Kedi köpeği kovaladı.”<br>
+    “Köpeği kedi kovaladı.”
+  </div>
+
+  <p>
+    Kelimeler benzerdir; fakat sıra değiştiğinde anlam değişir. Bu nedenle token embedding’lerine konum bilgisi eklenmelidir.
+  </p>
+
+  <figure>
+    <img src="3.png" alt="Sıra bilgisinin eklenmesi">
+    <figcaption><strong>Görsel 3.</strong> Token embedding’lerine sıra bilgisinin eklenmesi. Transformer yalnızca token içeriğini değil, token’ın dizideki konumunu da bilmelidir.</figcaption>
+  </figure>
+
+  <p>
+    Matematiksel olarak i. token’ın embedding vektörü \(e_i\), i. pozisyonun konum vektörü \(p_i\) olsun. Transformer’a verilen giriş:
+  </p>
+
+  <div class="math">
+    \[
+      z_i = e_i + p_i
+    \]
+  </div>
+
+  <p>
+    İlk Transformer çalışmasında sinüs ve kosinüs temelli positional encoding kullanılmıştır:
+  </p>
+
+  <div class="math">
+    \[
+      PE(pos, 2i) = \sin \left( \frac{pos}{10000^{2i/d_{model}}} \right)
+    \]
+    \[
+      PE(pos, 2i+1) = \cos \left( \frac{pos}{10000^{2i/d_{model}}} \right)
+    \]
+  </div>
+
+  <p>
+    Bu formüllerin amacı her pozisyona farklı fakat düzenli bir vektör vermektir. Böylece model “bu hangi token?” sorusuna ek olarak “bu token nerede?” sorusunu da cevaplayabilir.
+  </p>
+
+  <div class="callout orange">
+    <strong class="label">Kısa özet</strong>
+    Token embedding içeriği, positional encoding ise konumu temsil eder. Transformer’ın gerçek girdisi bu ikisinin birleşimidir.
+  </div>
+</section>
+
+<section id="selfattention">
+  <h2><span class="section-no">6</span>Self-Attention: Her token diğer token’lara bakar</h2>
+
+  <p>
+    Self-attention, Transformer’ın merkezindeki mekanizmadır. Bir token’ın temsilini oluştururken diğer token’lardan ne kadar bilgi alacağını hesaplar. Böylece her token yalnızca kendi anlamını değil, bağlam içindeki rolünü de öğrenir.
+  </p>
+
+  <figure>
+    <img src="4.png" alt="Self attention mantığı">
+    <figcaption><strong>Görsel 4.</strong> Self-attention mantığı. “gidiyorum” token’ı, bağlamını anlamak için “Ben”, “bugün” ve “okula” token’larına farklı ağırlıklarla dikkat eder.</figcaption>
+  </figure>
+
+  <p>
+    “Ben bugün okula gidiyorum.” cümlesinde “gidiyorum” token’ını düşünelim. Bu token tek başına bir eylemi ifade eder. Ancak eylemin tam anlamı için başka bilgilere ihtiyaç vardır:
+  </p>
+
+  <ul>
+    <li>Kim gidiyor? → Ben</li>
+    <li>Ne zaman gidiyor? → bugün</li>
+    <li>Nereye gidiyor? → okula</li>
+  </ul>
+
+  <p>
+    Self-attention bu ilişkileri elle yazılmış kurallarla değil, öğrenilen ağırlıklarla hesaplar. Örneğin “gidiyorum” token’ı “Ben”e 0.42, “bugün”e 0.31, “okula”ya 0.20 ağırlık verebilir. Bu değerler bağlamdan bağlama değişir.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Token</th><th>Olası dikkat ağırlığı</th><th>Anlamı</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Ben</td><td>0.42</td><td>Eylemi yapan kişi bilgisini taşır.</td></tr>
+      <tr><td>bugün</td><td>0.31</td><td>Eylemin zamanını belirtir.</td></tr>
+      <tr><td>okula</td><td>0.20</td><td>Eylemin yöneldiği yeri belirtir.</td></tr>
+      <tr><td>gidiyorum</td><td>0.05</td><td>Token’ın kendi bilgisi de sınırlı ölçüde korunur.</td></tr>
+      <tr><td>.</td><td>0.02</td><td>Noktalama düşük önem taşıyabilir.</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+    Görüntü işlemeye aktardığımızda, self-attention’ın benzer bir rolü vardır. Bir görüntüde nesnenin başı, gövdesi ve kenarları farklı patch’lerde bulunabilir. Self-attention, bu patch’ler arasında ilişki kurarak daha bütüncül bir temsil oluşturabilir.
+  </p>
+</section>
+
+<section id="qkv">
+  <h2><span class="section-no">7</span>Query, Key, Value: Dikkatin matematiksel çekirdeği</h2>
+
+  <p>
+    Self-attention’ın temel hesaplaması Query, Key ve Value kavramlarıyla yapılır. Bu üç kavramı sezgisel olarak şöyle düşünebiliriz:
+  </p>
+
+  <ul>
+    <li><strong>Query:</strong> Ben şu anda hangi bilgiyi arıyorum?</li>
+    <li><strong>Key:</strong> Bende hangi bilginin bulunduğunu nasıl tanıtırım?</li>
+    <li><strong>Value:</strong> Bana dikkat edilirse hangi bilgiyi aktarırım?</li>
+  </ul>
+
+  <figure>
+    <img src="5.png" alt="Query Key Value mantığı">
+    <figcaption><strong>Görsel 5.</strong> Query, Key ve Value mantığı. Query bilgi arama niyetini, Key bilginin tanıtıcı kimliğini, Value ise taşınacak içeriği temsil eder.</figcaption>
+  </figure>
+
+  <p>
+    Giriş token temsilleri \(X\) matrisi ile gösterilsin. Transformer, bu girişten üç farklı temsil üretir:
+  </p>
+
+  <div class="math">
+    \[
+      Q = XW_Q
+    \]
+    \[
+      K = XW_K
+    \]
+    \[
+      V = XW_V
+    \]
+  </div>
+
+  <p>
+    Burada \(W_Q\), \(W_K\) ve \(W_V\) eğitim sırasında öğrenilen ağırlık matrisleridir. Attention şu şekilde hesaplanır:
+  </p>
+
+  <div class="math">
+    \[
+      Attention(Q,K,V) =
+      softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+    \]
+  </div>
+
+  <p>
+    Bu formülü adım adım yorumlayalım:
+  </p>
+
+  <ol>
+    <li>\(QK^T\): Her token’ın Query vektörü, diğer token’ların Key vektörleriyle karşılaştırılır.</li>
+    <li>\(\sqrt{d_k}\): Skorlar ölçeklenir; büyük boyutlu vektörlerde değerlerin aşırı büyümesi engellenir.</li>
+    <li><code>softmax</code>: Skorlar toplamı 1 olan dikkat ağırlıklarına dönüştürülür.</li>
+    <li>\(V\): Bu ağırlıklarla Value vektörleri toplanır.</li>
+  </ol>
+
+  <p>
+    Tek bir token için dikkat hesabı daha sade biçimde şöyle yazılabilir:
+  </p>
+
+  <div class="math">
+    \[
+      score_{ij} = \frac{q_i \cdot k_j}{\sqrt{d_k}}
+    \]
+    \[
+      \alpha_{ij} =
+      \frac{e^{score_{ij}}}{\sum_j e^{score_{ij}}}
+    \]
+    \[
+      o_i = \sum_j \alpha_{ij} v_j
+    \]
+  </div>
+
+  <p>
+    Burada \(o_i\), i. token’ın diğer token’lardan topladığı bilgilerle oluşan yeni temsilidir.
+  </p>
+</section>
+
+<section id="multihead">
+  <h2><span class="section-no">8</span>Multi-Head Attention: Aynı veriye birden fazla açıdan bakmak</h2>
+
+  <p>
+    Bir cümlede tek bir ilişki türü yoktur. “Ben bugün okula gidiyorum” cümlesinde kişi-eylem, zaman-eylem, yer-eylem ve genel bağlam ilişkileri aynı anda bulunur. Tek bir attention başlığı bu ilişkilerin tamamını yakalamakta sınırlı kalabilir.
+  </p>
+
+  <figure>
+    <img src="6.png" alt="Multi-head attention">
+    <figcaption><strong>Görsel 6.</strong> Multi-head attention. Model aynı girdiye birden fazla dikkat başlığıyla bakarak farklı ilişki türlerini öğrenir.</figcaption>
+  </figure>
+
+  <p>
+    Multi-head attention, aynı giriş üzerinde birden fazla attention mekanizmasını paralel çalıştırır. Her başlık farklı bir temsil alt uzayında farklı ilişkilere odaklanabilir.
+  </p>
+
+  <div class="math">
+    \[
+      head_i = Attention(XW_Q^{(i)}, XW_K^{(i)}, XW_V^{(i)})
+    \]
+    \[
+      MultiHead(X) = Concat(head_1, head_2, ..., head_h)W_O
+    \]
+  </div>
+
+  <p>
+    Burada \(h\) attention başlığı sayısıdır. Başlıklar birleştirilir ve \(W_O\) matrisi ile tekrar model boyutuna dönüştürülür.
+  </p>
+
+  <div class="callout green">
+    <strong class="label">Görüntü işlemeye bağlantı</strong>
+    Bir görüntüde bir başlık yerel dokuya, başka bir başlık nesne parçalarına, başka bir başlık arka plan-nesne ilişkisine odaklanabilir. Multi-head attention, görüntü bölgeleri arasındaki çok yönlü ilişkileri modellemeye imkân verir.
+  </div>
+</section>
+
+<section id="encoder">
+  <h2><span class="section-no">9</span>Encoder: Girdiyi bağlamsal temsile dönüştürmek</h2>
+
+  <p>
+    Encoder, giriş token’larını bağlamı dikkate alan temsillere dönüştürür. Başlangıçta “Ben” yalnızca kişi, “bugün” zaman, “okula” yer, “gidiyorum” ise eylem gibi düşünülebilir. Encoder’dan sonra bu temsiller bağlam içinde yeniden anlam kazanır.
+  </p>
+
+  <figure>
+    <img src="7.png" alt="Encoder yapısı">
+    <figcaption><strong>Görsel 7.</strong> Encoder yapısı. Token embedding’leri encoder bloklarından geçerek bağlamsal vektör temsillerine dönüşür.</figcaption>
+  </figure>
+
+  <p>
+    Tipik bir Transformer encoder katmanı şu bileşenlerden oluşur:
+  </p>
+
+  <ol>
+    <li>Multi-head self-attention</li>
+    <li>Residual bağlantı ve layer normalization</li>
+    <li>Feed-forward network</li>
+    <li>Residual bağlantı ve layer normalization</li>
+  </ol>
+
+  <p>
+    Sade matematiksel gösterim:
+  </p>
+
+  <div class="math">
+    \[
+      Y = LayerNorm(X + MultiHeadAttention(X))
+    \]
+    \[
+      Z = LayerNorm(Y + FeedForward(Y))
+    \]
+  </div>
+
+  <p>
+    Residual bağlantı, katmanın öğrendiği yeni bilgiyi önceki temsilin üzerine ekler. Bu yapı derin ağların eğitimini daha kararlı hâle getirir. Layer normalization ise temsil değerlerinin ölçeğini düzenler.
+  </p>
+
+  <p>
+    Feed-forward network her token’a ayrı ayrı uygulanan küçük bir sinir ağıdır:
+  </p>
+
+  <div class="math">
+    \[
+      FFN(x) = W_2 \sigma(W_1x + b_1) + b_2
+    \]
+  </div>
+
+  <p>
+    Burada \(\sigma\), ReLU veya GELU gibi doğrusal olmayan bir aktivasyon fonksiyonudur.
+  </p>
+</section>
+
+<section id="decoder">
+  <h2><span class="section-no">10</span>Decoder: Çıktıyı adım adım üretmek</h2>
+
+  <p>
+    Encoder kaynak girdiyi anlamlı temsillere dönüştürür. Decoder ise bu bilgiyi ve daha önce üretilmiş token’ları kullanarak hedef çıktıyı adım adım üretir. Makine çevirisinde kaynak cümle Türkçe, hedef cümle İngilizce olabilir.
+  </p>
+
+  <figure>
+    <img src="8.png" alt="Decoder yapısı">
+    <figcaption><strong>Görsel 8.</strong> Decoder yapısı. Decoder, encoder bilgisini ve önceki çıktıları kullanarak her adımda bir sonraki token’ı üretir.</figcaption>
+  </figure>
+
+  <p>
+    Decoder içinde üç temel yapı bulunur:
+  </p>
+
+  <ol>
+    <li><strong>Masked self-attention:</strong> Decoder yalnızca önceki token’lara bakabilir. Gelecekteki token’ları görmesi engellenir.</li>
+    <li><strong>Cross-attention:</strong> Decoder, encoder’ın kaynak cümle için ürettiği temsillere bakar.</li>
+    <li><strong>Feed-forward network:</strong> Her adımda elde edilen temsil doğrusal olmayan biçimde dönüştürülür.</li>
+  </ol>
+
+  <p>
+    Masked self-attention özellikle üretici modeller için kritiktir. Model bir sonraki token’ı tahmin ederken gelecekteki token’ı görmemelidir. Aksi hâlde eğitim sırasında gerçek cevabı doğrudan görmüş olur.
+  </p>
+
+  <div class="callout purple">
+    <strong class="label">Encoder-decoder ayrımı</strong>
+    Encoder daha çok anlamayı; decoder ise üretmeyi temsil eder. BERT encoder tabanlı, GPT çizgisi decoder tabanlıdır. Klasik Vision Transformer ise görüntü sınıflandırmada çoğunlukla encoder gövdesi kullanır.
+  </div>
+</section>
+
+<section id="pipeline">
+  <h2><span class="section-no">11</span>Transformer’ın uçtan uca çalışma akışı</h2>
+
+  <p>
+    Şimdiye kadar Transformer’ın parçalarını ayrı ayrı ele aldık. Aşağıdaki görsel, tokenizasyondan çıktı üretimine kadar tüm süreci özetler.
+  </p>
+
+  <figure>
+    <img src="9.png" alt="Transformer adım adım çalışma akışı">
+    <figcaption><strong>Görsel 9.</strong> Transformer’ın genel çalışma akışı. Tokenizasyon, embedding, positional encoding, self-attention, multi-head attention, encoder ve decoder süreci bir arada gösterilmiştir.</figcaption>
+  </figure>
+
+  <p>
+    Bu akış şu şekilde okunabilir:
+  </p>
+
+  <ol>
+    <li>Girdi cümlesi alınır.</li>
+    <li>Cümle token’lara ayrılır.</li>
+    <li>Her token embedding vektörüne dönüştürülür.</li>
+    <li>Token’lara sıra bilgisi eklenir.</li>
+    <li>Self-attention ile token’lar arası ilişkiler hesaplanır.</li>
+    <li>Multi-head attention ile farklı ilişki türleri paralel olarak öğrenilir.</li>
+    <li>Encoder bağlamsal temsil üretir.</li>
+    <li>Decoder hedef çıktıyı adım adım üretir.</li>
+  </ol>
+
+  <p>
+    Bu noktada Transformer’ın ana fikri netleşir: Model token’ları tek tek ezberlemez; token’lar arasındaki ilişkileri öğrenerek bağlamsal temsil üretir.
+  </p>
+</section>
+
+<section id="vit">
+  <h2><span class="section-no">12</span>Vision Transformer: Metindeki token fikrini görüntüye taşımak</h2>
+
+  <p>
+    Vision Transformer’ın çıkış sorusu oldukça basittir: Transformer kelimelerden oluşan bir token dizisi üzerinde çalışabiliyorsa, görüntü de token dizisine dönüştürülebilir mi?
+  </p>
+
+  <p>
+    Bu sorunun cevabı evettir. Bir görüntü küçük kare parçalara ayrılır. Bu parçalara <strong>patch</strong> denir. Her patch düzleştirilir ve doğrusal bir katmandan geçirilerek embedding vektörüne dönüştürülür. Böylece görüntü, Transformer encoder’ın işleyebileceği bir token dizisi hâline gelir.
+  </p>
+
+  <h3>Örnek hesaplama: 224×224 görüntü ve 16×16 patch</h3>
+
+  <p>
+    RGB bir görüntümüz olsun:
+  </p>
+
+  <div class="math">
+    \[
+      I \in \mathbb{R}^{224 \times 224 \times 3}
+    \]
+  </div>
+
+  <p>
+    Görüntüyü 16×16 boyutlu yamalara bölersek, her eksende 14 yama oluşur:
+  </p>
+
+  <div class="math">
+    \[
+      \frac{224}{16} = 14
+    \]
+  </div>
+
+  <p>
+    Toplam patch sayısı:
+  </p>
+
+  <div class="math">
+    \[
+      N = 14 \times 14 = 196
+    \]
+  </div>
+
+  <p>
+    Her patch’in ham boyutu:
+  </p>
+
+  <div class="math">
+    \[
+      16 \times 16 \times 3 = 768
+    \]
+  </div>
+
+  <p>
+    Bu 768 boyutlu vektör doğrusal bir katmandan geçirilerek model boyutu olan \(d_{model}\) boyutlu patch embedding’e dönüştürülür:
+  </p>
+
+  <div class="math">
+    \[
+      z_i = x_i W_E + b_E
+    \]
+  </div>
+
+  <p>
+    Daha sonra her patch embedding’e pozisyon bilgisi eklenir:
+  </p>
+
+  <div class="math">
+    \[
+      z_i = z_i + p_i
+    \]
+  </div>
+
+  <h3>CLS token</h3>
+  <p>
+    ViT mimarisinde görüntü sınıflandırması için genellikle özel bir <code>[CLS]</code> token kullanılır. Bu token, tüm patch’lerden bilgi toplayan özet temsil gibi çalışır. Transformer encoder bloklarından sonra sınıflandırma katmanı çoğunlukla bu token’ın son temsiline uygulanır:
+  </p>
+
+  <div class="math">
+    \[
+      y = MLP(h_{CLS})
+    \]
+  </div>
+
+  <h3>ViT ile CNN arasındaki temel fark</h3>
+
+  <table>
+    <thead>
+      <tr><th>Özellik</th><th>CNN</th><th>Vision Transformer</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Temel işlem</td><td>Konvolüsyon filtresi</td><td>Patch token’ları arasında self-attention</td></tr>
+      <tr><td>Yerel örüntü</td><td>Doğal olarak güçlü</td><td>Öğrenilmesi gerekir; büyük veri ihtiyacı artabilir</td></tr>
+      <tr><td>Uzak ilişki</td><td>Derin katmanlarla dolaylı kurulur</td><td>Attention ile doğrudan kurulabilir</td></tr>
+      <tr><td>İndüktif önyargı</td><td>Yerellik ve translasyon eşdeğerliliği güçlüdür</td><td>Daha az yapısal önyargı, daha yüksek esneklik</td></tr>
+      <tr><td>Güçlü olduğu bağlam</td><td>Küçük/orta veri, pratik görüntü görevleri</td><td>Büyük ölçekli ön eğitim, transfer öğrenme, çok modlu sistemler</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Attention maliyeti</h3>
+  <p>
+    Vision Transformer’ın önemli sınırlamalarından biri self-attention maliyetidir. Klasik attention, token sayısına göre karesel karmaşıklık taşır:
+  </p>
+
+  <div class="math">
+    \[
+      O(N^2 \cdot d)
+    \]
+  </div>
+
+  <p>
+    Burada \(N\) token sayısı, \(d\) temsil boyutudur. Görüntü çözünürlüğü arttıkça patch sayısı artar; patch sayısı arttıkça attention maliyeti hızla yükselir. Bu nedenle Swin Transformer gibi mimariler attention’ı tüm görüntü üzerinde değil, yerel pencerelerde hesaplayarak verimlilik sağlar.
+  </p>
+
+  <div class="callout teal">
+    <strong class="label">Ders için ana cümle</strong>
+    Vision Transformer, görüntüyü piksel matrisi olarak değil, birbirleriyle ilişki kurabilen patch token’ları dizisi olarak ele alır.
+  </div>
+</section>
+
+<section id="guncel">
+  <h2><span class="section-no">13</span>Transformer bugün nereye gidiyor?</h2>
+
+  <p>
+    Transformer mimarisi artık yalnızca doğal dil işleme modeli değildir. Görüntü, metin, ses, video, 3B veri, robotik algı ve biyolojik dizilerde kullanılan genel bir temsil öğrenme yaklaşımına dönüşmüştür. Ancak bu yaygınlaşma yeni problemleri de beraberinde getirmiştir: yüksek hesaplama maliyeti, büyük veri gereksinimi, enerji tüketimi ve uzun dizilerde attention’ın karesel karmaşıklığı.
+  </p>
+
+  <h3>Swin Transformer</h3>
+  <p>
+    Swin Transformer, görüntü alanında Transformer’ı daha verimli kullanmak için shifted window yaklaşımını önerir. Model, attention’ı tüm görüntü üzerinde hesaplamak yerine yerel pencerelerde hesaplar ve pencereleri kaydırarak bölgeler arası bağlantı kurar. Bu yaklaşım görüntü sınıflandırma, nesne tespiti ve segmentasyon gibi yoğun tahmin görevleri için daha uygun bir omurga sağlar.
+  </p>
+
+  <h3>CLIP ve çok modlu öğrenme</h3>
+  <p>
+    CLIP, görüntü ve metni ortak bir temsil uzayında hizalamaya çalışır. Bu yaklaşım, görsel verinin doğal dil ile aranması, sıfır atış sınıflandırma ve çok modlu yapay zekâ sistemleri için önemli bir temel oluşturmuştur.
+  </p>
+
+  <h3>DINOv2 ve self-supervised görsel temsil</h3>
+  <p>
+    DINOv2 gibi çalışmalar, çok büyük görüntü koleksiyonları üzerinde etiket kullanmadan güçlü görsel temsil öğrenmeyi hedefler. Bu tür modeller, tıbbi görüntüleme veya endüstriyel görüntü işleme gibi etiketli veri üretmenin pahalı olduğu alanlar için önemlidir.
+  </p>
+
+  <h3>SAM ve SAM 2</h3>
+  <p>
+    Segment Anything yaklaşımı, segmentasyonu belirli bir veri kümesine özel model olmaktan çıkarıp kullanıcı ipuçlarıyla yönlendirilebilen genel bir probleme dönüştürmüştür. SAM 2 ile bu yaklaşım görüntüden videoya genişlemiş ve streaming memory gibi yapılarla video segmentasyonu tarafında daha güçlü hâle gelmiştir.
+  </p>
+
+  <h3>Mamba ve verimli dizisel modelleme</h3>
+  <p>
+    Attention’ın uzun dizilerdeki maliyeti nedeniyle durum uzayı modelleri ve Mamba benzeri yaklaşımlar tekrar ilgi çekmiştir. Görsel alanda MambaVision gibi hibrit yaklaşımlar, Transformer’ın temsil gücünü daha verimli dizisel modelleme mekanizmalarıyla birleştirmeye çalışmaktadır.
+  </p>
+
+  <div class="callout green">
+    <strong class="label">Sonuç</strong>
+    CNN’ler görüntü işleme için hâlâ güçlü ve pratik mimarilerdir. Vision Transformer ise büyük ölçekli ön eğitim, uzun menzilli ilişki modelleme, çok modlu öğrenme ve genel amaçlı görsel temsil öğrenme açısından modern görüntü işlemenin ana damarlarından biri hâline gelmiştir.
+  </div>
+</section>
+
+<section id="ders">
+  <h2><span class="section-no">14</span>Bu görseller ders içinde nasıl kullanılabilir?</h2>
+
+  <div class="teacher">
+    <p><strong>Ders akışı önerisi:</strong> Önce Görsel 10 ile RNN/LSTM ve Transformer arasındaki temel fark gösterilebilir. Ardından Görsel 1–6 ile Transformer’ın hesaplama zinciri kurulabilir. Görsel 7–9 ile mimari tamamlanabilir. Son aşamada aynı fikirlerin Vision Transformer’da görüntü yamalarına nasıl taşındığı anlatılabilir.</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Görsel</th><th>Ders içindeki rolü</th><th>Ana mesaj</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Tokenizasyon</td><td>Model bütün cümleyi değil, küçük işlenebilir parçaları görür.</td></tr>
+      <tr><td>2</td><td>Embedding</td><td>Token’lar sayısal vektörlere dönüşmeden sinir ağı tarafından işlenemez.</td></tr>
+      <tr><td>3</td><td>Positional encoding</td><td>Transformer sırayı kendiliğinden bilmez; sıra bilgisi ayrıca eklenir.</td></tr>
+      <tr><td>4</td><td>Self-attention</td><td>Her token diğer token’lara farklı ağırlıklarla bakarak bağlam oluşturur.</td></tr>
+      <tr><td>5</td><td>Query-Key-Value</td><td>Query arar, Key tanıtır, Value bilgi taşır.</td></tr>
+      <tr><td>6</td><td>Multi-head attention</td><td>Model aynı veriye birden fazla ilişki türü açısından bakar.</td></tr>
+      <tr><td>7</td><td>Encoder</td><td>Giriş token’ları bağlamsal temsillere dönüşür.</td></tr>
+      <tr><td>8</td><td>Decoder</td><td>Model önceki çıktıları ve encoder bilgisini kullanarak adım adım üretim yapar.</td></tr>
+      <tr><td>9</td><td>Genel akış</td><td>Token’dan çeviriye kadar tüm süreç tek görselde özetlenir.</td></tr>
+      <tr><td>10</td><td>Mimari karşılaştırma</td><td>Transformer’ın gücü sırayla taşımaktan değil, ilişkileri doğrudan modellemekten gelir.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ozet">
+  <h2><span class="section-no">15</span>Bölüm özeti</h2>
+
+  <p>
+    Transformer, dizisel verilerin işlenmesinde önemli bir paradigma değişimi yaratmıştır. RNN/LSTM gibi modeller bilgiyi adım adım taşırken Transformer, token’lar arasındaki ilişkileri doğrudan attention mekanizmasıyla hesaplar. Bu yapı hem paralel eğitim imkânı sağlar hem de uzak bağımlılıkları modellemeyi kolaylaştırır.
+  </p>
+
+  <p>
+    Tokenizasyon veriyi küçük parçalara ayırır. Embedding bu parçaları sayısal vektörlere dönüştürür. Positional encoding, modele sıra veya konum bilgisi verir. Self-attention token’lar arası ilişkileri hesaplar. Query-Key-Value yapısı, attention’ın matematiksel temelini oluşturur. Multi-head attention farklı ilişki türlerini aynı anda öğrenmeyi sağlar. Encoder bağlamsal temsil üretir; decoder ise adım adım çıktı üretir.
+  </p>
+
+  <p>
+    Vision Transformer, bu fikri görüntü işleme alanına taşır. Görüntü küçük yamalara ayrılır; her yama bir token gibi ele alınır. Böylece model görüntü bölgeleri arasındaki ilişkileri attention ile öğrenebilir. Bu yaklaşım, modern görsel temel modellerin ve çok modlu yapay zekâ sistemlerinin gelişiminde önemli bir rol oynamıştır.
+  </p>
+</section>
+
+<section id="kaynaklar">
+  <h2><span class="section-no">16</span>Kaynakça ve ileri okuma</h2>
+  <ol class="refs">
+    <li>Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., & Polosukhin, I. (2017). <em>Attention Is All You Need</em>. NeurIPS. <a href="https://arxiv.org/abs/1706.03762">https://arxiv.org/abs/1706.03762</a></li>
+    <li>Bahdanau, D., Cho, K., & Bengio, Y. (2014/2015). <em>Neural Machine Translation by Jointly Learning to Align and Translate</em>. ICLR. <a href="https://arxiv.org/abs/1409.0473">https://arxiv.org/abs/1409.0473</a></li>
+    <li>Hochreiter, S., & Schmidhuber, J. (1997). <em>Long Short-Term Memory</em>. Neural Computation, 9(8), 1735–1780. <a href="https://doi.org/10.1162/neco.1997.9.8.1735">https://doi.org/10.1162/neco.1997.9.8.1735</a></li>
+    <li>Devlin, J., Chang, M.-W., Lee, K., & Toutanova, K. (2018/2019). <em>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</em>. NAACL. <a href="https://arxiv.org/abs/1810.04805">https://arxiv.org/abs/1810.04805</a></li>
+    <li>Radford, A. et al. (2018). <em>Improving Language Understanding by Generative Pre-Training</em>. OpenAI Technical Report. <a href="https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf">OpenAI report</a></li>
+    <li>Carion, N., Massa, F., Synnaeve, G., Usunier, N., Kirillov, A., & Zagoruyko, S. (2020). <em>End-to-End Object Detection with Transformers</em>. ECCV. <a href="https://arxiv.org/abs/2005.12872">https://arxiv.org/abs/2005.12872</a></li>
+    <li>Dosovitskiy, A. et al. (2020/2021). <em>An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</em>. ICLR. <a href="https://arxiv.org/abs/2010.11929">https://arxiv.org/abs/2010.11929</a></li>
+    <li>Liu, Z. et al. (2021). <em>Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</em>. ICCV. <a href="https://arxiv.org/abs/2103.14030">https://arxiv.org/abs/2103.14030</a></li>
+    <li>Radford, A. et al. (2021). <em>Learning Transferable Visual Models From Natural Language Supervision</em>. ICML. <a href="https://arxiv.org/abs/2103.00020">https://arxiv.org/abs/2103.00020</a></li>
+    <li>He, K. et al. (2021/2022). <em>Masked Autoencoders Are Scalable Vision Learners</em>. CVPR. <a href="https://arxiv.org/abs/2111.06377">https://arxiv.org/abs/2111.06377</a></li>
+    <li>Oquab, M. et al. (2023). <em>DINOv2: Learning Robust Visual Features without Supervision</em>. <a href="https://arxiv.org/abs/2304.07193">https://arxiv.org/abs/2304.07193</a></li>
+    <li>Kirillov, A. et al. (2023). <em>Segment Anything</em>. ICCV. <a href="https://arxiv.org/abs/2304.02643">https://arxiv.org/abs/2304.02643</a></li>
+    <li>Ravi, N. et al. (2024). <em>SAM 2: Segment Anything in Images and Videos</em>. <a href="https://arxiv.org/abs/2408.00714">https://arxiv.org/abs/2408.00714</a></li>
+    <li>Gu, A., & Dao, T. (2023). <em>Mamba: Linear-Time Sequence Modeling with Selective State Spaces</em>. <a href="https://arxiv.org/abs/2312.00752">https://arxiv.org/abs/2312.00752</a></li>
+    <li>Hatamizadeh, A., & Kautz, J. (2024). <em>MambaVision: A Hybrid Mamba-Transformer Vision Backbone</em>. <a href="https://arxiv.org/abs/2407.08083">https://arxiv.org/abs/2407.08083</a></li>
+  </ol>
+
+  <p class="note">
+    Not: Bu bölümde kullanılan 10 görsel ders anlatım materyali olarak düşünülmüştür. HTML dosyası, görsellerin <code>1.png</code>–<code>10.png</code> isimleriyle aynı klasörde yer aldığı varsayımıyla hazırlanmıştır.
+  </p>
+</section>
+
+</main>
+</div>
+</body>
+</html>
