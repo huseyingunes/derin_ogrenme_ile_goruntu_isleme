@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CVPR 2026 — Öne Çıkan Konular ve Çalışmalar</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root{--ink:#0a0e14;--panel:#111722;--line:#1f2a3a;--fog:#8696ad;--paper:#eef2f7;
+    --scan:#00e0a4;--scan-dim:#0a8f6c;--amber:#ffb340;--violet:#9b7bff;--grid:rgba(0,224,164,.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:32px;-webkit-font-smoothing:antialiased;}
+  .slide{width:100%;max-width:1180px;aspect-ratio:16/9;
+    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/40px 40px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/40px 40px,
+      radial-gradient(120% 120% at 85% 8%, #0e1622 0%, var(--ink) 58%);
+    border:1px solid var(--line);border-radius:6px;position:relative;overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.8);}
+  .topbar{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 28px;border-bottom:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--fog);z-index:5;background:rgba(10,14,20,.6);backdrop-filter:blur(4px);}
+  .topbar .course{color:var(--scan)}
+  .topbar .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--scan);margin-right:8px;box-shadow:0 0 10px var(--scan)}
+  .badge{position:absolute;top:58px;right:24px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;
+    background:rgba(0,224,164,.12);border:1px solid var(--scan-dim);color:var(--scan);padding:4px 11px;border-radius:3px;text-transform:uppercase;z-index:4;}
+  .num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--scan-dim);letter-spacing:.1em;margin-bottom:6px;}
+  .num b{color:var(--scan)}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-.02em;line-height:.98;}
+  .tagline{color:var(--paper);opacity:.82;font-weight:500;}
+  .body-pad{position:absolute;inset:46px 0 0 0;padding:30px 46px 36px;display:flex;flex-direction:column;justify-content:center;z-index:3;overflow:hidden}
+  .intro .body-pad,.trend .body-pad,.summary .body-pad{justify-content:flex-start;padding-top:34px}
+  strong,.bdy b{color:var(--scan);font-weight:600}
+
+  /* INTRO */
+  .intro h1{font-size:72px;margin:2px 0 6px}
+  .intro .tagline{font-size:16px;margin-bottom:26px;max-width:80%}
+  .intro .rows{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+  .intro .row{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:15px 4px;border-bottom:1px solid var(--line);align-items:baseline}
+  .intro .row .k{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--scan);letter-spacing:.08em;text-transform:uppercase}
+  .intro .row .v{font-size:14.5px;line-height:1.5;color:#cdd7e3}
+  .intro .row .v b{color:#fff;font-weight:600}
+
+  /* TREND bars */
+  .lead{font-size:14px;line-height:1.6;color:#c4cedd;margin-bottom:20px;max-width:92%}
+  .bars{display:flex;flex-direction:column;gap:13px;margin-top:4px}
+  .bar{display:grid;grid-template-columns:300px 1fr 230px;gap:16px;align-items:center}
+  .bar .lbl{font-size:13px;color:#dde5ef;font-weight:500}
+  .bar .track{height:22px;background:#141d29;border-radius:4px;overflow:hidden;position:relative}
+  .bar .fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--scan-dim),var(--scan))}
+  .bar.down .fill{background:linear-gradient(90deg,#7a3a4a,#c45a6a)}
+  .bar .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--fog)}
+  .bar .meta .ar{color:var(--scan);font-weight:600}
+  .bar.down .meta .ar{color:#f08aa0}
+
+  /* THEME */
+  .theme-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;height:100%}
+  .theme h1{font-size:42px;margin:2px 0 6px}
+  .theme .tagline{font-size:14.5px;margin-bottom:14px}
+  .theme .desc{font-size:13px;line-height:1.62;color:#c4cedd;margin-bottom:14px}
+  .concept{background:rgba(0,224,164,.07);border-left:3px solid var(--scan);padding:11px 14px;border-radius:0 6px 6px 0;
+    font-size:12px;line-height:1.55;color:#d4dde8;margin-bottom:auto}
+  .concept::before{content:"💡 SEZGİ";display:block;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;color:var(--scan);margin-bottom:5px}
+  .papers{display:flex;flex-direction:column;gap:11px}
+  .papers .ph{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--scan-dim);text-transform:uppercase;margin-bottom:2px}
+  .paper{background:#10171f;border:1px solid var(--line);border-radius:7px;padding:11px 13px}
+  .paper .pn{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--scan);font-weight:500;margin-bottom:4px}
+  .paper .pd{font-size:11.5px;line-height:1.45;color:#aeb9c9}
+  .paper .pd b{color:#e6edf4;font-weight:600}
+
+  /* SHIFT */
+  .shift h1{font-size:44px;margin:2px 0 6px}
+  .shift .tagline{font-size:14px;margin-bottom:16px}
+  .pts{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+  .pt{display:grid;grid-template-columns:46px 1fr;gap:16px;align-items:start}
+  .pt .ic{width:42px;height:42px;border:1.5px solid var(--scan);border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;color:var(--scan);font-size:18px}
+  .pt .tx{font-size:13.5px;line-height:1.55;color:#c4cedd}
+  .pt .tx b{color:#fff;font-weight:600}
+
+  /* BEST PAPER */
+  .bp-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;height:100%}
+  .bestpaper h1{font-size:60px;margin:2px 0 4px;background:linear-gradient(90deg,#fff,var(--scan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .bestpaper .tagline{font-size:14px;margin-bottom:12px}
+  .bestpaper .desc{font-size:12.5px;line-height:1.6;color:#c4cedd}
+  .steps{display:flex;flex-direction:column;gap:12px}
+  .step{position:relative;padding-left:26px}
+  .step::before{content:"";position:absolute;left:7px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--scan);box-shadow:0 0 8px var(--scan)}
+  .step:not(:last-child)::after{content:"";position:absolute;left:11px;top:16px;bottom:-12px;width:1px;background:var(--scan-dim)}
+  .step .sh{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--scan);text-transform:uppercase;margin-bottom:3px}
+  .step .sx{font-size:12px;line-height:1.5;color:#c4cedd}
+  .step .sx b{color:#fff;font-weight:600}
+  .bp-note{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--amber);background:rgba(255,179,64,.08);border:1px solid rgba(255,179,64,.3);padding:8px 12px;border-radius:6px;line-height:1.5}
+
+  /* GRID (diger calismalar) */
+  .grid-h1{font-size:40px;margin:2px 0 4px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+  .card{background:#10171f;border:1px solid var(--line);border-radius:8px;padding:14px 15px;display:flex;flex-direction:column;gap:6px}
+  .card .cn{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--scan);font-weight:500}
+  .card .ct{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-family:'JetBrains Mono',monospace}
+  .card .cd{font-size:11.5px;line-height:1.5;color:#aeb9c9}
+  .card .cd b{color:#e6edf4;font-weight:600}
+
+  /* SUMMARY */
+  .summary h1{font-size:48px;margin:2px 0 6px}
+  .summary .tagline{font-size:14.5px;margin-bottom:20px}
+  .takes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .take{background:#10171f;border:1px solid var(--line);border-left:3px solid var(--scan);border-radius:0 8px 8px 0;padding:14px 16px}
+  .take .th{font-family:'Space Grotesk',sans-serif;font-size:15px;color:var(--scan);font-weight:600;margin-bottom:5px}
+  .take .tt{font-size:12.5px;line-height:1.5;color:#c4cedd}
+  .take .tt b{color:#fff;font-weight:600}
+  .access{margin-top:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fog);border-top:1px solid var(--line);padding-top:14px;line-height:1.6}
+  .access b{color:var(--scan)}
+
+  /* cover scene decoration */
+  .cover-deco{position:absolute;right:-60px;top:60px;width:340px;height:340px;opacity:.5;z-index:1;pointer-events:none}
+
+  body{padding:0;overflow:hidden}
+  .deck{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+  .deck-slide{display:none;width:100%;justify-content:center;padding:30px}
+  .deck-slide.active{display:flex}
+  .deck-slide .slide{max-width:1180px}
+  .nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fog);z-index:50;
+    background:rgba(12,20,32,.85);border:1px solid var(--line);border-radius:30px;padding:7px 16px;backdrop-filter:blur(6px)}
+  .nav button{background:none;border:1px solid var(--scan-dim);color:var(--scan);border-radius:6px;width:30px;height:26px;cursor:pointer;font-size:13px}
+  .nav button:hover{background:rgba(0,224,164,.15)}
+  .nav .counter{min-width:54px;text-align:center;color:var(--scan)}
+  .hint{position:fixed;top:12px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--fog);opacity:.5;z-index:50;letter-spacing:.1em}
+</style></head>
+<body>
+<div class="hint">← → ile geçiş · boşluk: ileri · Home/End</div>
+<div class="deck">
+<section class="deck-slide" data-i="0"><div class="slide intro"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="num">SLAYT <b>01</b> / 11 · KONFERANS TANITIMI</div><h1>CVPR 2026</h1><div class="tagline">Computer Vision and Pattern Recognition — alanın en büyük buluşması</div><div class="rows"><div class="row"><div class="k">Nedir?</div><div class="v">Bilgisayarlı görü (computer vision) ve görüntü işlemenin <b>dünyadaki en prestijli</b> konferansı. IEEE ve CVF tarafından her yıl düzenlenir.</div></div><div class="row"><div class="k">Ne zaman / nerede?</div><div class="v">43.'sü <b>3–7 Haziran 2026</b>'da Denver, Colorado'da yapıldı (bu hafta sona erdi).</div></div><div class="row"><div class="k">Ne kadar büyük?</div><div class="v">Bu yıl <b>4.090 bildiri</b> kabul edildi — geçen yıla göre <b>%42 artış</b> (2.878 → 4.090).</div></div><div class="row"><div class="k">Erişim</div><div class="v">Tüm bildiriler <b>ücretsiz</b>: openaccess.thecvf.com (PDF + BibTeX). Resmi sürüm IEEE Xplore'da.</div></div></div><svg class="cover-deco" viewBox="0 0 200 200">
+          <g fill="none" stroke="var(--scan)" stroke-width="1" opacity=".6">
+            <circle cx="100" cy="100" r="80"/><circle cx="100" cy="100" r="55"/><circle cx="100" cy="100" r="30"/></g>
+          <g fill="var(--scan)"><circle cx="100" cy="20" r="3"/><circle cx="155" cy="65" r="3"/><circle cx="155" cy="135" r="3"/>
+            <circle cx="100" cy="180" r="3"/><circle cx="45" cy="135" r="3"/><circle cx="45" cy="65" r="3"/></g></svg></div></div></section>
+<section class="deck-slide" data-i="1"><div class="slide trend"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="num">SLAYT <b>02</b> / 11 · BİR BAKIŞTA</div><h1 style="font-size:42px;margin:2px 0 6px">Alan nereye kayıyor?</h1><div class="tagline" style="font-size:14.5px;margin-bottom:16px">Son 12 ayda öne çıkan bildirilerdeki konu dağılımı değişti</div><div class="lead">Derste öğrendiğiniz "klasik" görüntü işleme (tespit, segmentasyon) hâlâ var; ama araştırmanın ağırlık merkezi <strong>üretken (generative)</strong> ve <strong>çok-modlu (multimodal)</strong> yapay zekâya kaydı.</div><div class="bars"><div class="bar ">
+              <div class="lbl">Çok-modlu LLM / VLM</div>
+              <div class="track"><div class="fill" style="width:95%"></div></div>
+              <div class="meta"><span class="ar">▲ 10.6%</span> · %4.9 → %10.6 · en büyük tek tema</div></div><div class="bar ">
+              <div class="lbl">Video üretimi & dünya modelleri</div>
+              <div class="track"><div class="fill" style="width:80%"></div></div>
+              <div class="meta"><span class="ar">▲ 8.8%</span> · %3.8 → %8.8 · ~2.3 kat</div></div><div class="bar ">
+              <div class="lbl">Gömülü AI / Robotik</div>
+              <div class="track"><div class="fill" style="width:55%"></div></div>
+              <div class="meta"><span class="ar">▲ —</span> · +%3.3 · sürpriz yükseliş</div></div><div class="bar ">
+              <div class="lbl">Üretken temalar (toplam)</div>
+              <div class="track"><div class="fill" style="width:90%"></div></div>
+              <div class="meta"><span class="ar">▲ 22%</span> · %14 → %22 · konferansın beşte biri</div></div><div class="bar down">
+              <div class="lbl">Klasik CV (tespit/segment/takip)</div>
+              <div class="track"><div class="fill" style="width:18%"></div></div>
+              <div class="meta"><span class="ar">▼ 1.2%</span> · %3.8 → %1.2 · belirgin geri çekilme</div></div></div></div></div></section>
+<section class="deck-slide" data-i="2"><div class="slide theme"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="badge">en büyük tema</div><div class="body-pad"><div class="theme-grid"><div><div class="num">SLAYT <b>03</b> / 11 · ÖNE ÇIKAN TEMA · 1</div><h1>VLM & Çok-modlu LLM</h1><div class="tagline">Görüntüyü ve dili birlikte anlayan modeller</div><div class="desc">Artık görü problemleri tek başına "piksel" işi olarak değil, <strong>dil ile birlikte</strong> ele alınıyor. Bir resim ver, soru sor; model açıklar, sayar, konumlandırır, hatta mantık yürütür. Bu yıl <strong>konferansın en büyük teması</strong> oldu — iki yıl önce niş sayılan bir alandı.</div><div class="concept">Klasik yaklaşım: "Bu pikseller köpek mi?" → Yeni yaklaşım: "Bu sahnede ne oluyor, neden, ve sonra ne olur?" Görü artık dilin üzerine oturuyor.</div></div><div class="papers"><div class="ph">▸ Öne çıkan çalışmalar</div><div class="paper"><div class="pn">HiSpatial</div><div class="pd">Dil modellerine hiyerarşik <b>3B uzamsal anlama</b> kazandırma — modelin nesneleri sadece tanıması değil, nerede olduklarını da kavraması.</div></div><div class="paper"><div class="pn">LLaDA-V</div><div class="pd">Difüzyon tabanlı bir görsel-dil modeli — üretim ve anlama tek çatıda.</div></div><div class="paper"><div class="pn">Perception-centric Reward</div><div class="pd">VLM'lerin <b>algı doğruluğunu</b> ödül modelleriyle iyileştirme.</div></div></div></div></div></div></section>
+<section class="deck-slide" data-i="3"><div class="slide theme"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="badge">~2.3 kat büyüme</div><div class="body-pad"><div class="theme-grid"><div><div class="num">SLAYT <b>04</b> / 11 · ÖNE ÇIKAN TEMA · 2</div><h1>Video Üretimi & Dünya Modelleri</h1><div class="tagline">Görüntüden "dünyayı simüle eden" sistemlere</div><div class="desc">Odak, "metinden şık video üret"ten <strong>işe yarar video modellerine</strong> kaydı. "Dünya modeli" (world model), bir yapay zekânın çevresinin nasıl davranacağını <strong>tahmin edip simüle ettiği</strong> bir sistem — örneğin bir aracın yol sahnesini ileriye doğru hayal etmesi.</div><div class="concept">Dünya modeli = videoyu sadece izlemek değil, "bir sonraki kare ne olur?"u öngörmek. Bu, otonom sürüş ve robotik için kritik.</div></div><div class="papers"><div class="ph">▸ Öne çıkan çalışmalar</div><div class="paper"><div class="pn">GenieDrive</div><div class="pd"><b>Sürüş-farkındalıklı</b> dünya modeli — otonom araç senaryolarını üretip simüle etme.</div></div><div class="paper"><div class="pn">ARCache</div><div class="pd">Otoregresif difüzyonda <b>önbellekleme</b> ile video üretimini hızlandırma.</div></div><div class="paper"><div class="pn">SURF</div><div class="pd">İmza/yapı koruyarak <b>hızlı video üretimi</b>.</div></div></div></div></div></div></section>
+<section class="deck-slide" data-i="4"><div class="slide theme"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="badge">konferansın %22'si</div><div class="body-pad"><div class="theme-grid"><div><div class="num">SLAYT <b>05</b> / 11 · ÖNE ÇIKAN TEMA · 3</div><h1>Üretken Yapay Zekâ</h1><div class="tagline">Görüntü üretimi, düzenleme ve difüzyon teorisi</div><div class="desc">Görüntü üretimi, 3B üretim, görüntü düzenleme ve difüzyon teorisi — bu dört üretken tema birlikte <strong>öne çıkan bildirilerin ~%22'sine</strong> ulaştı. CVPR artık beş yıl önceki "algı odaklı" konferanstan çok, <strong>uygulamalı üretken-AI</strong> konferansına yakın.</div><div class="concept">Difüzyon modeli (önceki derslerden hatırlayın): gürültüden başlayıp adım adım görüntüyü "netleştirme". Bu yıl odak: daha hızlı, daha kontrollü, daha güvenli üretim.</div></div><div class="papers"><div class="ph">▸ Öne çıkan çalışmalar</div><div class="paper"><div class="pn">Concept Erasure</div><div class="pd">Metinden-görüntü modellerinden <b>binlerce kavramı silme</b> — istenmeyen/telifli içerik üretimini engelleme (güvenlik & etik).</div></div><div class="paper"><div class="pn">Reflection Separation</div><div class="pd">Tek görüntüden <b>yansımayı ayırma</b> (cam arkasından çekilmiş fotoğrafı temizleme) — difüzyonla.</div></div><div class="paper"><div class="pn">MultiBanana</div><div class="pd">Çoklu-referanslı metinden-görüntü üretimi için <b>zorlu kıyaslama</b> kümesi.</div></div></div></div></div></div></section>
+<section class="deck-slide" data-i="5"><div class="slide theme"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="badge">birincil tema</div><div class="body-pad"><div class="theme-grid"><div><div class="num">SLAYT <b>06</b> / 11 · ÖNE ÇIKAN TEMA · 4</div><h1>3B Görü & Gaussian Splatting</h1><div class="tagline">2B tanımadan 3B "dünya" inşasına</div><div class="desc">Sektör otonom sistemlere ve gömülü AI'ya yöneldikçe, <strong>2B görünün sınırları</strong> darboğaz oldu. "3B grounding": modelin görsel özellikleri <strong>gerçek fiziksel koordinatlara</strong> bağlaması. Gaussian Splatting (önceki slaytlardan!) ile sahneler gerçek zamanlı, gezilebilir 3B'ye dönüşüyor.</div><div class="concept">Gaussian Splatting: bir sahneyi milyonlarca renkli, yarı-saydam "leke" ile temsil edip gerçek zamanlı render etme. Artık sadece görselleştirme değil, robotların içinde gezindiği "dünya" oluyor.</div></div><div class="papers"><div class="ph">▸ Öne çıkan çalışmalar</div><div class="paper"><div class="pn">GaussianZoom</div><div class="pd">Geometrik + anlamsal rehberlikle <b>kademeli yakınlaşan</b> 3D Gaussian üretimi.</div></div><div class="paper"><div class="pn">Compact 3DGS</div><div class="pd">Akıllı budama ile <b>daha hafif</b> Gaussian Splatting — daha az bellek, daha keskin sonuç.</div></div><div class="paper"><div class="pn">TGSFormer</div><div class="pd">Gömülü AI için <b>zamansal</b> Gaussian Splatting — hareketli sahnelerde 3B tamamlama.</div></div></div></div></div></div></section>
+<section class="deck-slide" data-i="6"><div class="slide theme"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="badge">sürpriz yükseliş</div><div class="body-pad"><div class="theme-grid"><div><div class="num">SLAYT <b>07</b> / 11 · ÖNE ÇIKAN TEMA · 5</div><h1>Gömülü AI & Robotik</h1><div class="tagline">Görüyü "gerçek dünyada hareket eden" ajanlara bağlama</div><div class="desc">"Embodied AI" (gömülü/bedenlenmiş AI): bir yapay zekânın <strong>fiziksel bir gövdeyle</strong> (robot, drone, araç) çevreyle etkileşmesi. Görü artık ekrandaki bir görüntüyü etiketlemek değil; bir robotun <strong>nereye gideceğine, neyi tutacağına</strong> karar vermesini sağlamak. Bu yılın sürpriz yükselen teması.</div><div class="concept">Fark şu: pasif görü = "bu resimde ne var?" · gömülü görü = "bu odada hedefe nasıl giderim, hangi nesneyi alırım?" Görü, eyleme dönüşüyor.</div></div><div class="papers"><div class="ph">▸ Öne çıkan çalışmalar</div><div class="paper"><div class="pn">Wanderland</div><div class="pd">Açık-dünya gömülü AI için <b>geometrik temelli simülasyon</b> ortamı.</div></div><div class="paper"><div class="pn">Context-Nav</div><div class="pd">Bağlam-güdümlü keşif ve <b>3B uzamsal akıl yürütme</b> ile nesneye yönelme.</div></div><div class="paper"><div class="pn">BridgeEQA</div><div class="pd">Gerçek <b>köprü denetimleri</b> için sanal gömülü ajanlar — sahadan mühendisliğe uygulama.</div></div></div></div></div></div></section>
+<section class="deck-slide" data-i="7"><div class="slide shift"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="badge">%3.8 → %1.2</div><div class="body-pad"><div class="num">SLAYT <b>08</b> / 11 · PERSPEKTİF</div><h1>Peki klasik CV nereye gitti?</h1><div class="tagline">Tespit, segmentasyon, takip — derste öğrendikleriniz</div><div class="lead">Bu konular <strong>kaybolmadı</strong> — aksine o kadar olgunlaştılar ki artık "çözülmüş, hazır araç" sayılıyorlar. Öne çıkan bildirilerdeki payları %3.8'den %1.2'ye düştü, çünkü araştırma sınırı başka yere kaydı.</div><div class="pts"><div class="pt"><div class="ic">◆</div><div class="tx"><b>Olgunlaştılar.</b> YOLO, SAM gibi araçlar artık üretim kalitesinde hazır. Yeni bir tespit makalesi yazmak yerine, herkes bu araçları <b>kullanıyor</b>.</div></div><div class="pt"><div class="ic">▣</div><div class="tx"><b>Yapı taşı oldular.</b> Tespit/segmentasyon, dünya modelleri ve gömülü AI'nin <b>içine gömülü</b> bir bileşen artık — amaç değil, araç.</div></div><div class="pt"><div class="ic">★</div><div class="tx"><b>Ders hâlâ kritik.</b> Bu temeli bilmeden üst katmanı (VLM, 3B, üretim) anlamak imkânsız. Siz <b>doğru sırada</b> öğreniyorsunuz.</div></div></div></div></div></section>
+<section class="deck-slide" data-i="8"><div class="slide bestpaper"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="badge">100× hızlanma</div><div class="body-pad"><div class="bp-grid"><div><div class="num">SLAYT <b>09</b> / 11 · EN İYİ BİLDİRİ · BEST PAPER 🏆</div><h1>D4RT</h1><div class="tagline">Videodan dinamik 4B sahne yeniden inşası — tek transformer</div><div class="desc">CVPR 2026 Best Paper ödülü. Google DeepMind + UCL + Oxford ekibi. Sıradan bir videodan sahnenin <strong>geometrisini, hareketini ve kamera konumunu</strong> tek bir modelle, tek geçişte çıkarıyor.</div><div class="bp-note">📐 4B = 3B uzay + zaman. Yani "hareketli bir sahnenin her anındaki 3B yapısı."</div></div><div class="steps"><div class="step"><div class="sh">Eski yöntem</div><div class="sx">Ayrı ayrı: derinlik kestirici + nokta takipçisi + kamera çözücü → karmaşık, yavaş, her birini birleştirmek zor.</div></div><div class="step"><div class="sh">D4RT'nin fikri</div><div class="sx"><b>Tek transformer</b> hepsini birlikte yapıyor. "Uzay-zamandaki herhangi bir noktayı sorgula" mantığı — her kareyi baştan sona hesaplamak yerine sadece gerekeni hesaplıyor.</div></div><div class="step"><div class="sh">Sonuç</div><div class="sx">Önceki en iyiye göre <b>18–300 kat daha hızlı</b>. Sorgular birbirinden bağımsız olduğu için modern donanımda paralel çalışıyor.</div></div></div></div></div></div></section>
+<section class="deck-slide" data-i="9"><div class="slide grid"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="num">SLAYT <b>10</b> / 11 · DİĞER DİKKAT ÇEKEN ÇALIŞMALAR</div><h1 class="grid-h1">Kısa kısa</h1><div class="tagline" style="font-size:14px">Farklı alanlardan ilgi çekici bildiriler</div><div class="cards"><div class="card"><div class="ct">Deepfake Tespiti</div><div class="cn">DFD-HR</div><div class="cd">Hiyerarşik yönlendirme ile <b>genelleştirilebilir derin sahte tespiti</b> — daha önce görülmemiş sahtelerde de çalışıyor.</div></div><div class="card"><div class="ct">Otomatik Tasarım</div><div class="cn">PSDesigner</div><div class="cd"><b>İnsan benzeri yaratıcı iş akışıyla</b> otomatik grafik tasarım — yapay zekânın tasarımcı gibi adım adım çalışması.</div></div><div class="card"><div class="ct">Tıbbi Görü</div><div class="cn">VoDaSuRe</div><div class="cd"><b>Hacimsel süper çözünürlükte</b> alan kayması (domain shift) sorununu ortaya koyan büyük veri kümesi.</div></div><div class="card"><div class="ct">Otonom Sürüş</div><div class="cn">AutoTraces</div><div class="cd">Çok-modlu LLM'lerle <b>yörünge tahmini</b> — aracın diğer nesnelerin nereye gideceğini öngörmesi.</div></div><div class="card"><div class="ct">Robotik</div><div class="cn">UniPR</div><div class="cd">Tek stereo çiftinden <b>gerçekten-simülasyona</b> nesne algısı ve yeniden inşa.</div></div><div class="card"><div class="ct">Sinyal/Telsiz</div><div class="cn">Geometric Algebra 3DGS</div><div class="cd">Gaussian Splatting'i <b>kablosuz kanal tahmini</b>ne uygulama — görü tekniği bambaşka alanda.</div></div></div></div></div></section>
+<section class="deck-slide" data-i="10"><div class="slide summary"><div class="topbar"><div><span class="dot"></span>CVPR 2026 · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="num">SLAYT <b>11</b> / 11 · ÖZET & ÇIKARIMLAR</div><h1>Toparlarsak</h1><div class="tagline">CVPR 2026'dan ne öğrendik?</div><div class="takes"><div class="take"><div class="th">Çok-modlu çağ</div><div class="tt">Görü ve dil birleşti. VLM'ler artık niş değil, alanın <b>zemini</b>.</div></div><div class="take"><div class="th">Üretken dönüşüm</div><div class="tt">Konferans algı-odaklıdan <b>üretken-AI odaklıya</b> kaydı (~%22).</div></div><div class="take"><div class="th">3B ve dünya modelleri</div><div class="tt">2B'den <b>fiziksel 3B dünyaya</b> ve simülasyona geçiş hızlanıyor.</div></div><div class="take"><div class="th">Klasik temel kritik</div><div class="tt">Tespit/segmentasyon hazır araç oldu — ama <b>onları bilmeden</b> üstünü anlamak mümkün değil.</div></div></div><div class="access">▸ Tüm bildiriler ücretsiz: openaccess.thecvf.com/CVPR2026 · Kodu olanlar: paperswithcode / Paper Digest CVPR-2026 Code sayfası (~1.000 bildiri)</div></div></div></section>
+</div>
+<div class="nav"><button onclick="show(cur-1)">‹</button><span class="counter" id="cnt">1 / 11</span><button onclick="show(cur+1)">›</button></div>
+<script>
+  const slides=[...document.querySelectorAll('.deck-slide')];let cur=0;
+  function show(n){slides[cur].classList.remove('active');cur=(n+slides.length)%slides.length;
+    slides[cur].classList.add('active');document.getElementById('cnt').textContent=(cur+1)+' / '+slides.length;}
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){show(cur+1);e.preventDefault();}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){show(cur-1);e.preventDefault();}
+    if(e.key==='Home')show(0);if(e.key==='End')show(slides.length-1);});
+  show(0);
+</script>
+</body></html>

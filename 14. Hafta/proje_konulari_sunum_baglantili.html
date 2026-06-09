@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proje Konuları — Derin Öğrenme ile Görüntü İşleme</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root{--ink:#0a0e14;--panel:#111722;--line:#1f2a3a;--fog:#8696ad;--paper:#eef2f7;
+    --scan:#00e0a4;--scan-dim:#0a8f6c;--amber:#ffb340;--violet:#9b7bff;--grid:rgba(0,224,164,.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:32px;-webkit-font-smoothing:antialiased;}
+  .slide{width:100%;max-width:1180px;aspect-ratio:16/9;
+    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/40px 40px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/40px 40px,
+      radial-gradient(120% 120% at 85% 8%, #0e1622 0%, var(--ink) 58%);
+    border:1px solid var(--line);border-radius:6px;position:relative;overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.8);}
+  .topbar{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 28px;border-bottom:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--fog);z-index:5;background:rgba(10,14,20,.6);backdrop-filter:blur(4px);}
+  .topbar .course{color:var(--scan)}
+  .topbar .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--scan);margin-right:8px;box-shadow:0 0 10px var(--scan)}
+  .num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--scan-dim);letter-spacing:.1em;margin-bottom:8px;}
+  .num b{color:var(--scan)}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-.02em;line-height:.98;}
+  .tagline{color:var(--paper);opacity:.82;font-weight:500;}
+  strong,b{color:var(--scan);font-weight:600}
+  .body-pad{position:absolute;inset:46px 0 0 0;padding:30px 48px 38px;display:flex;flex-direction:column;justify-content:center;z-index:3;overflow:hidden}
+
+  /* INTRO */
+  .intro .body-pad{justify-content:flex-start;padding-top:40px}
+  .intro h1{font-size:64px;margin:2px 0 6px}
+  .intro .tagline{font-size:16px;margin-bottom:22px}
+  .intro .lead{font-size:14.5px;line-height:1.65;color:#c4cedd;max-width:90%;margin-bottom:30px}
+  .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:6px}
+  .pillar{background:#10171f;border:1px solid var(--line);border-top:3px solid var(--scan);border-radius:0 0 8px 8px;padding:16px}
+  .pillar:nth-child(2){border-top-color:var(--violet)}
+  .pillar:nth-child(3){border-top-color:var(--amber)}
+  .pillar:nth-child(4){border-top-color:#4d96ff}
+  .pillar .ph{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:5px}
+  .pillar .pt{font-size:11.5px;line-height:1.45;color:#9fb0c2}
+
+  /* PROJECT (tek proje / tam sayfa) */
+  .proj .pj-no{position:absolute;top:64px;right:40px;font-family:'Space Grotesk',sans-serif;
+    font-size:120px;font-weight:700;line-height:1;color:var(--ac);opacity:.12;z-index:0}
+  .proj .tag-pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;
+    color:var(--ac);border:1px solid var(--ac);border-radius:5px;padding:4px 11px;text-transform:uppercase;margin-bottom:14px}
+  .proj h1{font-size:38px;max-width:80%;margin-bottom:16px}
+  .proj .desc{font-size:14px;line-height:1.62;color:#c4cedd;max-width:82%;margin-bottom:22px}
+  .proj .desc b{color:#e6edf4}
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px;max-width:92%}
+  .metric{background:#10171f;border:1px solid var(--line);border-top:2px solid var(--ac);border-radius:0 0 8px 8px;padding:13px 15px}
+  .metric .mk{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--ac);text-transform:uppercase;margin-bottom:6px}
+  .metric .mv{font-size:12.5px;line-height:1.45;color:#dde5ef}
+  .links-row{display:flex;flex-direction:column;gap:9px;border-top:1px solid var(--line);padding-top:16px;max-width:92%}
+  .links-row .lh{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;color:var(--scan-dim);text-transform:uppercase}
+  .lnks{display:flex;flex-wrap:wrap;gap:10px}
+  .lnk{display:inline-flex;align-items:center;gap:8px;background:#0d141d;border:1px solid var(--line);border-radius:7px;
+    padding:8px 13px;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9d4e0;transition:border-color .15s}
+  .lnk:hover{border-color:var(--ac)}
+  .lnk .li{color:var(--ac);font-weight:600}
+  .lnk .lu{color:var(--fog);font-size:10px}
+
+  /* CLOSING */
+  .closing .body-pad{justify-content:flex-start;padding-top:40px}
+  .closing h1{font-size:46px;margin:2px 0 6px}
+  .closing .tagline{font-size:14.5px;margin-bottom:22px}
+  .checks{display:flex;flex-direction:column;gap:14px}
+  .check{display:grid;grid-template-columns:42px 1fr;gap:18px;align-items:start;background:#10171f;border:1px solid var(--line);border-radius:9px;padding:15px 18px}
+  .check .cn{width:38px;height:38px;border:1.5px solid var(--scan);border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;color:var(--scan);font-size:16px;font-weight:600}
+  .check .cx .ch{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:3px}
+  .check .cx .ct{font-size:12.5px;line-height:1.5;color:#c4cedd}
+  .closing .note{margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);
+    background:rgba(255,179,64,.08);border:1px solid rgba(255,179,64,.3);padding:11px 14px;border-radius:7px;line-height:1.55}
+
+  body{padding:0;overflow:hidden}
+  .deck{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+  .deck-slide{display:none;width:100%;justify-content:center;padding:30px}
+  .deck-slide.active{display:flex}
+  .deck-slide .slide{max-width:1180px}
+  .nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fog);z-index:50;
+    background:rgba(12,20,32,.85);border:1px solid var(--line);border-radius:30px;padding:7px 16px;backdrop-filter:blur(6px)}
+  .nav button{background:none;border:1px solid var(--scan-dim);color:var(--scan);border-radius:6px;width:30px;height:26px;cursor:pointer;font-size:13px}
+  .nav button:hover{background:rgba(0,224,164,.15)}
+  .nav .counter{min-width:54px;text-align:center;color:var(--scan)}
+  .hint{position:fixed;top:12px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--fog);opacity:.5;z-index:50;letter-spacing:.1em}
+</style></head>
+<body>
+<div class="hint">← → ile geçiş · boşluk: ileri · Home/End</div>
+<div class="deck">
+<section class="deck-slide" data-i="0"><div class="slide intro"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="num">DERS PROJESİ · CVPR 2026 TRENDLERİNE UYGUN</div>
+      <h1>Proje Konuları</h1><div class="tagline">Derin Öğrenme ile Görüntü İşleme · Yüksek Lisans</div>
+      <div class="lead">CVPR 2026'nın güncel yaklaşımlarına uygun, RTX 3090'da çalışabilir ölçekte, yayına dönüşebilir 12 proje konusu. Her konu ayrı slaytta; veri seti ve yardımcı bağlantılarıyla birlikte.</div><div class="pillars"><div class="pillar"><div class="ph">VLM / Çok-modlu</div><div class="pt">Görüntü + dil birlikte</div></div><div class="pillar"><div class="ph">Üretken AI</div><div class="pt">Difüzyon, üretim, düzenleme</div></div><div class="pillar"><div class="ph">3B & Dünya Modelleri</div><div class="pt">Derinlik, Gaussian Splatting</div></div><div class="pillar"><div class="ph">Gömülü AI</div><div class="pt">Dil-güdümlü, etkileşimli</div></div></div></div></div></section>
+<section class="deck-slide" data-i="1"><div class="slide proj" style="--ac:var(--scan)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">01</div>
+      <div class="num">PROJE <b>01</b> / 12 · VLM</div>
+      <div class="tag-pill">VLM</div>
+      <h1>VLM ile Sıfır-Atış Endüstriyel Kusur Tespiti</h1>
+      <div class="desc">Qwen3-VL / Florence-2'yi yeniden eğitmeden, <b>metin komutuyla</b> üretim hattı görüntülerinde kusur arama. Denetimli CNN ile karşılaştırarak "az veriyle ne kadar yol alınır?" sorusunu inceleme.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">MVTec-AD (15 kategori, ~5300 görüntü, piksel etiketli)</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Denetimli CNN (ResNet / EfficientNet)</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Az-örnekli rejimde VLM, denetimli modele ne kadar yaklaşır?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://www.mvtec.com/company/research/datasets/mvtec-ad" target="_blank"><span class="li">▣</span> <span>Veri · MVTec-AD</span></a><a class="lnk" href="https://github.com/QwenLM/Qwen3-VL" target="_blank"><span class="li">◆</span> <span>Model · Qwen3-VL</span></a><a class="lnk" href="https://huggingface.co/microsoft/Florence-2-large" target="_blank"><span class="li">◆</span> <span>Model · Florence-2</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="2"><div class="slide proj" style="--ac:var(--scan)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">02</div>
+      <div class="num">PROJE <b>02</b> / 12 · VLM</div>
+      <div class="tag-pill">VLM</div>
+      <h1>Açık-Sözcüklü Tespit + Segmentasyon Hattı</h1>
+      <div class="desc">Grounding DINO + SAM 2 ile metin komutundan otomatik maske üreten sistem ve bunun <b>otomatik etiketleme aracı</b> olarak performansı.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">COCO alt kümesi veya kendi görüntü setiniz</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Manuel etiketleme (insan)</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Otomatik etiketleme, manuele göre ne kadar zaman/doğruluk dengesi sunar?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/IDEA-Research/GroundingDINO" target="_blank"><span class="li">›_</span> <span>Kod · Grounding DINO</span></a><a class="lnk" href="https://github.com/IDEA-Research/Grounded-SAM-2" target="_blank"><span class="li">›_</span> <span>Kod · Grounded-SAM-2</span></a><a class="lnk" href="https://cocodataset.org/" target="_blank"><span class="li">▣</span> <span>Veri · COCO</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="3"><div class="slide proj" style="--ac:var(--amber)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">03</div>
+      <div class="num">PROJE <b>03</b> / 12 · 3B</div>
+      <div class="tag-pill">3B</div>
+      <h1>Tek Görüntüden Derinlik + Gaussian Splatting ile 3B Sahne</h1>
+      <div class="desc">Depth Anything V2 çıktısıyla <b>tek/az fotoğraftan</b> gezilebilir 3B sahne üretme. Çok-görüntülü klasik 3DGS'e göre kalite-kolaylık dengesi.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">Tanks & Temples / Mip-NeRF 360 veya kendi çekiminiz</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Çok-görüntülü 3D Gaussian Splatting</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Az görüntüyle üretilen 3B sahne, tam set'e göre kaliteyi ne kadar korur?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/DepthAnything/Depth-Anything-V2" target="_blank"><span class="li">›_</span> <span>Kod · Depth Anything V2</span></a><a class="lnk" href="https://github.com/graphdeco-inria/gaussian-splatting" target="_blank"><span class="li">›_</span> <span>Kod · 3D Gaussian Splatting</span></a><a class="lnk" href="https://jonbarron.info/mipnerf360/" target="_blank"><span class="li">▣</span> <span>Veri · Mip-NeRF 360</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="4"><div class="slide proj" style="--ac:var(--amber)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">04</div>
+      <div class="num">PROJE <b>04</b> / 12 · 3B</div>
+      <div class="tag-pill">3B</div>
+      <h1>Video Dünya Modeli ile Sürüş Senaryosu Öngörüsü</h1>
+      <div class="desc">Kısa video klipten <b>gelecek karelerin tahmini</b> (world-model prototipi). Otonom sürüşte sınırlı ölçekli gelecek-öngörü.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">nuScenes / BDD100K alt kümesi</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Son-kareyi-tekrarla (naive baseline)</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Üretilen gelecek kareler, naive temele göre öngörüyü ne kadar iyileştirir?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://www.nuscenes.org/" target="_blank"><span class="li">▣</span> <span>Veri · nuScenes</span></a><a class="lnk" href="https://bdd-data.berkeley.edu/" target="_blank"><span class="li">▣</span> <span>Veri · BDD100K</span></a><a class="lnk" href="https://github.com/nutonomy/nuscenes-devkit" target="_blank"><span class="li">›_</span> <span>Araç · nuscenes-devkit</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="5"><div class="slide proj" style="--ac:var(--violet)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">05</div>
+      <div class="num">PROJE <b>05</b> / 12 · ÜRETKEN</div>
+      <div class="tag-pill">ÜRETKEN</div>
+      <h1>Difüzyonla Veri Çoğaltma (Augmentation)</h1>
+      <div class="desc">FLUX Kontext / ControlNet ile az-örnekli sınıflandırmada <b>sentetik veri</b> üretip gerçek veriyle eğitime katkısını ölçme.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">Az-örnekli özel set (kendi probleminiz)</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Klasik augmentation (flip / crop / renk)</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Sentetik veri ne zaman yardımcı olur, ne zaman zarar verir?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/black-forest-labs/flux" target="_blank"><span class="li">◆</span> <span>Model · FLUX</span></a><a class="lnk" href="https://github.com/lllyasviel/ControlNet" target="_blank"><span class="li">›_</span> <span>Kod · ControlNet</span></a><a class="lnk" href="https://github.com/huggingface/diffusers" target="_blank"><span class="li">›_</span> <span>Araç · diffusers</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="6"><div class="slide proj" style="--ac:var(--scan)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">06</div>
+      <div class="num">PROJE <b>06</b> / 12 · VLM</div>
+      <div class="tag-pill">VLM</div>
+      <h1>VLM Tabanlı Belge Anlama ve Yapılandırma</h1>
+      <div class="desc">Fatura/form/rapor görüntülerinden VLM ile <b>yapılandırılmış veri (JSON/tablo)</b> çıkarma; OCR+kural tabanlı hatla karşılaştırma.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">FUNSD (formlar) / DocVQA veya kendi belgeleriniz</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">OCR + kural tabanlı hat (EasyOCR)</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">VLM, klasik OCR hattına göre dayanıklılıkta ne kazandırır?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://guillaumejaume.github.io/FUNSD/" target="_blank"><span class="li">▣</span> <span>Veri · FUNSD</span></a><a class="lnk" href="https://www.docvqa.org/" target="_blank"><span class="li">▣</span> <span>Veri · DocVQA</span></a><a class="lnk" href="https://github.com/QwenLM/Qwen3-VL" target="_blank"><span class="li">◆</span> <span>Model · Qwen3-VL</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="7"><div class="slide proj" style="--ac:#4d96ff"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">07</div>
+      <div class="num">PROJE <b>07</b> / 12 · GÖMÜLÜ</div>
+      <div class="tag-pill">GÖMÜLÜ</div>
+      <h1>Gömülü AI için Dil-Güdümlü Nesne Bulma</h1>
+      <div class="desc">"Masadaki kırmızı kupayı bul" komutuyla ajanın hedefe yönelmesi. Gerçek robot gerekmez; simülasyon veya görüntü dizisinde <b>3B uzamsal akıl yürütme</b>.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">Habitat / AI2-THOR simülasyon ortamı</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Rastgele / açgözlü gezinme</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Dil-güdümlü yönelme, kör gezinmeye göre başarı oranını ne kadar artırır?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/facebookresearch/habitat-sim" target="_blank"><span class="li">›_</span> <span>Sim · Habitat</span></a><a class="lnk" href="https://github.com/allenai/ai2thor" target="_blank"><span class="li">›_</span> <span>Sim · AI2-THOR</span></a><a class="lnk" href="https://github.com/facebookresearch/habitat-lab" target="_blank"><span class="li">▣</span> <span>Görev · ObjectNav</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="8"><div class="slide proj" style="--ac:var(--violet)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">08</div>
+      <div class="num">PROJE <b>08</b> / 12 · ÜRETKEN</div>
+      <div class="tag-pill">ÜRETKEN</div>
+      <h1>Difüzyon Modellerinden Kavram Silme & Güvenlik</h1>
+      <div class="desc">Metinden-görüntü modelinden <b>istenmeyen/telifli kavramı çıkarma</b> ve bunun diğer üretim kalitesine etkisini ölçme. Etik/güvenlik odaklı, az çalışılmış.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">I2P (Inappropriate Image Prompts) / özel prompt seti</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Silme öncesi orijinal model</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Kavram silindiğinde komşu kavramların üretim kalitesi nasıl etkilenir?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/rohitgandikota/erasing" target="_blank"><span class="li">›_</span> <span>Kod · Erasing Concepts (ESD)</span></a><a class="lnk" href="https://huggingface.co/datasets/AIML-TUDA/i2p" target="_blank"><span class="li">▣</span> <span>Veri · I2P</span></a><a class="lnk" href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0" target="_blank"><span class="li">◆</span> <span>Model · Stable Diffusion</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="9"><div class="slide proj" style="--ac:var(--violet)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">09</div>
+      <div class="num">PROJE <b>09</b> / 12 · ÜRETKEN</div>
+      <div class="tag-pill">ÜRETKEN</div>
+      <h1>Çok-Modlu Yapay Görüntü (Deepfake) Tespiti</h1>
+      <div class="desc">Difüzyonla üretilmiş görüntüleri <b>daha önce görülmemiş üreticilerde</b> de yakalayan genelleştirilebilir dedektör.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">GenImage (~1M sahte/gerçek çift, 8 üretici)</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Tek-üretici eğitimli CNN</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Bir üreticide eğitilen dedektör, başka üreticide ne kadar genelleşir?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/GenImage-Dataset/GenImage" target="_blank"><span class="li">▣</span> <span>Veri+Kod · GenImage</span></a><a class="lnk" href="https://arxiv.org/abs/2306.08571" target="_blank"><span class="li">¶</span> <span>Makale · GenImage (arXiv)</span></a><a class="lnk" href="https://github.com/ZhendongWang6/DIRE" target="_blank"><span class="li">›_</span> <span>Kıyas · DIRE detektörü</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="10"><div class="slide proj" style="--ac:var(--scan)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">10</div>
+      <div class="num">PROJE <b>10</b> / 12 · VLM</div>
+      <div class="tag-pill">VLM</div>
+      <h1>Hafifletilmiş VLM: Nicemleme & Damıtma ile Uçta Çalıştırma</h1>
+      <div class="desc">Büyük VLM'i (Qwen3-VL 8B) <b>quantization / LoRA / damıtma</b> ile küçültüp RTX 3090 / Jetson'da çalıştırma; doğruluk-hız-bellek ödünleşimi.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">Standart VLM benchmarkları (MMBench, MME)</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Tam-hassasiyet (FP16) model</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Modeli küçültmek doğruluğu ne kadar düşürür, hızı ne kadar artırır?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/unslothai/unsloth" target="_blank"><span class="li">›_</span> <span>Araç · Unsloth (hızlı LoRA)</span></a><a class="lnk" href="https://github.com/ggerganov/llama.cpp" target="_blank"><span class="li">›_</span> <span>Araç · llama.cpp (GGUF)</span></a><a class="lnk" href="https://github.com/open-compass/MMBench" target="_blank"><span class="li">▣</span> <span>Kıyas · MMBench</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="11"><div class="slide proj" style="--ac:var(--amber)"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">11</div>
+      <div class="num">PROJE <b>11</b> / 12 · 3B</div>
+      <div class="tag-pill">3B</div>
+      <h1>SAM 2 ile Tıbbi/Uydu Görüntülerde Etkileşimli Segmentasyon</h1>
+      <div class="desc">SAM 2'yi alana özgü ince-ayarla (MedSAM2 yaklaşımı) tıbbi/uzaktan algılama probleminde <b>insan-döngüde</b> değerlendirme.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">Medical Segmentation Decathlon (tıbbi) / iSAID (uydu)</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Tam-otomatik U-Net / nnU-Net</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Etkileşimli segmentasyon, otomatik modele göre verimlilikte ne kazandırır?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/facebookresearch/sam2" target="_blank"><span class="li">›_</span> <span>Kod · SAM 2</span></a><a class="lnk" href="https://github.com/bowang-lab/MedSAM2" target="_blank"><span class="li">›_</span> <span>Kod · MedSAM2</span></a><a class="lnk" href="http://medicaldecathlon.com/" target="_blank"><span class="li">▣</span> <span>Veri · MSD</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="12"><div class="slide proj" style="--ac:#4d96ff"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="pj-no">12</div>
+      <div class="num">PROJE <b>12</b> / 12 · GÖMÜLÜ</div>
+      <div class="tag-pill">GÖMÜLÜ</div>
+      <h1>Optik Akış + Poz Kestirimi ile Hareket/Anomali Analizi</h1>
+      <div class="desc">RTMPose + RAFT birleşiminden <b>anormal davranış tespiti</b> (düşme, riskli duruş, kalabalık). Spor/güvenlik/yaşlı bakımı senaryosu.</div>
+      <div class="metrics"><div class="metric"><div class="mk">▣ Veri Kümesi</div><div class="mv">UR Fall Detection / kendi video setiniz</div></div>
+      <div class="metric"><div class="mk">⚖ Baseline (kıyas)</div><div class="mv">Tek-modlu (sadece poz veya sadece akış)</div></div>
+      <div class="metric"><div class="mk">? Araştırma Sorusu</div><div class="mv">Akış + poz birleşimi, tek-modlu temele göre anomali tespitini ne kadar iyileştirir?</div></div></div>
+      <div class="links-row"><div class="lh">▸ Veri seti & yardımcı bağlantılar</div><div class="lnks"><a class="lnk" href="https://github.com/open-mmlab/mmpose" target="_blank"><span class="li">›_</span> <span>Kod · RTMPose (MMPose)</span></a><a class="lnk" href="https://github.com/princeton-vl/RAFT" target="_blank"><span class="li">›_</span> <span>Kod · RAFT</span></a><a class="lnk" href="http://fenix.ur.edu.pl/~mkepski/ds/uf.html" target="_blank"><span class="li">▣</span> <span>Veri · UR Fall Detection</span></a></div></div></div></div></section>
+<section class="deck-slide" data-i="13"><div class="slide closing"><div class="topbar"><div><span class="dot"></span>Proje Konuları · Güncel Görüntü İşleme</div><div class="course">BAUN · Bilgisayar Müh.</div></div><div class="body-pad"><div class="num">SON SÖZ</div><h1>Konuyu seçerken</h1><div class="tagline">Başarılı bir tezin üç şartı</div>
+      <div class="checks"><div class="check"><div class="cn">①</div><div class="cx"><div class="ch">Somut veri kümesi</div><div class="ct">"İnternetten bir şey bulurum" değil — başlamadan elde edilebilir, boyutu belli bir veri kümesi seçilmeli. Her slaytta bağlantılar verildi.</div></div></div><div class="check"><div class="cn">②</div><div class="cx"><div class="ch">Ölçülebilir kıyas (baseline)</div><div class="ct">Yeni yöntemin neye göre daha iyi olduğu net olmalı. Karşılaştırılacak basit bir temel olmadan katkı ölçülemez.</div></div></div><div class="check"><div class="cn">③</div><div class="cx"><div class="ch">Tek cümlelik araştırma sorusu</div><div class="ct">"X yöntemi, Y koşulunda Z metriğini iyileştirir mi?" biçiminde net bir soru — tüm tezi yönlendirir.</div></div></div></div><div class="note">💡 Linkler erişim noktasıdır; bazı veri setleri (MVTec, nuScenes) ücretsiz hesap/lisans onayı isteyebilir.</div></div></div></section>
+</div>
+<div class="nav"><button onclick="show(cur-1)">‹</button><span class="counter" id="cnt">1 / 14</span><button onclick="show(cur+1)">›</button></div>
+<script>
+  const slides=[...document.querySelectorAll('.deck-slide')];let cur=0;
+  function show(n){slides[cur].classList.remove('active');cur=(n+slides.length)%slides.length;
+    slides[cur].classList.add('active');document.getElementById('cnt').textContent=(cur+1)+' / '+slides.length;}
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){show(cur+1);e.preventDefault();}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){show(cur-1);e.preventDefault();}
+    if(e.key==='Home')show(0);if(e.key==='End')show(slides.length-1);});
+  show(0);
+</script>
+</body></html>
